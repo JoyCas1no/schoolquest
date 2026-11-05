@@ -28,7 +28,7 @@ const ctx = {
 ctx.window.document = ctx.document;
 vm.createContext(ctx);
 try {
-  vm.runInContext(js + "\n;globalThis.T={setGrade,maxLevel,startLevel,load,getS:function(){return S},CLS,sayc,cleanName,BANK,genMath,SUBJ,MON,newState,recordAnswer,getQuestion,startLevel,leaderboard,setS:function(s){S=s}};", ctx);
+  vm.runInContext(js + "\n;globalThis.T={Cloud,normalize,save,setGrade,maxLevel,startLevel,load,getS:function(){return S},CLS,sayc,cleanName,BANK,genMath,SUBJ,MON,newState,recordAnswer,getQuestion,startLevel,leaderboard,setS:function(s){S=s}};", ctx);
 } catch (e) { fail("скрипт не запускается: " + e.message); process.exit(1); }
 const T = ctx.T;
 
@@ -105,6 +105,23 @@ for (let g = 1; g <= 11; g++) {
   if (!T.setGrade("4") || S4.grade !== 4 || T.SUBJ.some((x) => S4.subj[x.id].lvl !== 2)) fail("смена класса 8→4 не подрезала уровни");
   if (T.setGrade("0") || T.setGrade("12") || T.setGrade("abc") || S4.grade !== 4) fail("setGrade принял неверный класс");
   if (!T.setGrade(7) || T.SUBJ.some((x) => S4.subj[x.id].lvl !== 2)) fail("смена класса 4→7 не должна поднимать уровни");
+}
+
+// логин, почта родителя, нормализация данных из облака, сохранение без сети
+["abc", "dragon_mia7", "a_b_c_d_e_f_g_h_i_j"].forEach((u) => { if (!T.Cloud.nameOk(u)) fail("логин должен проходить: " + u); });
+["ab", "Dragon", "дракон", "a b c", "x".repeat(21), "a@b", ""].forEach((u) => { if (T.Cloud.nameOk(u)) fail("логин не должен проходить: " + u); });
+["mama@mail.ru", "a.b@c.org"].forEach((m) => { if (!T.Cloud.mailOk(m)) fail("почта должна проходить: " + m); });
+["mama", "a@b", "@x.ru", "a b@c.ru"].forEach((m) => { if (T.Cloud.mailOk(m)) fail("почта не должна проходить: " + m); });
+if (T.Cloud.online) fail("в тестовой среде не должно быть сессии");
+{
+  const bare = T.normalize({ nick: { custom: "Мия" }, grade: 4, subj: { math: { lvl: 3, recent: [], ok: 1, tot: 2 } } });
+  if (bare.subj.rus.lvl !== 1 && bare.subj.rus.lvl !== 2) fail("normalize не достроил предметы");
+  if (bare.subj.math.lvl !== 2) fail("normalize не подрезал уровень по классу");
+  if (typeof bare.coll !== "object" || typeof bare.ts !== "number") fail("normalize не достроил поля");
+  const S5 = T.newState(); S5.nick = { custom: "Тест" }; T.setS(S5);
+  const before = S5.ts; T.save();
+  if (!(S5.ts >= before) || !store["schoolquest_v1"] || JSON.parse(store["schoolquest_v1"]).nick.custom !== "Тест") fail("save не записал состояние");
+  delete store["schoolquest_v1"];
 }
 
 // классы героев и их реплики

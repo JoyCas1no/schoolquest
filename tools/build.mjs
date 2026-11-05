@@ -10,6 +10,7 @@ const out =
   read("head.html") +
   "<script>\n" +
   read("data.js") +
+  read("cloud.js") +
   read("engine.js") +
   read("tail.html");
 

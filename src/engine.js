@@ -10,14 +10,17 @@ var snd={ok:function(){beep(660,.15);setTimeout(function(){beep(880,.2)},120)},b
 var KEY="schoolquest_v1";
 var S=null;
 function newState(){var s={nick:null,cls:"warrior",grade:3,subj:{},coll:{},pages:0,score:0,week:weekKey(),best:0,
-  chest:"",streak:0,lastDay:"",limit:true,sound:true,battles:0};
+  chest:"",streak:0,lastDay:"",limit:true,sound:true,battles:0,ts:0};
   SUBJ.forEach(function(x){s.subj[x.id]={lvl:1,recent:[],ok:0,tot:0}});return s}
+/* приводит сохранение (с устройства или из облака) к текущему формату и подрезает уровни по классу */
+function normalize(s){var base=newState();Object.keys(base).forEach(function(k){if(!(k in s))s[k]=base[k]});
+  SUBJ.forEach(function(x){if(!s.subj[x.id])s.subj[x.id]=base.subj[x.id];
+    var cap=maxLevel(s.grade);if(s.subj[x.id].lvl>cap)s.subj[x.id].lvl=cap});return s}
 function load(){try{var j=localStorage.getItem(KEY);if(j){S=JSON.parse(j)}}catch(e){}
-  if(!S||typeof S!=="object")S=null;
-  if(S){var base=newState();Object.keys(base).forEach(function(k){if(!(k in S))S[k]=base[k]});
-    SUBJ.forEach(function(x){if(!S.subj[x.id])S.subj[x.id]=base.subj[x.id];
-      var cap=maxLevel(S.grade);if(S.subj[x.id].lvl>cap)S.subj[x.id].lvl=cap})}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+  if(!S||typeof S!=="object"||!S.subj||typeof S.subj!=="object")S=null;
+  if(S)S=normalize(S)}
+function save(){if(S)S.ts=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  if(S&&Cloud.online)Cloud.schedulePush(function(){return S})}
 /* стартовый уровень и потолок по классу: нельзя вырасти до материала старше своего класса
    (уровень 3 — проценты, Present Perfect и т.п., это примерно с 6 класса) */
 function startLevel(g){return g<=2?1:(g<=7?2:3)}
@@ -63,7 +66,10 @@ function screenStart(){
   "<div class='dim'>Не хочешь писать — выбери готовое:</div><select id='na'>"+opts(ADJ)+"</select><select id='nn'>"+opts(NOUN)+"</select>"+
   "<b>Твой класс в школе</b><select id='gr'>"+gr+"</select>"+
   "<b>Выбери героя</b>"+Object.keys(CLS).map(function(k){var c=CLS[k];return"<button class='clsb' data-c='"+k+"'>"+c.ico+" <b>"+c.n+"</b> — "+c.d+(c.lore?"<div class='dim'>"+c.lore+"</div>":"")+"</button>"}).join("")+
-  "</div><button class='main' id='go'>В путь!</button><p class='dim' id='nerr' style='color:#fb7185'></p><p class='dim'>Имя видно только тебе на этом устройстве. Настоящее имя и фамилию писать не нужно — придумай прозвище. Прогресс хранится только на этом устройстве.</p>");
+  "</div><button class='main' id='go'>В путь!</button><p class='dim' id='nerr' style='color:#fb7185'></p>"+
+  (Cloud.online?"":"<button id='haveacc'>🔑 У меня уже есть логин</button>")+
+  "<p class='dim'>Настоящее имя и фамилию писать не нужно — придумай прозвище. Потом можно создать логин и пароль, чтобы не потерять прогресс.</p>");
+  if(!Cloud.online)document.getElementById("haveacc").onclick=function(){screenAccount("login")};
   var chosen="warrior";
   function mark(){[].forEach.call(document.querySelectorAll(".clsb"),function(b){b.style.outline=b.dataset.c===chosen?"3px solid #ffcf4a":"none"})}
   [].forEach.call(document.querySelectorAll(".clsb"),function(b){b.onclick=function(){chosen=b.dataset.c;mark()}});mark();
@@ -83,14 +89,16 @@ function touchDay(){var t=dayKey();if(S.lastDay!==t){
 function screenHome(){
   touchDay();var c=CLS[S.cls];
   var chestReady=S.chest!==dayKey();
-  h("<div class='top'><span>"+c.ico+" "+esc(nickStr())+"</span><span>🔥 "+S.streak+" дн. · 📜 "+S.pages+"</span></div>"+
+  h("<div class='top'><span>"+c.ico+" "+esc(nickStr())+(Cloud.online?" ☁️":"")+"</span><span>🔥 "+S.streak+" дн. · 📜 "+S.pages+"</span></div>"+
   "<h1>Карта</h1><div class='narr'><b>Рассказчик:</b> "+say("home")+"</div>"+
+  (Cloud.online?"":"<div class='card'>💾 Прогресс хранится только в этом браузере и может пропасть. Создай логин и пароль — и он всегда будет с тобой.<button class='main' id='b-acc'>Создать логин и пароль</button></div>")+
   "<div class='grid'>"+SUBJ.map(function(x){var s=S.subj[x.id];return"<button data-s='"+x.id+"'><span>"+x.ico+"</span>"+x.name+"<div class='dim'>уровень "+s.lvl+"</div></button>"}).join("")+"</div>"+
   "<button class='main' id='chest' "+(chestReady?"":"disabled")+">"+(chestReady?"🎁 Открыть ежедневный сундук":"🎁 Сундук откроется завтра")+"</button>"+
   "<div class='row'><button id='b-col'>🐾 Коллекция</button><button id='b-tal'>🗺️ Таланты</button></div>"+
   "<div class='row'><button id='b-lb'>🏆 Рейтинг</button><button id='b-set'>⚙️ Настройки</button></div>");
   [].forEach.call(document.querySelectorAll("[data-s]"),function(b){b.onclick=function(){startBattle(b.dataset.s)}});
   document.getElementById("chest").onclick=openChest;
+  if(!Cloud.online)document.getElementById("b-acc").onclick=function(){screenAccount("register")};
   document.getElementById("b-col").onclick=screenColl;document.getElementById("b-tal").onclick=screenTalents;
   document.getElementById("b-lb").onclick=screenLb;document.getElementById("b-set").onclick=screenSettings;
 }
@@ -119,6 +127,7 @@ function screenLb(){
 
 function screenSettings(){
   h("<h1>⚙️ Настройки</h1><div class='card'><button id='t1'>⏱️ Напоминание об отдыхе (30 мин): "+(S.limit?"включено":"выключено")+"</button><button id='t2'>🔊 Звук: "+(S.sound?"включён":"выключен")+"</button>"+
+  "<button id='t6'>☁️ Аккаунт: "+(Cloud.online?"вошёл как "+esc(Cloud.user):"не создан")+"</button>"+
   "<button id='t4'>✏️ Сменить имя героя</button><button id='t5'>🎓 Сменить класс (сейчас: "+S.grade+")</button><button id='t3'>🔄 Начать заново (стереть прогресс)</button></div><button id='back'>← Назад</button>");
   document.getElementById("t5").onclick=function(){var v=prompt("В каком ты классе? (1–11)",S.grade);
     if(v===null)return;if(!setGrade(v)){alert("Нужно число от 1 до 11.");return}screenSettings()};
@@ -126,8 +135,49 @@ function screenSettings(){
     if(v===null)return;var cn=cleanName(v);if(!cn){alert("Имя: от 2 до 16 букв или цифр, без смайликов и знаков.");return}S.nick={custom:cn};save();screenSettings()};
   document.getElementById("t1").onclick=function(){S.limit=!S.limit;save();screenSettings()};
   document.getElementById("t2").onclick=function(){S.sound=!S.sound;save();screenSettings()};
-  document.getElementById("t3").onclick=function(){if(confirm("Точно стереть весь прогресс?")){try{localStorage.removeItem(KEY)}catch(e){}S=null;screenStart()}};
+  document.getElementById("t6").onclick=function(){screenAccount(Cloud.online?"":"register")};
+  document.getElementById("t3").onclick=function(){
+    if(confirm(Cloud.online?"Точно начать заново? Новый герой заменит прогресс и на этом устройстве, и в аккаунте.":"Точно стереть весь прогресс?")){try{localStorage.removeItem(KEY)}catch(e){}S=null;screenStart()}};
   document.getElementById("back").onclick=screenHome}
+
+/* ===== аккаунт: логин и пароль ===== */
+function adopt(data){S=normalize(data);try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function screenAccount(mode){
+  var back=function(){if(S&&S.nick)screenHome();else screenStart()};
+  if(Cloud.online){
+    h("<h1>☁️ Аккаунт</h1><div class='card'>Ты вошёл как <b>"+esc(Cloud.user)+"</b>.<p class='dim'>Прогресс сохраняется сам. Чтобы открыть его на другом устройстве, зайди на сайт и нажми «У меня уже есть логин».</p>"+
+      (Cloud.lastError?"<p class='dim' style='color:#fb7185'>"+esc(Cloud.lastError)+"</p>":"")+"</div>"+
+      "<button id='sync'>🔄 Сохранить сейчас</button><button id='out'>🚪 Выйти из аккаунта</button><button id='back'>← Назад</button>");
+    document.getElementById("sync").onclick=function(){Cloud.push(S).then(function(){toast("Сохранено ☁️")}).catch(function(e){alert(Cloud.human(e))})};
+    document.getElementById("out").onclick=function(){if(confirm("Выйти? Игра останется на этом устройстве, но перестанет сохраняться в аккаунт."))
+      {Cloud.signOut();back()}};
+    document.getElementById("back").onclick=back;return}
+  var reg=mode==="register";
+  h("<h1>"+(reg?"💾 Создать логин":"🔑 Вход")+"</h1><div class='card'>"+
+    "<b>Логин</b><input id='al' maxlength='20' autocomplete='username' autocapitalize='none' autocorrect='off' spellcheck='false' placeholder='латинские буквы, цифры и _'>"+
+    "<b>Пароль</b><input id='ap' type='password' maxlength='72' autocomplete='"+(reg?"new-password":"current-password")+"' placeholder='минимум 6 символов'>"+
+    (reg?"<b>Почта родителя</b> <span class='dim'>(необязательно)</span><input id='ae' type='email' maxlength='120' autocomplete='off' placeholder='parent@mail.ru'>"+
+      "<div class='dim'>Нужна, чтобы родитель мог помочь вернуть доступ. Её видит только владелец игры. Запиши логин и пароль на бумажку: автоматического восстановления пока нет.</div>":"")+
+    "</div><p class='dim' id='aerr' style='color:#fb7185;min-height:20px'></p>"+
+    "<button class='main' id='ago'>"+(reg?"Создать и сохранить прогресс":"Войти")+"</button>"+
+    "<button id='aswitch'>"+(reg?"🔑 У меня уже есть логин":"💾 Создать новый логин")+"</button><button id='back'>← Назад</button>"+
+    "<p class='dim'>Настоящее имя и фамилию в логине не используй — придумай что-нибудь вроде <b>dragon_mia7</b>.</p>");
+  var err=document.getElementById("aerr"),go=document.getElementById("ago");
+  document.getElementById("aswitch").onclick=function(){screenAccount(reg?"login":"register")};
+  document.getElementById("back").onclick=back;
+  go.onclick=async function(){
+    var u=document.getElementById("al").value,p=document.getElementById("ap").value;err.textContent="";go.disabled=true;
+    try{
+      if(reg){await Cloud.signUp(u,p,document.getElementById("ae").value);
+        if(S&&S.nick){await Cloud.push(S);toast("Готово! Прогресс сохранён ☁️");screenHome()}else screenStart()}
+      else{await Cloud.signIn(u,p);var row=await Cloud.pull();
+        if(row&&row.data&&row.data.nick){
+          if(S&&S.battles>0&&!confirm("На этом устройстве уже есть игра ("+S.battles+" боёв). Открыть игру из аккаунта? Игра на устройстве будет заменена."))
+            {Cloud.signOut();back();return}
+          adopt(row.data);toast("С возвращением! ☁️");screenHome()}
+        else if(S&&S.nick){await Cloud.push(S);toast("Прогресс сохранён ☁️");screenHome()}
+        else screenStart()}
+    }catch(e){err.textContent=Cloud.human(e)}finally{go.disabled=false}}}
 
 /* ===== бой ===== */
 function startBattle(id){
@@ -202,3 +252,11 @@ setInterval(function(){if(S&&S.limit&&!timeWarned&&Date.now()-timerStart>30*60*1
 /* старт */
 load();
 if(typeof document!=="undefined"&&$app){if(S&&S.nick)screenHome();else screenStart()}
+
+/* при запуске в аккаунте: если в облаке игра новее, чем на устройстве, берём облачную (не посреди боя) */
+if(Cloud.online&&typeof document!=="undefined"){Cloud.pull().then(function(row){
+  if(!row||!row.data||!row.data.nick)return;
+  var cts=row.data.ts||Date.parse(row.updated_at)||0;
+  if(!S||!S.nick||cts>(S.ts||0)){
+    if(!S||!S.nick||document.getElementById("chest")){adopt(row.data);screenHome()}}
+  else if((S.ts||0)>cts)Cloud.schedulePush(function(){return S})}).catch(function(){})}
