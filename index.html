@@ -477,8 +477,9 @@ function screenAccount(mode){
     (reg?"<b>Почта родителя</b> <span class='dim'>(необязательно)</span><input id='ae' type='email' maxlength='120' autocomplete='off' placeholder='parent@mail.ru'>"+
       "<div class='dim'>Нужна, чтобы родитель мог помочь вернуть доступ. Её видит только владелец игры. Запиши логин и пароль на бумажку: автоматического восстановления пока нет.</div>":"")+
     "</div><p class='dim' id='aerr' style='color:#fb7185;min-height:20px'></p>"+
-    "<button class='main' id='ago'>"+(reg?"Создать и сохранить прогресс":"Войти")+"</button>"+
-    "<button id='aswitch'>"+(reg?"🔑 У меня уже есть логин":"💾 Создать новый логин")+"</button><button id='back'>← Назад</button>"+
+    "<button class='main' id='ago'>"+(reg?(S&&S.nick?"Создать и сохранить прогресс":"Создать логин"):"Войти")+"</button>"+
+    "<button id='aswitch'>"+(reg?"🔑 У меня уже есть логин":"💾 Создать новый логин")+"</button>"+
+    "<button id='back'>"+(S&&S.nick?"← Назад":"🎮 Играть без логина")+"</button>"+
     "<p class='dim'>Настоящее имя и фамилию в логине не используй — придумай что-нибудь вроде <b>dragon_mia7</b>.</p>");
   var err=document.getElementById("aerr"),go=document.getElementById("ago");
   document.getElementById("aswitch").onclick=function(){screenAccount(reg?"login":"register")};
@@ -569,7 +570,8 @@ setInterval(function(){if(S&&S.limit&&!timeWarned&&Date.now()-timerStart>30*60*1
 
 /* старт */
 load();
-if(typeof document!=="undefined"&&$app){if(S&&S.nick)screenHome();else screenStart()}
+/* новый посетитель (нет игры на устройстве и нет входа) сначала видит экран входа */
+if(typeof document!=="undefined"&&$app){if(S&&S.nick)screenHome();else if(Cloud.online)screenStart();else screenAccount("login")}
 
 /* при запуске в аккаунте: если в облаке игра новее, чем на устройстве, берём облачную (не посреди боя) */
 if(Cloud.online&&typeof document!=="undefined"){Cloud.pull().then(function(row){
