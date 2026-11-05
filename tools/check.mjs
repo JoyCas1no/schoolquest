@@ -28,7 +28,7 @@ const ctx = {
 ctx.window.document = ctx.document;
 vm.createContext(ctx);
 try {
-  vm.runInContext(js + "\n;globalThis.T={BANK,genMath,SUBJ,MON,newState,recordAnswer,getQuestion,startLevel,leaderboard,setS:function(s){S=s}};", ctx);
+  vm.runInContext(js + "\n;globalThis.T={cleanName,BANK,genMath,SUBJ,MON,newState,recordAnswer,getQuestion,startLevel,leaderboard,setS:function(s){S=s}};", ctx);
 } catch (e) { fail("скрипт не запускается: " + e.message); process.exit(1); }
 const T = ctx.T;
 
@@ -80,6 +80,13 @@ for (let r = 0; r < runs; r++) {
   }
 }
 if (T.leaderboard.length === undefined) fail("рейтинг");
+
+// своё имя
+const okNames = ["Лиза", "Мия 2010", "Star-Girl", "  Аня   Ко  "];
+const badNames = ["", "а", "😀😀", "<b>x</b>", "ОченьДлинноеИмяГероя", "a@b.ru"];
+okNames.forEach((n) => { if (!T.cleanName(n)) fail("имя должно проходить: " + n); });
+badNames.forEach((n) => { if (T.cleanName(n)) fail("имя не должно проходить: " + n); });
+if (T.cleanName("  Аня   Ко  ") !== "Аня Ко") fail("пробелы в имени не сжаты");
 
 console.log(bad ? "ПРОВЕРКА НЕ ПРОЙДЕНА: " + bad : "Проверка пройдена");
 process.exit(bad ? 1 : 0);

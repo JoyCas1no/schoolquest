@@ -37,7 +37,10 @@ function league(g){return g<=4?"Лига 1–4 классов":(g<=8?"Лига 5
 var FAKE=["Лунный Кот","Тихий Дракон","Быстрый Енот","Звёздная Сова","Храбрый Ёж","Рыжий Лис","Снежный Волк"];
 function leaderboard(){var seed=S.week,list=FAKE.map(function(n,i){var v=((seed*(i+3)*7919)%260)+40;return{n:n+" ✱",v:v}});
   list.push({n:nickStr(),v:S.score,me:true});list.sort(function(a,b){return b.v-a.v});return list}
-function nickStr(){return S.nick?S.nick.a+" "+S.nick.n:"Герой"}
+function nickStr(){return S.nick?(S.nick.custom?S.nick.custom:S.nick.a+" "+S.nick.n):"Герой"}
+/* своё имя: 2-16 символов, буквы/цифры/пробел/дефис. Пока хранится только на устройстве. */
+function cleanName(s){s=String(s||"").replace(/\s+/g," ").trim();
+  return(s.length>=2&&s.length<=16&&/^[\p{L}\p{N} _-]+$/u.test(s))?s:""}
 
 /* ===== интерфейс ===== */
 var $app=document.getElementById("app"),timerStart=Date.now(),timeWarned=false,B=null;
@@ -49,15 +52,18 @@ function screenStart(){
   var opts=function(a){return a.map(function(x){return"<option>"+x+"</option>"}).join("")};
   var gr="";for(var g=1;g<=11;g++)gr+="<option value='"+g+"'"+(g===3?" selected":"")+">"+g+" класс</option>";
   h("<h1>📖 Школьный Квест</h1><div class='narr'><b>Рассказчик:</b> "+say("intro")+"</div>"+
-  "<div class='card'><b>Придумай имя героя</b><select id='na'>"+opts(ADJ)+"</select><select id='nn'>"+opts(NOUN)+"</select>"+
+  "<div class='card'><b>Своё имя героя</b><input id='cn' maxlength='16' placeholder='Напиши своё имя (2–16 букв)' autocomplete='off'>"+
+  "<div class='dim'>Не хочешь писать — выбери готовое:</div><select id='na'>"+opts(ADJ)+"</select><select id='nn'>"+opts(NOUN)+"</select>"+
   "<b>Твой класс в школе</b><select id='gr'>"+gr+"</select>"+
   "<b>Выбери героя</b>"+Object.keys(CLS).map(function(k){var c=CLS[k];return"<button class='clsb' data-c='"+k+"'>"+c.ico+" <b>"+c.n+"</b> — "+c.d+"</button>"}).join("")+
-  "</div><button class='main' id='go'>В путь!</button><p class='dim'>Имя собирается из готовых слов, личные данные не нужны. Прогресс хранится только на этом устройстве.</p>");
+  "</div><button class='main' id='go'>В путь!</button><p class='dim' id='nerr' style='color:#fb7185'></p><p class='dim'>Имя видно только тебе на этом устройстве. Настоящее имя и фамилию писать не нужно — придумай прозвище. Прогресс хранится только на этом устройстве.</p>");
   var chosen="warrior";
   function mark(){[].forEach.call(document.querySelectorAll(".clsb"),function(b){b.style.outline=b.dataset.c===chosen?"3px solid #ffcf4a":"none"})}
   [].forEach.call(document.querySelectorAll(".clsb"),function(b){b.onclick=function(){chosen=b.dataset.c;mark()}});mark();
   document.getElementById("go").onclick=function(){
-    S=newState();S.nick={a:document.getElementById("na").value,n:document.getElementById("nn").value};
+    var raw=document.getElementById("cn").value,cn=cleanName(raw);
+    if(raw.trim()&&!cn){document.getElementById("nerr").textContent="Имя: от 2 до 16 букв или цифр, без смайликов и знаков.";return}
+    S=newState();S.nick=cn?{custom:cn}:{a:document.getElementById("na").value,n:document.getElementById("nn").value};
     S.cls=chosen;S.grade=+document.getElementById("gr").value;var sl=startLevel(S.grade);
     SUBJ.forEach(function(x){S.subj[x.id].lvl=sl});save();screenHome()}
 }
@@ -106,7 +112,9 @@ function screenLb(){
 
 function screenSettings(){
   h("<h1>⚙️ Настройки</h1><div class='card'><button id='t1'>⏱️ Напоминание об отдыхе (30 мин): "+(S.limit?"включено":"выключено")+"</button><button id='t2'>🔊 Звук: "+(S.sound?"включён":"выключен")+"</button>"+
-  "<button id='t3'>🔄 Начать заново (стереть прогресс)</button></div><button id='back'>← Назад</button>");
+  "<button id='t4'>✏️ Сменить имя героя</button><button id='t3'>🔄 Начать заново (стереть прогресс)</button></div><button id='back'>← Назад</button>");
+  document.getElementById("t4").onclick=function(){var v=prompt("Новое имя героя (2–16 букв или цифр):",S.nick&&S.nick.custom||"");
+    if(v===null)return;var cn=cleanName(v);if(!cn){alert("Имя: от 2 до 16 букв или цифр, без смайликов и знаков.");return}S.nick={custom:cn};save();screenSettings()};
   document.getElementById("t1").onclick=function(){S.limit=!S.limit;save();screenSettings()};
   document.getElementById("t2").onclick=function(){S.sound=!S.sound;save();screenSettings()};
   document.getElementById("t3").onclick=function(){if(confirm("Точно стереть весь прогресс?")){try{localStorage.removeItem(KEY)}catch(e){}S=null;screenStart()}};
