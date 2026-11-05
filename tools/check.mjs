@@ -28,7 +28,7 @@ const ctx = {
 ctx.window.document = ctx.document;
 vm.createContext(ctx);
 try {
-  vm.runInContext(js + "\n;globalThis.T={CLS,sayc,cleanName,BANK,genMath,SUBJ,MON,newState,recordAnswer,getQuestion,startLevel,leaderboard,setS:function(s){S=s}};", ctx);
+  vm.runInContext(js + "\n;globalThis.T={setGrade,maxLevel,startLevel,load,getS:function(){return S},CLS,sayc,cleanName,BANK,genMath,SUBJ,MON,newState,recordAnswer,getQuestion,startLevel,leaderboard,setS:function(s){S=s}};", ctx);
 } catch (e) { fail("скрипт не запускается: " + e.message); process.exit(1); }
 const T = ctx.T;
 
@@ -57,7 +57,7 @@ for (let l = 1; l <= 3; l++) {
       const r = { "+": a + b, "−": a - b, "×": a * b, "÷": a / b }[m[2]];
       if (String(r) !== q.o[q.a]) { fail("математика, ответ: " + q.q); break; }
     }
-    const p = q.q.match(/^(\d+)% от (\d+) = \?$/);
+    const p = q.q.match(/^(\d+)% от (\d+) = \?/);
     if (p && String((+p[2] * +p[1]) / 100) !== q.o[q.a]) { fail("проценты: " + q.q); break; }
     const x = q.q.match(/^x \+ (\d+) = (\d+)\./);
     if (x && String(+x[2] - +x[1]) !== q.o[q.a]) { fail("уравнение: " + q.q); break; }
@@ -76,10 +76,36 @@ for (let r = 0; r < runs; r++) {
     if (!q || q.a < 0 || q.o.length !== 4) { fail("вопрос сломан в " + sj); break; }
     T.recordAnswer(sj, Math.random() < p);
     const l = S.subj[sj].lvl;
-    if (l < 1 || l > 3) { fail("уровень вне 1..3: " + l); break; }
+    if (l < 1 || l > T.maxLevel(S.grade)) { fail("уровень вне 1..потолок: " + l); break; }
   }
 }
 if (T.leaderboard.length === undefined) fail("рейтинг");
+
+// потолок уровня по классу: до 6 класса материал уровня 3 (проценты и т.п.) не выдаём
+for (let g = 1; g <= 11; g++) {
+  const S3 = T.newState(); S3.grade = g; T.setS(S3);
+  const cap = T.maxLevel(g), st = T.startLevel(g);
+  if (st > cap || st < 1) fail(`старт ${st} вне потолка ${cap} для ${g} класса`);
+  if ((g <= 5 && cap > 2) || (g <= 2 && cap > 1) || (g >= 6 && cap !== 3)) fail("потолок по классам: " + g);
+  for (let i = 0; i < 60; i++) T.recordAnswer("math", true);
+  if (S3.subj.math.lvl > cap) fail(`серия верных подняла уровень выше потолка: класс ${g}`);
+}
+{ // старое сохранение дочери: 4 класс, уровень 3 → подрезается до 2
+  const old = T.newState(); old.nick = { custom: "Мия" }; old.grade = 4;
+  T.SUBJ.forEach((x) => (old.subj[x.id].lvl = 3));
+  store["schoolquest_v1"] = JSON.stringify(old);
+  T.load();
+  const L = T.getS();
+  if (!L || T.SUBJ.some((x) => L.subj[x.id].lvl !== 2)) fail("старое сохранение не подрезано до потолка");
+  delete store["schoolquest_v1"];
+}
+
+{ // смена класса
+  const S4 = T.newState(); S4.grade = 8; T.SUBJ.forEach((x) => (S4.subj[x.id].lvl = 3)); T.setS(S4);
+  if (!T.setGrade("4") || S4.grade !== 4 || T.SUBJ.some((x) => S4.subj[x.id].lvl !== 2)) fail("смена класса 8→4 не подрезала уровни");
+  if (T.setGrade("0") || T.setGrade("12") || T.setGrade("abc") || S4.grade !== 4) fail("setGrade принял неверный класс");
+  if (!T.setGrade(7) || T.SUBJ.some((x) => S4.subj[x.id].lvl !== 2)) fail("смена класса 4→7 не должна поднимать уровни");
+}
 
 // классы героев и их реплики
 for (const [k, c] of Object.entries(T.CLS)) {

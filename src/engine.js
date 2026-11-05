@@ -15,14 +15,21 @@ function newState(){var s={nick:null,cls:"warrior",grade:3,subj:{},coll:{},pages
 function load(){try{var j=localStorage.getItem(KEY);if(j){S=JSON.parse(j)}}catch(e){}
   if(!S||typeof S!=="object")S=null;
   if(S){var base=newState();Object.keys(base).forEach(function(k){if(!(k in S))S[k]=base[k]});
-    SUBJ.forEach(function(x){if(!S.subj[x.id])S.subj[x.id]=base.subj[x.id]})}}
+    SUBJ.forEach(function(x){if(!S.subj[x.id])S.subj[x.id]=base.subj[x.id];
+      var cap=maxLevel(S.grade);if(S.subj[x.id].lvl>cap)S.subj[x.id].lvl=cap})}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function startLevel(g){return g<=3?1:(g<=7?2:3)}
+/* стартовый уровень и потолок по классу: нельзя вырасти до материала старше своего класса
+   (уровень 3 — проценты, Present Perfect и т.п., это примерно с 6 класса) */
+function startLevel(g){return g<=2?1:(g<=7?2:3)}
+function maxLevel(g){return g<=2?1:(g<=5?2:3)}
+/* смена класса: уровни выше нового потолка подрезаются, вверх сами не растут */
+function setGrade(g){g=Math.floor(+g);if(!(g>=1&&g<=11))return false;S.grade=g;var cap=maxLevel(g);
+  SUBJ.forEach(function(x){if(S.subj[x.id].lvl>cap)S.subj[x.id].lvl=cap});save();return true}
 
 /* адаптивная сложность */
 function recordAnswer(id,ok){var s=S.subj[id];s.tot++;if(ok)s.ok++;s.recent.push(ok?1:0);if(s.recent.length>5)s.recent.shift();
   var n=s.recent.length,last3=s.recent.slice(-3),right3=last3.reduce(function(a,b){return a+b},0),msg="";
-  if(n>=3&&right3===3&&s.lvl<3){s.lvl++;s.recent=[];msg="Уровень предмета вырос до "+s.lvl+"!"}
+  if(n>=3&&right3===3&&s.lvl<maxLevel(S.grade)){s.lvl++;s.recent=[];msg="Уровень предмета вырос до "+s.lvl+"!"}
   else if(n>=3&&right3<=1&&s.lvl>1){s.lvl--;s.recent=[];msg="Сделаем чуть полегче — уровень "+s.lvl+"."}
   return msg}
 
@@ -112,7 +119,9 @@ function screenLb(){
 
 function screenSettings(){
   h("<h1>⚙️ Настройки</h1><div class='card'><button id='t1'>⏱️ Напоминание об отдыхе (30 мин): "+(S.limit?"включено":"выключено")+"</button><button id='t2'>🔊 Звук: "+(S.sound?"включён":"выключен")+"</button>"+
-  "<button id='t4'>✏️ Сменить имя героя</button><button id='t3'>🔄 Начать заново (стереть прогресс)</button></div><button id='back'>← Назад</button>");
+  "<button id='t4'>✏️ Сменить имя героя</button><button id='t5'>🎓 Сменить класс (сейчас: "+S.grade+")</button><button id='t3'>🔄 Начать заново (стереть прогресс)</button></div><button id='back'>← Назад</button>");
+  document.getElementById("t5").onclick=function(){var v=prompt("В каком ты классе? (1–11)",S.grade);
+    if(v===null)return;if(!setGrade(v)){alert("Нужно число от 1 до 11.");return}screenSettings()};
   document.getElementById("t4").onclick=function(){var v=prompt("Новое имя героя (2–16 букв или цифр):",S.nick&&S.nick.custom||"");
     if(v===null)return;var cn=cleanName(v);if(!cn){alert("Имя: от 2 до 16 букв или цифр, без смайликов и знаков.");return}S.nick={custom:cn};save();screenSettings()};
   document.getElementById("t1").onclick=function(){S.limit=!S.limit;save();screenSettings()};
