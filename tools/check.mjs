@@ -28,7 +28,7 @@ const ctx = {
 ctx.window.document = ctx.document;
 vm.createContext(ctx);
 try {
-  vm.runInContext(js + "\n;globalThis.T={cleanName,BANK,genMath,SUBJ,MON,newState,recordAnswer,getQuestion,startLevel,leaderboard,setS:function(s){S=s}};", ctx);
+  vm.runInContext(js + "\n;globalThis.T={CLS,sayc,cleanName,BANK,genMath,SUBJ,MON,newState,recordAnswer,getQuestion,startLevel,leaderboard,setS:function(s){S=s}};", ctx);
 } catch (e) { fail("скрипт не запускается: " + e.message); process.exit(1); }
 const T = ctx.T;
 
@@ -80,6 +80,23 @@ for (let r = 0; r < runs; r++) {
   }
 }
 if (T.leaderboard.length === undefined) fail("рейтинг");
+
+// классы героев и их реплики
+for (const [k, c] of Object.entries(T.CLS)) {
+  if (!c.n || !c.ico || !c.d) fail("класс без названия/значка/описания: " + k);
+  if (!(c.hearts >= 3) || !(c.hints >= 1) || typeof c.bonus !== "number") fail("числа класса: " + k);
+  if (c.lines) for (const [lk, arr] of Object.entries(c.lines)) {
+    if (!Array.isArray(arr) || !arr.length || arr.some((s) => typeof s !== "string" || !s)) fail(`реплики ${k}.${lk}`);
+  }
+}
+for (const k of Object.keys(T.CLS)) {
+  const S2 = T.newState(); S2.cls = k; T.setS(S2);
+  for (let i = 0; i < 300; i++) for (const key of ["fight", "hit", "miss"]) {
+    const s = T.sayc(key);
+    if (typeof s !== "string" || !s) { fail("sayc пустой: " + k + "." + key); break; }
+  }
+}
+if (!T.CLS.vampire) fail("нет класса vampire");
 
 // своё имя
 const okNames = ["Лиза", "Мия 2010", "Star-Girl", "  Аня   Ко  "];

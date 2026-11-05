@@ -55,7 +55,7 @@ function screenStart(){
   "<div class='card'><b>Своё имя героя</b><input id='cn' maxlength='16' placeholder='Напиши своё имя (2–16 букв)' autocomplete='off'>"+
   "<div class='dim'>Не хочешь писать — выбери готовое:</div><select id='na'>"+opts(ADJ)+"</select><select id='nn'>"+opts(NOUN)+"</select>"+
   "<b>Твой класс в школе</b><select id='gr'>"+gr+"</select>"+
-  "<b>Выбери героя</b>"+Object.keys(CLS).map(function(k){var c=CLS[k];return"<button class='clsb' data-c='"+k+"'>"+c.ico+" <b>"+c.n+"</b> — "+c.d+"</button>"}).join("")+
+  "<b>Выбери героя</b>"+Object.keys(CLS).map(function(k){var c=CLS[k];return"<button class='clsb' data-c='"+k+"'>"+c.ico+" <b>"+c.n+"</b> — "+c.d+(c.lore?"<div class='dim'>"+c.lore+"</div>":"")+"</button>"}).join("")+
   "</div><button class='main' id='go'>В путь!</button><p class='dim' id='nerr' style='color:#fb7185'></p><p class='dim'>Имя видно только тебе на этом устройстве. Настоящее имя и фамилию писать не нужно — придумай прозвище. Прогресс хранится только на этом устройстве.</p>");
   var chosen="warrior";
   function mark(){[].forEach.call(document.querySelectorAll(".clsb"),function(b){b.style.outline=b.dataset.c===chosen?"3px solid #ffcf4a":"none"})}
@@ -124,7 +124,7 @@ function screenSettings(){
 function startBattle(id){
   var m=randMonster(),c=CLS[S.cls],hp=3+m.r;
   B={subj:id,m:m,hp:hp,maxhp:hp,hearts:c.hearts,maxh:c.hearts,hints:c.hints,used:[],n:0,pts:0,done:false,q:null,asked:0};
-  nextQuestion(say("fight"))}
+  nextQuestion(sayc("fight"))}
 
 function pipsHtml(){var s="";for(var i=0;i<B.maxhp;i++)s+=i<B.hp?"❤️‍🔥":"▫️";return s}
 function heartsHtml(){var s="";for(var i=0;i<B.maxh;i++)s+=i<B.hearts?"❤️":"🖤";return s}
@@ -151,7 +151,7 @@ function answer(i){
   btns[B.q.a].classList.add("right");if(!ok)btns[i].classList.add("wrong");
   var lvlMsg=recordAnswer(B.subj,ok);B.n++;
   if(!ok){B.hearts--;snd.bad();
-    document.getElementById("msg").textContent="Промах! −1 сердце. "+say("miss");
+    document.getElementById("msg").textContent="Промах! −1 сердце. "+sayc("miss");
     document.getElementById("after").innerHTML="<div class='expl'>💬 "+esc(B.q.e)+(lvlMsg?"<br><b>"+lvlMsg+"</b>":"")+"</div>";
     document.querySelector(".top span:last-child").textContent=heartsHtml();
     finishStep(false);return}
@@ -163,7 +163,9 @@ function answer(i){
       dice.textContent="🎲 "+r+(bonus?" +"+bonus:"");
       B.hp=Math.max(0,B.hp-dmg);
       var mon=document.getElementById("mon");mon.classList.add("hit");
-      document.getElementById("msg").textContent=(r===20?say("crit"):(dmg===2?"Сильный удар (−2)! ":"Удар (−1). ")+say("hit"));
+      var healed="";
+      if(CLS[S.cls].heal&&dmg>=2&&B.hearts<B.maxh){B.hearts++;healed=" Укус! +1 сердце.";document.querySelector(".top span:last-child").textContent=heartsHtml()}
+      document.getElementById("msg").textContent=(r===20?say("crit"):(dmg===2?"Сильный удар (−2)! ":"Удар (−1). ")+sayc("hit"))+healed;
       document.getElementById("after").innerHTML=lvlMsg?"<div class='expl'><b>"+lvlMsg+"</b></div>":"";
       var pp=document.querySelector(".pips");pp.textContent=pipsHtml();
       finishStep(true)}},70)}
