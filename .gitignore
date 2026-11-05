@@ -1,0 +1,6 @@
+# Служебные папки инструментов, в публичный репозиторий не попадают
+.claude/
+.claude-flow/
+.swarm/
+.mcp.json
+node_modules/

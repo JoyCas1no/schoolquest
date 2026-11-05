@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Школьный Квест</title>
+<style>
+:root{--bg:#1b1535;--card:#2a2250;--card2:#372d6b;--ink:#f4f0ff;--dim:#b7acd9;--acc:#ffcf4a;--ok:#4ade80;--bad:#fb7185;--blue:#60a5fa}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;min-height:100vh}
+#app{max-width:520px;margin:0 auto;padding:14px 14px 40px}
+h1{font-size:26px;margin:6px 0 4px}h2{font-size:20px;margin:14px 0 8px}
+.card{background:var(--card);border-radius:16px;padding:14px;margin:10px 0}
+.narr{background:var(--card2);border-left:5px solid var(--acc);border-radius:12px;padding:10px 12px;margin:10px 0;font-style:italic}
+.narr b{font-style:normal;color:var(--acc)}
+button{font:inherit;color:var(--ink);background:var(--card2);border:0;border-radius:14px;padding:13px 14px;cursor:pointer;width:100%;margin:5px 0;text-align:left}
+button:active{transform:scale(.98)}
+button.main{background:var(--acc);color:#2b1d00;font-weight:700;text-align:center}
+button.sm{width:auto;padding:8px 12px;font-size:15px}
+button[disabled]{opacity:.55}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:15px;color:var(--dim)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid button{text-align:center;padding:14px 8px}
+.grid button span{display:block;font-size:30px}
+.mon{font-size:90px;text-align:center;line-height:1.1;transition:transform .2s}
+.mon.hit{animation:hit .4s}.mon.dead{transform:scale(.2) rotate(40deg);opacity:0;transition:all .8s}
+@keyframes hit{0%{transform:translateX(0)}25%{transform:translateX(-14px)}75%{transform:translateX(14px)}100%{transform:translateX(0)}}
+.pips{text-align:center;font-size:22px;letter-spacing:3px}
+.q{font-size:20px;font-weight:600;margin:10px 0;text-align:center}
+.opt.right{background:#166534}.opt.wrong{background:#9f1239}
+.dice{font-size:44px;font-weight:800;text-align:center;color:var(--acc);min-height:56px}
+.msg{text-align:center;min-height:24px;margin:4px 0}
+.expl{background:#3b2f73;border-radius:12px;padding:10px;margin:8px 0;font-size:15px}
+.bar{height:12px;background:#1b1535;border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue)}
+.lb div{display:flex;justify-content:space-between;padding:6px 4px;border-bottom:1px solid #3b2f73}
+.lb .me{color:var(--acc);font-weight:700}
+.coll{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
+.coll div{background:var(--card2);border-radius:12px;padding:8px 2px;font-size:11px}.coll span{display:block;font-size:34px}
+.coll .no{opacity:.35;filter:grayscale(1)}
+.dim{color:var(--dim);font-size:14px}
+select{font:inherit;width:100%;padding:11px;border-radius:12px;border:0;background:var(--card2);color:var(--ink);margin:4px 0}
+.toast{position:fixed;left:12px;right:12px;bottom:16px;max-width:496px;margin:auto;background:var(--acc);color:#2b1d00;padding:12px;border-radius:14px;z-index:9}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+/* ===== утилиты ===== */
+var rnd=function(n){return Math.floor(Math.random()*n)};
+var pick=function(a){return a[rnd(a.length)]};
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=rnd(i+1),t=a[i];a[i]=a[j];a[j]=t}return a}
+function mk(q,right,wrong,e){var o=shuffle([right].concat(wrong));return{q:q,o:o,a:o.indexOf(right),e:e}}
+function dayKey(){var d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()}
+function weekKey(){return Math.floor(Date.now()/604800000)}
+
+/* ===== предметы ===== */
+var SUBJ=[
+{id:"math",name:"Математика",ico:"🔢"},
+{id:"rus",name:"Русский",ico:"📝"},
+{id:"eng",name:"Английский",ico:"🇬🇧"},
+{id:"nat",name:"Природа",ico:"🌿"},
+{id:"geo",name:"География",ico:"🌍"},
+{id:"logic",name:"Логика",ico:"🧩"}];
+
+/* банки: [вопрос, верный, [неверные], объяснение] по уровням 1..3 */
+var BANK={
+rus:[[
+["Сколько слогов в слове «ма-ши-на»?","3",["2","4","1"],"Ма-ши-на: три слога, в каждом одна гласная."],
+["Какой буквы не хватает: м_локо?","о",["а","и","е"],"Слово пишется «молоко»."],
+["Сколько гласных в слове «кот»?","1",["2","0","3"],"Гласная только «о»."],
+["Выбери правильное написание","жираф",["жыраф","жураф","жераф"],"Жи-ши пиши с буквой И: жираф."],
+["Какое слово называет предмет?","стол",["бежать","красный","быстро"],"Предмет отвечает на вопрос «что?»: стол."],
+["Какое слово лишнее: кошка, собака, стол, лошадь?","стол",["кошка","собака","лошадь"],"Стол — не животное."]
+],[
+["Вставь букву: г_ра (много гор — горы)","о",["а","е","и"],"Проверочное слово «горы», ударная О."],
+["Антоним к слову «большой»","маленький",["огромный","высокий","старый"],"Антоним — слово с противоположным значением."],
+["Сколько звуков в слове «ёж»?","3",["2","4","1"],"[й] [о] [ш] — три звука."],
+["Какая часть речи слово «бежит»?","глагол",["существительное","прилагательное","наречие"],"Отвечает на вопрос «что делает?» — глагол."],
+["Какое слово пишется с мягким знаком?","день",["дом","лес","мак"],"В слове «день» мягкий знак показывает мягкость Н."],
+["Слово «стол» во множественном числе","столы",["столов","стола","столу"],"Один стол — много столов... но форма мн. числа: столы."]
+],[
+["Какой падеж у слова «книгу» в предложении «Я читаю книгу»?","винительный",["родительный","дательный","творительный"],"Читаю (кого? что?) книгу — винительный падеж."],
+["Сколько грамматических основ в предложении «Солнце светит, и птицы поют»?","2",["1","3","4"],"Солнце светит; птицы поют — две основы."],
+["Укажи слово с приставкой","подъезд",["дорога","лесной","садик"],"Под-ъезд: приставка «под-»."],
+["Спряжение глагола «писать»","первое",["второе","третье","глагол не спрягается"],"Глаголы на -ать относятся к I спряжению."],
+["Выбери верное написание","рассказ",["расказ","раскас","роскас"],"Приставка рас- и корень -сказ: рас-сказ."],
+["Что такое синоним?","слово с близким значением",["слово с противоположным значением","слово, одинаковое по звучанию","слово из одной буквы"],"Синонимы: большой — огромный."]
+]],
+eng:[[
+["Как по-английски «кошка»?","cat",["dog","cow","cap"],"Cat — кошка, dog — собака."],
+["Переведи: apple","яблоко",["груша","арбуз","ананас"],"Apple — яблоко."],
+["Красный по-английски","red",["blue","green","black"],"Red — красный, blue — синий."],
+["Переведи: dog","собака",["кошка","корова","лошадь"],"Dog — собака."],
+["Число three","три",["два","пять","четыре"],"One, two, three — три."],
+["Как сказать «привет»?","Hello",["Goodbye","Thanks","Sorry"],"Hello — привет."]
+],[
+["I ___ a girl.","am",["is","are","be"],"С «I» используем «am»."],
+["She ___ a book.","has",["have","having","haves"],"С he/she/it — has."],
+["Как сказать «Мне 10 лет»?","I am ten",["I have ten","I is ten","Me ten"],"Возраст: I am ten."],
+["Множественное число слова child","children",["childs","childes","childrens"],"Child — children, особая форма."],
+["Противоположное слову «big»","small",["tall","long","fat"],"Big — большой, small — маленький."],
+["Что значит «Thank you»?","Спасибо",["Пожалуйста","Привет","Извини"],"Thank you — спасибо."]
+],[
+["He ___ football yesterday.","played",["play","plays","playing"],"Yesterday — прошедшее время, play+ed."],
+["Прошедшее время от go","went",["goed","goes","going"],"Go — went, неправильный глагол."],
+["If it rains, we ___ at home.","will stay",["stayed","staying","stays"],"Условие: if + настоящее, результат will + глагол."],
+["She is ___ than her sister.","taller",["tallest","more tall","tall"],"Сравнение: tall — taller."],
+["I have lived here ___ 2015.","since",["for","from","at"],"Since + точка во времени (с 2015)."],
+["There ___ two cats in the room.","are",["is","am","be"],"Two cats — много, значит are."]
+]],
+nat:[[
+["Сколько лап у кошки?","4",["2","6","8"],"У кошки четыре лапы."],
+["Какое животное даёт молоко?","корова",["курица","рыба","лягушка"],"Молоко даёт корова."],
+["Какое время года идёт после зимы?","весна",["лето","осень","снова зима"],"Зима, весна, лето, осень."],
+["Какое из этих животных — насекомое?","бабочка",["ёж","лягушка","ворона"],"У бабочки шесть ног и крылья — это насекомое."],
+["Что нужно растению, чтобы расти?","вода и свет",["только темнота","конфеты","музыка"],"Растениям нужны свет, вода и воздух."],
+["Кто живёт в воде?","рыба",["лиса","воробей","заяц"],"Рыба дышит в воде."]
+],[
+["Какая птица улетает на юг осенью?","ласточка",["воробей","ворона","синица"],"Ласточка — перелётная птица."],
+["Какой орган качает кровь?","сердце",["лёгкие","желудок","мозг"],"Сердце работает как насос."],
+["Какая планета ближайшая к Солнцу?","Меркурий",["Венера","Земля","Марс"],"Меркурий — самая близкая к Солнцу."],
+["Из чего делают стекло?","из песка",["из дерева","из железной руды","из шерсти"],"Основа стекла — песок."],
+["Каким газом мы дышим, чтобы жить?","кислородом",["углекислым газом","гелием","водородом"],"Нам нужен кислород."],
+["Что выделяют листья растений на свету?","кислород",["дым","воду со вкусом","песок"],"На свету растения создают кислород."]
+],[
+["Как называется воздушная оболочка Земли?","атмосфера",["гидросфера","литосфера","биосфера"],"Атмосфера — воздух вокруг Земли."],
+["Кто такие хищники?","животные, которые едят других животных",["животные, которые едят только траву","птицы","растения"],"Хищники питаются другими животными."],
+["Сколько планет в Солнечной системе?","8",["9","7","10"],"От Меркурия до Нептуна — восемь планет."],
+["Почему на Земле сменяются день и ночь?","Земля вращается вокруг своей оси",["Земля вращается вокруг Солнца","Луна закрывает Солнце","дует ветер"],"Оборот вокруг оси занимает сутки."],
+["Какое из животных — млекопитающее?","дельфин",["акула","пингвин","черепаха"],"Дельфин выкармливает детёнышей молоком."],
+["Что в растении всасывает воду из почвы?","корень",["лист","цветок","плод"],"Корень берёт воду и минералы."]
+]],
+geo:[[
+["Столица России","Москва",["Санкт-Петербург","Казань","Новосибирск"],"Столица России — Москва."],
+["Самый большой океан","Тихий",["Атлантический","Индийский","Северный Ледовитый"],"Тихий океан самый большой."],
+["Самый холодный материк","Антарктида",["Африка","Австралия","Южная Америка"],"Антарктида покрыта льдом."],
+["Что показывает компас?","стороны света",["время","погоду","глубину"],"Стрелка компаса указывает на север."],
+["Самая большая страна мира","Россия",["Китай","США","Канада"],"Россия — самая большая по площади."],
+["Какая вода в реках и большинстве озёр?","пресная",["морская","солёная","кислая"],"Реки и большинство озёр — пресные."]
+],[
+["Самое глубокое озеро мира","Байкал",["Ладожское","Виктория","Каспийское"],"Байкал — самое глубокое озеро."],
+["Столица Франции","Париж",["Лион","Рим","Берлин"],"Париж — столица Франции."],
+["Самая высокая гора мира","Эверест",["Эльбрус","Монблан","Килиманджаро"],"Эверест — 8849 м."],
+["На каком материке пустыня Сахара?","Африка",["Азия","Австралия","Европа"],"Сахара — на севере Африки."],
+["Какое море омывает Крым с юга?","Чёрное",["Балтийское","Белое","Каспийское"],"С юга Крым омывает Чёрное море."],
+["Самая длинная река Европы","Волга",["Дунай","Днепр","Рейн"],"Волга — самая длинная река Европы."]
+],[
+["Какая страна на карте похожа на сапог?","Италия",["Испания","Греция","Португалия"],"Италия вытянута, как сапог."],
+["На каком материке течёт Амазонка?","Южная Америка",["Африка","Азия","Австралия"],"Амазонка — в Южной Америке."],
+["Столица Австралии","Канберра",["Сидней","Мельбурн","Перт"],"Канберра, а не Сидней."],
+["Как называется линия, делящая Землю на Северное и Южное полушария?","экватор",["меридиан","тропик","полюс"],"Экватор — нулевая параллель."],
+["Какой пролив разделяет Азию и Северную Америку?","Берингов",["Гибралтарский","Босфор","Магелланов"],"Берингов пролив между Чукоткой и Аляской."],
+["Столица Японии","Токио",["Киото","Осака","Пекин"],"Токио — столица Японии."]
+]],
+logic:[[
+["Продолжи: 2, 4, 6, __","8",["7","9","10"],"Прибавляем по 2."],
+["Что лишнее: яблоко, груша, морковь, слива?","морковь",["яблоко","груша","слива"],"Остальные — фрукты, морковь — овощ."],
+["Продолжи ряд: 🔴 🔵 🔴 🔵 🔴 __","🔵",["🔴","🟢","🟡"],"Цвета чередуются."],
+["Сколько углов у квадрата?","4",["3","5","6"],"У квадрата четыре угла."],
+["Продолжи: ○ □ ○ □ __","○",["□","△","☆"],"Фигуры чередуются, дальше круг."],
+["Что тяжелее: килограмм ваты или килограмм железа?","одинаково",["железо","вата","нельзя узнать"],"И то и другое — килограмм."]
+],[
+["Продолжи: 1, 2, 4, 8, __","16",["12","14","10"],"Каждое число умножаем на 2."],
+["Что лишнее: 2, 4, 6, 9","9",["2","4","6"],"Остальные числа чётные."],
+["У отца 3 сына, у каждого сына есть сестра. Сколько всего детей?","4",["3","6","7"],"Сестра у всех одна: 3 сына + 1 дочь."],
+["Все розы — цветы, все цветы — растения. Значит розы — это...","растения",["животные","камни","неизвестно"],"Розы входят в цветы, а цветы — в растения."],
+["Продолжи: А, В, Д, Ж, __","И",["З","К","Л"],"Берём буквы через одну: А(Б)В(Г)Д(Е)Ж(З)И."],
+["Какое число лишнее: 3, 5, 7, 9, 12?","12",["3","5","9"],"Остальные числа нечётные."]
+],[
+["Продолжи: 1, 1, 2, 3, 5, 8, __","13",["11","12","10"],"Каждое число — сумма двух предыдущих."],
+["Сколько раз цифра 9 встречается в числах от 1 до 20?","2",["1","3","4"],"В числах 9 и 19."],
+["Продолжи: 3, 6, 12, 24, __","48",["36","30","42"],"Каждое число умножаем на 2."],
+["Если A больше B, а B больше C, то...","A больше C",["C больше A","A равно C","неизвестно"],"Если A>B>C, то A>C."],
+["Часы бьют 3 раза за 2 секунды. За сколько секунд они пробьют 6 раз?","5 секунд",["4 секунды","6 секунд","3 секунды"],"3 удара — 2 промежутка (2 с), 1 промежуток = 1 с. 6 ударов — 5 промежутков."],
+["Что лишнее: куб, шар, квадрат, пирамида","квадрат",["куб","шар","пирамида"],"Квадрат плоский, остальные объёмные."]
+]]};
+
+/* математика генерируется */
+function genMath(l){
+  var a,b,q,r,e,t=rnd(3);
+  if(l===1){
+    if(t===0){a=2+rnd(12);b=2+rnd(9);r=a+b;q=a+" + "+b+" = ?";e=a+" плюс "+b+" будет "+r+"."}
+    else if(t===1){a=8+rnd(12);b=1+rnd(a-1);r=a-b;q=a+" − "+b+" = ?";e=a+" минус "+b+" будет "+r+"."}
+    else{a=2+rnd(4);b=2+rnd(4);r=a*b;q=a+" × "+b+" = ?";e=a+" умножить на "+b+" будет "+r+"."}
+  }else if(l===2){
+    if(t===0){a=6+rnd(5);b=6+rnd(5);r=a*b;q=a+" × "+b+" = ?";e=a+"×"+b+"="+r+" (таблица умножения)."}
+    else if(t===1){b=3+rnd(7);r=3+rnd(9);a=b*r;q=a+" ÷ "+b+" = ?";e="Деление проверяем умножением: "+b+"×"+r+"="+a+"."}
+    else{a=30+rnd(60);b=11+rnd(30);r=a+b;q=a+" + "+b+" = ?";e=a+" плюс "+b+" будет "+r+"."}
+  }else{
+    if(t===0){a=11+rnd(14);b=3+rnd(7);r=a*b;q=a+" × "+b+" = ?";e=a+"×"+b+"="+r+"."}
+    else if(t===1){b=pick([10,20,25,50]);r=pick([2,4,6,8,10,12]);a=r*100/b;
+      if(a!==Math.floor(a)){b=50;a=r*2}
+      q=b+"% от "+a+" = ?";e=b+"% — это "+(100/b)+"-я часть: "+a+" ÷ "+(100/b)+" = "+r+"."}
+    else{a=5+rnd(30);r=a+10+rnd(40);b=r-a;q="x + "+a+" = "+r+". Чему равен x?";r=b;e="x = "+(r+a)+" − "+a+" = "+r+"."}
+  }
+  var w=[],tries=0;
+  while(w.length<3&&tries<50){tries++;var d=pick([-10,-2,-1,1,2,3,10,-3]);var c=r+d;
+    if(c>=0&&c!==r&&w.indexOf(String(c))<0)w.push(String(c))}
+  while(w.length<3)w.push(String(r+w.length+11));
+  return mk(q,String(r),w,e);
+}
+
+/* ===== монстры ===== */
+var MON=[
+{id:"frog",e:"🐸",n:"Квакошмяк",r:0},{id:"worm",e:"🐛",n:"Шуршун",r:0},{id:"snail",e:"🐌",n:"Тормозилка",r:0},
+{id:"liz",e:"🦎",n:"Хитрюшка",r:0},{id:"mouse",e:"🐭",n:"Грызун",r:0},
+{id:"fox",e:"🦊",n:"Лис-Хитрозвёзд",r:1},{id:"owl",e:"🦉",n:"Сова-Мудрица",r:1},{id:"octo",e:"🐙",n:"Чернилка",r:1},{id:"uni",e:"🦄",n:"Единорожка",r:1},
+{id:"dra",e:"🐉",n:"Дракончик-Книгоед",r:2},{id:"ghost",e:"👻",n:"Призрак-Забывака",r:2},{id:"robot",e:"🤖",n:"Робот-Зубрилка",r:2}];
+var RAR=["Обычный","Редкий","Эпичный"];
+function randMonster(){var x=rnd(100),r=x<65?0:(x<92?1:2);return pick(MON.filter(function(m){return m.r===r}))}
+
+/* ===== классы, ники, рассказчик ===== */
+var CLS={
+warrior:{n:"Воин",ico:"🛡️",d:"+1 сердце",hearts:4,hints:1,bonus:0},
+mage:{n:"Маг",ico:"🔮",d:"+1 подсказка",hearts:3,hints:2,bonus:0},
+rogue:{n:"Плут",ico:"🗡️",d:"+2 к броску",hearts:3,hints:1,bonus:2}};
+var ADJ=["Смелый","Весёлый","Быстрый","Хитрый","Добрый","Звёздный","Ловкий","Мудрый"];
+var NOUN=["Дракон","Лисёнок","Рыцарь","Енот","Пингвин","Кот","Волшебник","Тигрёнок"];
+var NARR={
+intro:["Великая Книга Знаний рассыпалась, а её страницы унесли монстры! Только ты сможешь вернуть их."],
+home:["Куда отправимся сегодня, герой?","Монстры прячутся у каждого предмета. Выбирай!","Страницы Книги сами не вернутся."],
+fight:["Из тумана выходит монстр!","Берегись, он что-то охраняет!","Слышишь шорох? Это монстр!"],
+hit:["Отличный удар!","Прямо в цель!","Монстр шатается!"],
+crit:["КРИТИЧЕСКИЙ УДАР! Монстр повержен!"],
+miss:["Не страшно! Ошибки учат.","Монстр увернулся. Прочти объяснение!","Бывает. В следующий раз получится."],
+win:["Победа! Монстр отдаёт страницу Книги.","Ты настоящий герой!"],
+lose:["Сегодня монстр оказался хитрее. Но ты стал умнее — попробуй ещё!"],
+flee:["Монстр сбежал, но ты узнал много нового!"]};
+function say(k){return pick(NARR[k])}
+
+/* ===== звук ===== */
+var AC=null;
+function beep(f,d,t){if(!S||!S.sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+  var o=AC.createOscillator(),g=AC.createGain();o.type=t||"sine";o.frequency.value=f;g.gain.value=.08;
+  o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.stop(AC.currentTime+d)}catch(e){}}
+var snd={ok:function(){beep(660,.15);setTimeout(function(){beep(880,.2)},120)},bad:function(){beep(180,.3,"sawtooth")},
+  tick:function(){beep(500,.04,"square")},win:function(){[523,659,784,1046].forEach(function(f,i){setTimeout(function(){beep(f,.25)},i*130)})}};
+
+/* ===== состояние ===== */
+var KEY="schoolquest_v1";
+var S=null;
+function newState(){var s={nick:null,cls:"warrior",grade:3,subj:{},coll:{},pages:0,score:0,week:weekKey(),best:0,
+  chest:"",streak:0,lastDay:"",limit:true,sound:true,battles:0};
+  SUBJ.forEach(function(x){s.subj[x.id]={lvl:1,recent:[],ok:0,tot:0}});return s}
+function load(){try{var j=localStorage.getItem(KEY);if(j){S=JSON.parse(j)}}catch(e){}
+  if(!S||typeof S!=="object")S=null;
+  if(S){var base=newState();Object.keys(base).forEach(function(k){if(!(k in S))S[k]=base[k]});
+    SUBJ.forEach(function(x){if(!S.subj[x.id])S.subj[x.id]=base.subj[x.id]})}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function startLevel(g){return g<=3?1:(g<=7?2:3)}
+
+/* адаптивная сложность */
+function recordAnswer(id,ok){var s=S.subj[id];s.tot++;if(ok)s.ok++;s.recent.push(ok?1:0);if(s.recent.length>5)s.recent.shift();
+  var n=s.recent.length,last3=s.recent.slice(-3),right3=last3.reduce(function(a,b){return a+b},0),msg="";
+  if(n>=3&&right3===3&&s.lvl<3){s.lvl++;s.recent=[];msg="Уровень предмета вырос до "+s.lvl+"!"}
+  else if(n>=3&&right3<=1&&s.lvl>1){s.lvl--;s.recent=[];msg="Сделаем чуть полегче — уровень "+s.lvl+"."}
+  return msg}
+
+function getQuestion(id,used){var l=S.subj[id].lvl;
+  if(id==="math")return genMath(l);
+  var pool=BANK[id][l-1],idx=[];for(var i=0;i<pool.length;i++)if(used.indexOf(id+l+i)<0)idx.push(i);
+  if(!idx.length){idx=pool.map(function(_,i){return i})}
+  var i2=pick(idx),p=pool[i2];used.push(id+l+i2);return mk(p[0],p[1],p[2],p[3])}
+
+/* ===== лига и рейтинг (тестовые игроки) ===== */
+function league(g){return g<=4?"Лига 1–4 классов":(g<=8?"Лига 5–8 классов":"Лига 9–11 классов")}
+var FAKE=["Лунный Кот","Тихий Дракон","Быстрый Енот","Звёздная Сова","Храбрый Ёж","Рыжий Лис","Снежный Волк"];
+function leaderboard(){var seed=S.week,list=FAKE.map(function(n,i){var v=((seed*(i+3)*7919)%260)+40;return{n:n+" ✱",v:v}});
+  list.push({n:nickStr(),v:S.score,me:true});list.sort(function(a,b){return b.v-a.v});return list}
+function nickStr(){return S.nick?S.nick.a+" "+S.nick.n:"Герой"}
+
+/* ===== интерфейс ===== */
+var $app=document.getElementById("app"),timerStart=Date.now(),timeWarned=false,B=null;
+function h(html){$app.innerHTML=html;window.scrollTo(0,0)}
+function toast(t){var d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove()},5000)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+
+function screenStart(){
+  var opts=function(a){return a.map(function(x){return"<option>"+x+"</option>"}).join("")};
+  var gr="";for(var g=1;g<=11;g++)gr+="<option value='"+g+"'"+(g===3?" selected":"")+">"+g+" класс</option>";
+  h("<h1>📖 Школьный Квест</h1><div class='narr'><b>Рассказчик:</b> "+say("intro")+"</div>"+
+  "<div class='card'><b>Придумай имя героя</b><select id='na'>"+opts(ADJ)+"</select><select id='nn'>"+opts(NOUN)+"</select>"+
+  "<b>Твой класс в школе</b><select id='gr'>"+gr+"</select>"+
+  "<b>Выбери героя</b>"+Object.keys(CLS).map(function(k){var c=CLS[k];return"<button class='clsb' data-c='"+k+"'>"+c.ico+" <b>"+c.n+"</b> — "+c.d+"</button>"}).join("")+
+  "</div><button class='main' id='go'>В путь!</button><p class='dim'>Имя собирается из готовых слов, личные данные не нужны. Прогресс хранится только на этом устройстве.</p>");
+  var chosen="warrior";
+  function mark(){[].forEach.call(document.querySelectorAll(".clsb"),function(b){b.style.outline=b.dataset.c===chosen?"3px solid #ffcf4a":"none"})}
+  [].forEach.call(document.querySelectorAll(".clsb"),function(b){b.onclick=function(){chosen=b.dataset.c;mark()}});mark();
+  document.getElementById("go").onclick=function(){
+    S=newState();S.nick={a:document.getElementById("na").value,n:document.getElementById("nn").value};
+    S.cls=chosen;S.grade=+document.getElementById("gr").value;var sl=startLevel(S.grade);
+    SUBJ.forEach(function(x){S.subj[x.id].lvl=sl});save();screenHome()}
+}
+
+function touchDay(){var t=dayKey();if(S.lastDay!==t){
+  var y=new Date(Date.now()-864e5),yk=y.getFullYear()+"-"+(y.getMonth()+1)+"-"+y.getDate();
+  S.streak=(S.lastDay===yk)?S.streak+1:1;S.lastDay=t}
+  if(S.week!==weekKey()){S.week=weekKey();S.score=0}save()}
+
+function screenHome(){
+  touchDay();var c=CLS[S.cls];
+  var chestReady=S.chest!==dayKey();
+  h("<div class='top'><span>"+c.ico+" "+esc(nickStr())+"</span><span>🔥 "+S.streak+" дн. · 📜 "+S.pages+"</span></div>"+
+  "<h1>Карта</h1><div class='narr'><b>Рассказчик:</b> "+say("home")+"</div>"+
+  "<div class='grid'>"+SUBJ.map(function(x){var s=S.subj[x.id];return"<button data-s='"+x.id+"'><span>"+x.ico+"</span>"+x.name+"<div class='dim'>уровень "+s.lvl+"</div></button>"}).join("")+"</div>"+
+  "<button class='main' id='chest' "+(chestReady?"":"disabled")+">"+(chestReady?"🎁 Открыть ежедневный сундук":"🎁 Сундук откроется завтра")+"</button>"+
+  "<div class='row'><button id='b-col'>🐾 Коллекция</button><button id='b-tal'>🗺️ Таланты</button></div>"+
+  "<div class='row'><button id='b-lb'>🏆 Рейтинг</button><button id='b-set'>⚙️ Настройки</button></div>");
+  [].forEach.call(document.querySelectorAll("[data-s]"),function(b){b.onclick=function(){startBattle(b.dataset.s)}});
+  document.getElementById("chest").onclick=openChest;
+  document.getElementById("b-col").onclick=screenColl;document.getElementById("b-tal").onclick=screenTalents;
+  document.getElementById("b-lb").onclick=screenLb;document.getElementById("b-set").onclick=screenSettings;
+}
+
+function openChest(){S.chest=dayKey();var m=randMonster();S.coll[m.id]=(S.coll[m.id]||0)+1;S.pages++;S.score+=10;save();snd.win();
+  h("<h1>🎁 Сундук открыт!</h1><div class='card' style='text-align:center'><div class='mon'>"+m.e+"</div><b>"+m.n+"</b><div class='dim'>"+RAR[m.r]+" — теперь в коллекции</div><p>+1 страница Книги, +10 очков</p></div><button class='main' id='ok'>Отлично</button>");
+  document.getElementById("ok").onclick=screenHome}
+
+function screenColl(){
+  h("<h1>🐾 Коллекция</h1><div class='coll'>"+MON.map(function(m){var n=S.coll[m.id]||0;
+    return"<div class='"+(n?"":"no")+"'><span>"+(n?m.e:"❓")+"</span>"+(n?m.n+(n>1?" ×"+n:""):RAR[m.r])+"</div>"}).join("")+"</div><p class='dim'>Собрано: "+MON.filter(function(m){return S.coll[m.id]}).length+" из "+MON.length+"</p><button id='back'>← Назад</button>");
+  document.getElementById("back").onclick=screenHome}
+
+function screenTalents(){
+  var rows=SUBJ.map(function(x){var s=S.subj[x.id],p=s.tot?Math.round(100*s.ok/s.tot):0;
+    return{x:x,p:p,t:s.tot}}),done=rows.filter(function(r){return r.t>=5}).sort(function(a,b){return b.p-a.p});
+  var tip=done.length>=2?"Лучше всего получается: <b>"+done[0].x.name+"</b>. Стоит ещё потренировать: <b>"+done[done.length-1].x.name+"</b>.":"Сыграй хотя бы по 5 вопросов в двух предметах — и я покажу твои таланты.";
+  h("<h1>🗺️ Карта талантов</h1><div class='card'>"+rows.map(function(r){return"<div>"+r.x.ico+" "+r.x.name+" — "+(r.t?r.p+"% ("+r.t+" отв.)":"пока нет данных")+"<div class='bar'><i style='width:"+r.p+"%'></i></div></div><br>"}).join("")+"</div><div class='narr'>"+tip+"</div><button id='back'>← Назад</button>");
+  document.getElementById("back").onclick=screenHome}
+
+function screenLb(){
+  var l=leaderboard();
+  h("<h1>🏆 Рейтинг недели</h1><div class='dim'>"+league(S.grade)+" · игроки со значком ✱ — тестовые, выдуманные</div><div class='card lb'>"+
+  l.map(function(p,i){return"<div class='"+(p.me?"me":"")+"'><span>"+(i+1)+". "+esc(p.n)+"</span><span>"+p.v+"</span></div>"}).join("")+"</div><p>Твой личный рекорд за бой: <b>"+S.best+"</b> очков</p><button id='back'>← Назад</button>");
+  document.getElementById("back").onclick=screenHome}
+
+function screenSettings(){
+  h("<h1>⚙️ Настройки</h1><div class='card'><button id='t1'>⏱️ Напоминание об отдыхе (30 мин): "+(S.limit?"включено":"выключено")+"</button><button id='t2'>🔊 Звук: "+(S.sound?"включён":"выключен")+"</button>"+
+  "<button id='t3'>🔄 Начать заново (стереть прогресс)</button></div><button id='back'>← Назад</button>");
+  document.getElementById("t1").onclick=function(){S.limit=!S.limit;save();screenSettings()};
+  document.getElementById("t2").onclick=function(){S.sound=!S.sound;save();screenSettings()};
+  document.getElementById("t3").onclick=function(){if(confirm("Точно стереть весь прогресс?")){try{localStorage.removeItem(KEY)}catch(e){}S=null;screenStart()}};
+  document.getElementById("back").onclick=screenHome}
+
+/* ===== бой ===== */
+function startBattle(id){
+  var m=randMonster(),c=CLS[S.cls],hp=3+m.r;
+  B={subj:id,m:m,hp:hp,maxhp:hp,hearts:c.hearts,maxh:c.hearts,hints:c.hints,used:[],n:0,pts:0,done:false,q:null,asked:0};
+  nextQuestion(say("fight"))}
+
+function pipsHtml(){var s="";for(var i=0;i<B.maxhp;i++)s+=i<B.hp?"❤️‍🔥":"▫️";return s}
+function heartsHtml(){var s="";for(var i=0;i<B.maxh;i++)s+=i<B.hearts?"❤️":"🖤";return s}
+
+function nextQuestion(narr){
+  B.q=getQuestion(B.subj,B.used);B.asked++;B.locked=false;
+  var sj=SUBJ.filter(function(x){return x.id===B.subj})[0];
+  h("<div class='top'><span>"+sj.ico+" "+sj.name+" · ур. "+S.subj[B.subj].lvl+"</span><span>"+heartsHtml()+"</span></div>"+
+  "<div class='mon' id='mon'>"+B.m.e+"</div><div class='pips'>"+pipsHtml()+"</div><div class='dim' style='text-align:center'>"+B.m.n+" · "+RAR[B.m.r]+"</div>"+
+  "<div class='narr'><b>Рассказчик:</b> "+narr+"</div>"+
+  "<div class='q'>"+esc(B.q.q)+"</div><div id='opts'>"+B.q.o.map(function(o,i){return"<button class='opt' data-i='"+i+"'>"+esc(o)+"</button>"}).join("")+"</div>"+
+  "<div class='dice' id='dice'></div><div class='msg' id='msg'></div><div id='after'></div>"+
+  "<button class='sm' id='hint' "+(B.hints>0?"":"disabled")+">💡 Подсказка ("+B.hints+")</button>");
+  [].forEach.call(document.querySelectorAll(".opt"),function(b){b.onclick=function(){answer(+b.dataset.i)}});
+  document.getElementById("hint").onclick=useHint}
+
+function useHint(){if(B.locked||B.hints<=0)return;B.hints--;
+  var wrong=[];B.q.o.forEach(function(_,i){if(i!==B.q.a)wrong.push(i)});shuffle(wrong).slice(0,2).forEach(function(i){var b=document.querySelector(".opt[data-i='"+i+"']");b.disabled=true;b.style.visibility="hidden"});
+  var hb=document.getElementById("hint");hb.disabled=true;hb.textContent="💡 Подсказка ("+B.hints+")"}
+
+function answer(i){
+  if(B.locked)return;B.locked=true;var ok=i===B.q.a,btns=document.querySelectorAll(".opt");
+  [].forEach.call(btns,function(b){b.disabled=true});
+  btns[B.q.a].classList.add("right");if(!ok)btns[i].classList.add("wrong");
+  var lvlMsg=recordAnswer(B.subj,ok);B.n++;
+  if(!ok){B.hearts--;snd.bad();
+    document.getElementById("msg").textContent="Промах! −1 сердце. "+say("miss");
+    document.getElementById("after").innerHTML="<div class='expl'>💬 "+esc(B.q.e)+(lvlMsg?"<br><b>"+lvlMsg+"</b>":"")+"</div>";
+    document.querySelector(".top span:last-child").textContent=heartsHtml();
+    finishStep(false);return}
+  snd.ok();S.score+=10*S.subj[B.subj].lvl;B.pts+=10*S.subj[B.subj].lvl;
+  var dice=document.getElementById("dice"),k=0,iv=setInterval(function(){
+    dice.textContent="🎲 "+(1+rnd(20));snd.tick();k++;
+    if(k>9){clearInterval(iv);var r=1+rnd(20),bonus=CLS[S.cls].bonus,tot=r+bonus,dmg=1;
+      if(r===20)dmg=99;else if(tot>=15)dmg=2;
+      dice.textContent="🎲 "+r+(bonus?" +"+bonus:"");
+      B.hp=Math.max(0,B.hp-dmg);
+      var mon=document.getElementById("mon");mon.classList.add("hit");
+      document.getElementById("msg").textContent=(r===20?say("crit"):(dmg===2?"Сильный удар (−2)! ":"Удар (−1). ")+say("hit"));
+      document.getElementById("after").innerHTML=lvlMsg?"<div class='expl'><b>"+lvlMsg+"</b></div>":"";
+      var pp=document.querySelector(".pips");pp.textContent=pipsHtml();
+      finishStep(true)}},70)}
+
+function finishStep(ok){
+  var after=document.getElementById("after"),win=B.hp<=0,lose=B.hearts<=0,flee=!win&&!lose&&B.asked>=7;
+  if(!(win||lose||flee)){after.insertAdjacentHTML("beforeend","<button class='main' id='nx'>Дальше →</button>");
+    document.getElementById("nx").onclick=function(){nextQuestion(ok?say("fight"):"Соберись, ты справишься!")};return}
+  after.insertAdjacentHTML("beforeend","<button class='main' id='nx'>Продолжить</button>");
+  document.getElementById("nx").onclick=function(){endBattle(win?"win":(lose?"lose":"flee"))}}
+
+function endBattle(res){
+  S.battles++;var m=B.m,extra="";
+  if(res==="win"){S.coll[m.id]=(S.coll[m.id]||0)+1;S.pages++;S.score+=20;B.pts+=20;snd.win();extra="<div class='mon'>"+m.e+"</div><b>"+m.n+"</b> теперь в твоей коллекции!<br>+1 страница Книги, +20 очков"}
+  else extra="<div class='mon'>"+m.e+"</div>"+(res==="lose"?"Сердца закончились, но ты узнал новое.":"Монстр сбежал.");
+  if(B.pts>S.best)S.best=B.pts;save();
+  var tt=res==="win"?"Победа!":(res==="lose"?"Не получилось":"Монстр сбежал");
+  h("<h1>"+(res==="win"?"🎉 ":"")+tt+"</h1><div class='narr'><b>Рассказчик:</b> "+say(res==="win"?"win":res)+"</div><div class='card' style='text-align:center'>"+extra+"<p>Очки за бой: <b>"+B.pts+"</b></p></div>"+
+  "<button class='main' id='again'>Ещё бой</button><button id='home'>На карту</button>");
+  var sid=B.subj;document.getElementById("again").onclick=function(){startBattle(sid)};document.getElementById("home").onclick=screenHome}
+
+/* напоминание об отдыхе */
+setInterval(function(){if(S&&S.limit&&!timeWarned&&Date.now()-timerStart>30*60*1000){timeWarned=true;toast("Ты играешь уже 30 минут. Может, отдохнёшь, разомнёшься? (напоминание можно выключить в настройках)")}},30000);
+
+/* старт */
+load();
+if(typeof document!=="undefined"&&$app){if(S&&S.nick)screenHome();else screenStart()}
+</script>
+</body>
+</html>
