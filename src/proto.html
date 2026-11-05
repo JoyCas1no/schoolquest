@@ -12,17 +12,17 @@
     display: flex; gap: 8px; align-items: center; z-index: 5; white-space: nowrap; }
   #top b { background: rgba(26,21,53,.82); color: #fff; padding: 6px 14px; border-radius: 10px; font-size: 15px; }
   #top span { background: rgba(26,21,53,.6); color: #cfe0ff; padding: 5px 12px; border-radius: 10px; font-size: 12px; }
-  #panel { position: fixed; left: 50%; transform: transform; bottom: calc(10px + env(safe-area-inset-bottom));
+  #panel { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(10px + env(safe-area-inset-bottom));
     background: rgba(26,21,53,.85); border-radius: 16px; padding: 12px 14px; z-index: 5;
     display: flex; flex-direction: column; gap: 8px; width: min(560px, calc(100vw - 20px)); box-sizing: border-box; }
-  .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
-  button { border: 0; border-radius: 10px; padding: 10px 14px; font-size: 14px; font-weight: 600;
-    background: #3d3670; color: #fff; cursor: cursor; cursor: pointer; flex: 1 1 auto; }
-  button:disabled { opacity: .5; cursor: default; }
   #hp { color: #ffd166; font-weight: 700; text-align: center; font-size: 15px; }
   #msg { color: #e8e6ff; text-align: center; font-size: 13px; min-height: 17px; }
   #dice { color: #7dd8ff; text-align: center; font-weight: 700; font-size: 14px; min-height: 17px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  button { border: 0; border-radius: 10px; padding: 10px 14px; font-size: 14px; font-weight: 600;
+    background: #3d3670; color: #fff; cursor: pointer; flex: 1 1 auto; }
   button.on { background: #ffd166; color: #2b1d00; }
+  button:disabled { opacity: .5; cursor: default; }
   #roll { background: #ff5f6d; font-size: 16px; padding: 12px; }
   #hint { position: fixed; bottom: calc(10px + env(safe-area-inset-bottom)); left: 10px; z-index: 4;
     color: rgba(255,255,255,.85); font-size: 11px; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
