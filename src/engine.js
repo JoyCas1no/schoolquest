@@ -10,7 +10,7 @@ var snd={ok:function(){beep(660,.15);setTimeout(function(){beep(880,.2)},120)},b
 var KEY="schoolquest_v1";
 var S=null;
 function newState(){var s={nick:null,cls:"warrior",grade:3,subj:{},coll:{},pages:0,score:0,week:weekKey(),best:0,
-  chest:"",streak:0,lastDay:"",limit:true,sound:true,battles:0,ts:0};
+  chest:"",streak:0,lastDay:"",limit:true,sound:true,battles:0,ts:0,seen:{}};
   SUBJ.forEach(function(x){s.subj[x.id]={lvl:1,recent:[],ok:0,tot:0}});return s}
 /* приводит сохранение (с устройства или из облака) к текущему формату и подрезает уровни по классу */
 function normalize(s){var base=newState();Object.keys(base).forEach(function(k){if(!(k in s))s[k]=base[k]});
@@ -36,11 +36,19 @@ function recordAnswer(id,ok){var s=S.subj[id];s.tot++;if(ok)s.ok++;s.recent.push
   else if(n>=3&&right3<=1&&s.lvl>1){s.lvl--;s.recent=[];msg="Сделаем чуть полегче — уровень "+s.lvl+"."}
   return msg}
 
+/* без повторов: помним показанные вопросы (по предмету и уровню) между боями;
+   когда показаны все, начинаем круг заново. used — вопросы текущего боя. */
 function getQuestion(id,used){var l=S.subj[id].lvl;
   if(id==="math")return genMath(l);
-  var pool=BANK[id][l-1],idx=[];for(var i=0;i<pool.length;i++)if(used.indexOf(id+l+i)<0)idx.push(i);
-  if(!idx.length){idx=pool.map(function(_,i){return i})}
-  var i2=pick(idx),p=pool[i2];used.push(id+l+i2);return mk(p[0],p[1],p[2],p[3])}
+  var pool=BANK[id][l-1],pre=id+"|"+l+"|",i;
+  if(!S.seen||typeof S.seen!=="object")S.seen={};
+  var seen=Array.isArray(S.seen[id])?S.seen[id]:(S.seen[id]=[]),idx=[];
+  for(i=0;i<pool.length;i++)if(used.indexOf(pre+i)<0&&seen.indexOf(pre+i)<0)idx.push(i);
+  if(!idx.length){S.seen[id]=seen=seen.filter(function(k){return k.indexOf(pre)!==0});
+    for(i=0;i<pool.length;i++)if(used.indexOf(pre+i)<0)idx.push(i)}
+  if(!idx.length)for(i=0;i<pool.length;i++)idx.push(i);
+  var i2=pick(idx),p=pool[i2];used.push(pre+i2);seen.push(pre+i2);
+  return mk(p[0],p[1],p[2],p[3])}
 
 /* ===== лига и рейтинг (тестовые игроки) ===== */
 function league(g){return g<=4?"Лига 1–4 классов":(g<=8?"Лига 5–8 классов":"Лига 9–11 классов")}

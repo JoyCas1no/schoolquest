@@ -81,6 +81,27 @@ for (let r = 0; r < runs; r++) {
 }
 if (T.leaderboard.length === undefined) fail("рейтинг");
 
+// без повторов: пока не показаны все вопросы уровня, ни один не повторяется (между боями тоже)
+for (const sj of ["geo", "logic", "rus", "eng", "nat"]) {
+  for (const lvl of [1, 2, 3]) {
+    const S6 = T.newState(); S6.grade = 11; S6.subj[sj].lvl = lvl; T.setS(S6);
+    const n = T.BANK[sj][lvl - 1].length, seenQ = new Set();
+    let left = n;
+    while (left > 0) { // бои по 5 вопросов, у каждого свой used
+      const used = [];
+      for (let i = 0; i < Math.min(5, left); i++) {
+        const q = T.getQuestion(sj, used);
+        if (seenQ.has(q.q)) fail(`повтор до исчерпания: ${sj} ур.${lvl}: ${q.q}`);
+        seenQ.add(q.q);
+      }
+      left -= Math.min(5, left);
+    }
+    if (seenQ.size !== n) fail(`не показали все вопросы ${sj} ур.${lvl}: ${seenQ.size}/${n}`);
+    const again = T.getQuestion(sj, []);   // следующий круг стартует без ошибок
+    if (!again || again.o.length !== 4) fail("новый круг сломан: " + sj);
+  }
+}
+
 // потолок уровня по классу: до 6 класса материал уровня 3 (проценты и т.п.) не выдаём
 for (let g = 1; g <= 11; g++) {
   const S3 = T.newState(); S3.grade = g; T.setS(S3);
