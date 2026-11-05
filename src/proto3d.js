@@ -104,39 +104,101 @@ const island = ball(7.5, 0x58b368, 0, -1.4, 0);
 island.scale.set(1, 0.32, 1);
 island.receiveShadow = true;
 world.add(island);
-const ground = new THREE.Mesh(new THREE.CircleGeometry(7.5, 40), M(0x6fcb7a));
+
+/* лужайка: рисованная текстура с пятнами, поляной и тропинкой */
+const meadowC = document.createElement("canvas");
+meadowC.width = meadowC.height = 512;
+{
+  const g = meadowC.getContext("2d");
+  g.fillStyle = "#63bd6f";
+  g.fillRect(0, 0, 512, 512);
+  const shades = ["#57b368", "#6fcb7a", "#4fae5c", "#78cf83", "#5ec24d"];
+  for (let i = 0; i < 2600; i++) {
+    g.fillStyle = shades[(Math.random() * shades.length) | 0];
+    g.globalAlpha = 0.2 + Math.random() * 0.3;
+    const r = 2 + Math.random() * 6;
+    g.beginPath(); g.arc(Math.random() * 512, Math.random() * 512, r, 0, 7); g.fill();
+  }
+  g.globalAlpha = 1;
+  /* светлая поляна по центру */
+  const rg = g.createRadialGradient(256, 256, 30, 256, 256, 195);
+  rg.addColorStop(0, "rgba(216,240,170,0.55)");
+  rg.addColorStop(1, "rgba(216,240,170,0)");
+  g.fillStyle = rg;
+  g.fillRect(0, 0, 512, 512);
+  /* вытоптанная тропинка боя */
+  g.fillStyle = "#c9a06a";
+  g.beginPath(); g.arc(256, 256, 60, 0, 7); g.fill();
+  for (let i = 0; i < 130; i++) {
+    g.fillStyle = Math.random() < 0.5 ? "#b98f56" : "#dab680";
+    g.globalAlpha = 0.5;
+    const a = Math.random() * 7, r = Math.random() * 56;
+    g.beginPath(); g.arc(256 + Math.cos(a) * r, 256 + Math.sin(a) * r, 1.5 + Math.random() * 3, 0, 7); g.fill();
+  }
+  g.globalAlpha = 1;
+}
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(7.5, 48),
+  new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(meadowC) })
+);
 ground.rotation.x = -Math.PI / 2;
 ground.position.y = 0.98;
 ground.receiveShadow = true;
 world.add(ground);
-/* вытоптанная тропинка боя */
-const path = new THREE.Mesh(new THREE.CircleGeometry(2.6, 30), M(0xc9a06a));
-path.rotation.x = -Math.PI / 2;
-path.position.y = 1.0;
-path.receiveShadow = true;
-world.add(path);
 
-/* деревья с кроной из пучков */
-function tree(x, z, s) {
-  const t = grp(x, 0.98, z);
-  t.add(cyl(0.16 * s, 0.24 * s, 1.2 * s, 0x8b5a2b, 0, 0.6 * s, 0));
-  /* корни */
+/* трава: все стебли — одна отрисовка */
+const bladeGeo = new THREE.ConeGeometry(0.04, 0.3, 4);
+bladeGeo.translate(0, 0.15, 0);
+const grass = new THREE.InstancedMesh(bladeGeo, M(0x4fae5c), 420);
+{
+  const gd = new THREE.Object3D();
+  const gcol = new THREE.Color();
+  for (let i = 0; i < 420; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = 2.1 + Math.random() * 5.2;
+    gd.position.set(Math.cos(a) * r, 0.98, Math.sin(a) * r);
+    gd.rotation.set((Math.random() - 0.5) * 0.25, Math.random() * Math.PI, (Math.random() - 0.5) * 0.25);
+    const s = 0.7 + Math.random() * 0.9;
+    gd.scale.set(s, s * (0.8 + Math.random() * 0.6), s);
+    gd.updateMatrix();
+    grass.setMatrixAt(i, gd.matrix);
+    grass.setColorAt(i, gcol.setHSL(0.31 + Math.random() * 0.05, 0.55, 0.32 + Math.random() * 0.16));
+  }
+}
+world.add(grass);
+
+/* деревья двух видов: дубки-пушистики и ели */
+function roots(t, s) {
   for (let i = 0; i < 4; i++) {
     const a = i * Math.PI / 2 + 0.4;
-    const r = box(0.1 * s, 0.1 * s, 0.5 * s, 0x7a4c22, Math.sin(a) * 0.28 * s, 0.1 * s, Math.cos(a) * 0.28 * s);
+    const r = box(0.09 * s, 0.09 * s, 0.45 * s, 0x7a4c22, Math.sin(a) * 0.26 * s, 0.08 * s, Math.cos(a) * 0.26 * s);
     r.rotation.y = a;
     t.add(r);
   }
-  t.add(ball(0.85 * s, 0x2f8f46, 0, 1.6 * s, 0));
-  t.add(ball(0.6 * s, 0x3aa856, 0.55 * s, 1.35 * s, 0.15 * s));
-  t.add(ball(0.62 * s, 0x3aa856, -0.5 * s, 1.4 * s, -0.1 * s));
-  t.add(ball(0.5 * s, 0x45b964, 0.05 * s, 2.05 * s, -0.05 * s));
+}
+function treeOak(x, z, s) {
+  const t = grp(x, 0.98, z);
+  t.add(cyl(0.15 * s, 0.24 * s, 1.4 * s, 0x8b5a2b, 0, 0.7 * s, 0, 10));
+  roots(t, s);
+  t.add(ball(0.85 * s, 0x2f8f46, 0, 1.85 * s, 0));
+  t.add(ball(0.6 * s, 0x3aa856, 0.58 * s, 1.55 * s, 0.12 * s));
+  t.add(ball(0.62 * s, 0x3aa856, -0.55 * s, 1.62 * s, -0.1 * s));
+  t.add(ball(0.48 * s, 0x45b964, 0.05 * s, 2.3 * s, -0.05 * s));
   /* яблоки */
-  t.add(ball(0.09 * s, 0xe23b3b, 0.5 * s, 1.7 * s, 0.5 * s));
-  t.add(ball(0.09 * s, 0xe23b3b, -0.6 * s, 1.5 * s, 0.4 * s));
+  t.add(ball(0.09 * s, 0xe23b3b, 0.5 * s, 1.9 * s, 0.45 * s));
+  t.add(ball(0.08 * s, 0xe23b3b, -0.55 * s, 1.72 * s, 0.35 * s));
   world.add(t);
 }
-tree(-6.0, -3.4, 1); tree(6.2, -3.0, 1.15); tree(-4.6, 4.8, 0.8); tree(5.0, 5.2, 0.9);
+function treePine(x, z, s) {
+  const t = grp(x, 0.98, z);
+  t.add(cyl(0.11 * s, 0.17 * s, 1.0 * s, 0x7a4c22, 0, 0.5 * s, 0, 8));
+  t.add(cone(0.95 * s, 1.5 * s, 0x2c7a3e, 0, 1.5 * s, 0, 9));
+  t.add(cone(0.72 * s, 1.2 * s, 0x35914b, 0, 2.2 * s, 0, 9));
+  t.add(cone(0.5 * s, 0.95 * s, 0x3aa856, 0, 2.85 * s, 0, 9));
+  world.add(t);
+}
+treeOak(-6.0, -3.4, 1); treePine(6.2, -3.0, 1.15); treeOak(-4.6, 4.8, 0.85);
+treePine(5.0, 5.2, 0.9); treePine(-6.4, 1.0, 0.8); treeOak(6.4, 1.9, 0.72);
 
 /* цветы со стеблями и лепестками */
 function flower(x, z, color) {
@@ -153,6 +215,8 @@ function flower(x, z, color) {
 }
 flower(2.4, 2.2, 0xff6b9d); flower(-2.6, 1.8, 0xff8c42); flower(1.8, -2.4, 0xc77dff);
 flower(-1.9, -2.2, 0xff6b9d); flower(3.4, 0.6, 0xffd166); flower(-3.5, -0.4, 0xff8c42);
+flower(4.4, -2.2, 0xff6b9d); flower(-4.3, 2.7, 0xc77dff); flower(0.6, -3.6, 0xff8c42);
+flower(-0.8, 3.8, 0xff6b9d);
 
 /* грибы */
 function shroom(x, z, s) {
@@ -167,6 +231,7 @@ function shroom(x, z, s) {
   world.add(m);
 }
 shroom(-2.9, 2.9, 1); shroom(3.1, 2.6, 0.75); shroom(2.6, -3.1, 0.9);
+shroom(-3.7, -2.6, 0.7);
 
 /* камни */
 function rock(x, z, s) {
@@ -187,7 +252,7 @@ function bush(x, z, s) {
   b.add(ball(0.28 * s, 0x3aa856, -0.28 * s, 0.22 * s, -0.05 * s));
   world.add(b);
 }
-bush(4.3, 1.6, 1); bush(-4.6, -1.4, 0.9);
+bush(4.3, 1.6, 1); bush(-4.6, -1.4, 0.9); bush(1.2, 4.4, 0.8);
 
 /* облака */
 const clouds = [];
@@ -200,7 +265,24 @@ for (let i = 0; i < 5; i++) {
   clouds.push(cl); world.add(cl);
 }
 
-/* ================= герой (база + детали) ================= */
+/* бабочки над поляной */
+const flies = [];
+function butterfly(color, cx, cz, ph) {
+  const b = grp(cx, 2.2, cz);
+  const wm = M(color, { side: THREE.DoubleSide });
+  const w1 = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.16), wm);
+  w1.position.x = -0.11;
+  const w2 = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.16), wm);
+  w2.position.x = 0.11;
+  b.add(w1, w2);
+  b.userData = { w1, w2, cx, cz, ph };
+  flies.push(b); world.add(b);
+}
+butterfly(0xff8fb3, -2.5, 1.5, 0);
+butterfly(0x8fc7ff, 2.8, -1.2, 2.1);
+butterfly(0xffd166, 0.5, 3.2, 4.2);
+
+/* ================= герой: человеческие пропорции ================= */
 function buildHero(kind) {
   const g = new THREE.Group();
   const skin = 0xffd9a0;
@@ -208,143 +290,154 @@ function buildHero(kind) {
   const shirt = { warrior: 0x4a7de2, mage: 0x8b5fd6, rogue: 0x3f9e5a, vampire: 0x2b2440 }[kind];
   const pants = { warrior: 0x3b4a8f, mage: 0x4a3a80, rogue: 0x2c4a33, vampire: 0x1a1526 }[kind];
 
-  /* ноги + сапоги */
-  P.legL = grp(-0.14, 0.42, 0);
-  P.legL.add(box(0.22, 0.42, 0.24, pants, 0, -0.21, 0));
-  P.legL.add(box(0.24, 0.14, 0.34, 0x4a3220, 0, -0.36, 0.05));
-  P.legR = grp(0.14, 0.42, 0);
-  P.legR.add(box(0.22, 0.42, 0.24, pants, 0, -0.21, 0));
-  P.legR.add(box(0.24, 0.14, 0.34, 0x4a3220, 0, -0.36, 0.05));
+  /* ноги: бедро, колено, голень, обувь; точка вращения — таз */
+  function leg(x) {
+    const l = grp(x, 0.92, 0);
+    l.add(cyl(0.085, 0.075, 0.42, pants, 0, -0.21, 0, 10));
+    l.add(ball(0.07, pants, 0, -0.44, 0));
+    l.add(cyl(0.06, 0.052, 0.36, pants, 0, -0.6, 0, 10));
+    l.add(box(0.19, 0.11, 0.33, 0x4a3220, 0, -0.85, 0.05));
+    return l;
+  }
+  P.legL = leg(-0.13); P.legR = leg(0.13);
 
-  /* торс + пояс */
-  P.body = box(0.62, 0.62, 0.34, shirt, 0, 0.73, 0);
-  P.body.add(box(0.64, 0.09, 0.36, 0x4a3220, 0, -0.24, 0));
-  P.body.add(box(0.12, 0.11, 0.03, 0xffd166, 0, -0.24, 0.185));
-  /* воротник */
-  P.body.add(box(0.5, 0.08, 0.36, 0xd8d2ee, 0, 0.3, 0));
+  /* торс с поясом и воротником */
+  P.body = box(0.46, 0.62, 0.28, shirt, 0, 1.25, 0);
+  P.body.add(box(0.48, 0.08, 0.3, 0x4a3220, 0, -0.25, 0));
+  P.body.add(box(0.1, 0.1, 0.03, 0xffd166, 0, -0.25, 0.155));
+  P.body.add(box(0.38, 0.07, 0.3, 0xd8d2ee, 0, 0.28, 0));
+  /* шея */
+  g.add(cyl(0.07, 0.08, 0.14, skin, 0, 1.62, 0, 8));
 
-  /* руки: точка вращения — плечо */
+  /* руки: плечо, предплечье, перчатка */
+  const glove = kind === "vampire" ? 0xd8d2ee : 0x4a3220;
   function arm(x) {
-    const a = new THREE.Group();
-    a.position.set(x, 1.0, 0);
-    a.add(box(0.18, 0.5, 0.2, shirt, 0, -0.22, 0));
-    a.add(ball(0.11, kind === "vampire" ? 0xd8d2ee : 0x4a3220, 0, -0.5, 0));
+    const a = grp(x, 1.5, 0);
+    a.add(ball(0.09, shirt, 0, 0, 0));
+    a.add(cyl(0.055, 0.048, 0.3, shirt, 0, -0.18, 0, 10));
+    a.add(ball(0.06, glove, 0, -0.36, 0));
+    a.add(cyl(0.045, 0.04, 0.28, skin, 0, -0.5, 0, 10));
+    a.add(ball(0.085, glove, 0, -0.68, 0));
     return a;
   }
-  P.armL = arm(-0.41); P.armR = arm(0.41);
+  P.armL = arm(-0.31); P.armR = arm(0.31);
 
-  /* голова */
-  P.head = grp(0, 1.36, 0);
-  P.head.add(box(0.52, 0.5, 0.5, skin, 0, 0, 0));
-  P.head.add(face("normal"));
-  /* уши */
-  P.head.add(box(0.06, 0.12, 0.1, skin, -0.28, 0, 0));
-  P.head.add(box(0.06, 0.12, 0.1, skin, 0.28, 0, 0));
+  /* голова: чуть вытянутый череп, уши, лицо */
+  P.head = grp(0, 1.82, 0);
+  const skull = ball(0.26, skin, 0, 0, 0);
+  skull.scale.set(0.95, 1.08, 0.95);
+  P.head.add(skull);
+  const f = face("normal");
+  f.scale.setScalar(0.8);
+  f.position.z = 0.235;
+  P.head.add(f);
+  P.head.add(ball(0.045, skin, -0.235, 0, 0));
+  P.head.add(ball(0.045, skin, 0.235, 0, 0));
 
-  /* волосы/шапка по классу */
+  /* экипировка по классу */
   if (kind === "warrior") {
-    /* шлем с гребнем */
-    const helm = ball(0.3, 0x9aa7bd, 0, 0.18, 0);
-    helm.scale.y = 0.75;
+    /* шлем-полусфера с обручем и красным гребнем */
+    const helm = new THREE.Mesh(
+      new THREE.SphereGeometry(0.29, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+      M(0x9aa7bd)
+    );
+    helm.position.y = 0.05;
+    helm.castShadow = true;
     P.head.add(helm);
-    P.head.add(box(0.58, 0.1, 0.54, 0x8d99ae, 0, 0.12, 0));
-    /* красный гребень */
+    P.head.add(box(0.5, 0.07, 0.46, 0x8d99ae, 0, 0.05, 0));
     for (let i = 0; i < 4; i++) {
-      P.head.add(box(0.05, 0.14, 0.12, 0xd33f3f, 0, 0.42 + Math.sin(i / 3 * Math.PI) * 0.08, 0.18 - i * 0.12));
+      P.head.add(box(0.05, 0.15, 0.12, 0xd33f3f, 0, 0.3 + Math.sin(i / 3 * Math.PI) * 0.1, 0.16 - i * 0.11));
     }
     /* наплечники */
-    const s1 = ball(0.16, 0x9aa7bd, -0.41, 1.06, 0); s1.scale.y = 0.6;
-    const s2 = ball(0.16, 0x9aa7bd, 0.41, 1.06, 0); s2.scale.y = 0.6;
+    const s1 = ball(0.13, 0x9aa7bd, -0.32, 1.54, 0); s1.scale.y = 0.7;
+    const s2 = ball(0.13, 0x9aa7bd, 0.32, 1.54, 0); s2.scale.y = 0.7;
     g.add(s1, s2);
-    /* меч: клинок, гарда, навершие */
-    const sw = grp(0, -0.5, 0);
-    sw.add(box(0.07, 0.55, 0.03, 0xd7dde8, 0, -0.36, 0));
-    sw.add(box(0.02, 0.5, 0.035, 0xffffff, 0, -0.38, 0));
-    sw.add(box(0.22, 0.06, 0.06, 0x8a5a33, 0, -0.06, 0));
-    sw.add(ball(0.05, 0xffd166, 0, 0.03, 0));
+    /* меч в правой руке */
+    const sw = grp(0, -0.68, 0);
+    sw.add(box(0.06, 0.6, 0.025, 0xd7dde8, 0, -0.4, 0));
+    sw.add(box(0.02, 0.55, 0.03, 0xffffff, 0, -0.42, 0));
+    sw.add(box(0.2, 0.05, 0.05, 0x8a5a33, 0, -0.08, 0));
+    sw.add(ball(0.045, 0xffd166, 0, 0.02, 0));
     P.armR.add(sw);
-    /* щит: диск с боком и оковкой */
-    const sh = grp(0, -0.28, 0.14);
-    const disk = cyl(0.26, 0.26, 0.07, 0x7a8699, 0, 0, 0, 18);
+    /* щит на левом предплечье */
+    const sh = grp(0, -0.45, 0.1);
+    const disk = cyl(0.24, 0.24, 0.06, 0x7a8699, 0, 0, 0, 18);
     disk.rotation.z = Math.PI / 2;
     sh.add(disk);
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.03, 8, 20), M(0xffd166));
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.03, 8, 20), M(0xffd166));
     rim.rotation.y = Math.PI / 2;
     sh.add(rim);
-    const boss = ball(0.07, 0xd7dde8, 0, 0, 0);
-    sh.add(boss);
+    sh.add(ball(0.06, 0xd7dde8, 0, 0, 0));
     P.armL.add(sh);
   } else if (kind === "mage") {
-    /* мантия-юбка */
-    const robe = cyl(0.3, 0.44, 0.5, 0x7a4fd0, 0, 0.36, 0, 12);
-    g.add(robe);
+    /* мантия до пят */
+    g.add(cyl(0.23, 0.42, 0.85, 0x7a4fd0, 0, 0.95, 0, 12));
+    g.add(box(0.06, 0.5, 0.03, 0xffd166, 0, 1.1, 0.15));
     /* колпак с полями, лентой и звёздами */
-    P.head.add(cyl(0.36, 0.4, 0.05, 0x5b3fb0, 0, 0.22, 0, 14));
-    P.head.add(cone(0.3, 0.58, 0x5b3fb0, 0, 0.53, 0, 12));
-    P.head.add(cyl(0.31, 0.31, 0.07, 0xffd166, 0, 0.3, 0, 14));
-    P.head.add(ball(0.05, 0xffd166, 0, 0.85, 0));
-    P.head.add(ball(0.025, 0xffe9a0, 0.16, 0.5, 0.2));
-    P.head.add(ball(0.02, 0xffe9a0, -0.2, 0.4, 0.14));
-    /* посох: древко, шар, кольца */
-    const st = grp(0, -0.5, 0);
-    st.add(cyl(0.03, 0.04, 0.95, 0x8a5a33, 0, -0.32, 0, 8));
-    const orb = ball(0.11, 0x7dd8ff, 0, 0.18, 0);
+    P.head.add(cyl(0.36, 0.4, 0.05, 0x5b3fb0, 0, 0.2, 0, 14));
+    P.head.add(cone(0.28, 0.55, 0x5b3fb0, 0, 0.5, 0, 12));
+    P.head.add(cyl(0.29, 0.29, 0.07, 0xffd166, 0, 0.28, 0, 14));
+    P.head.add(ball(0.05, 0xffd166, 0, 0.8, 0));
+    P.head.add(ball(0.025, 0xffe9a0, 0.15, 0.48, 0.19));
+    P.head.add(ball(0.02, 0xffe9a0, -0.18, 0.38, 0.13));
+    /* посох со светящимся шаром */
+    const st = grp(0, -0.68, 0);
+    st.add(cyl(0.03, 0.04, 1.0, 0x8a5a33, 0, -0.3, 0, 8));
+    const orb = ball(0.11, 0x7dd8ff, 0, 0.24, 0);
     orb.material = GLOW(0x9fe6ff);
     st.add(orb);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.02, 6, 18), M(0xffd166));
-    ring.position.y = 0.18;
+    ring.position.y = 0.24;
     ring.rotation.x = Math.PI / 2;
     st.add(ring);
     const ring2 = ring.clone(); ring2.rotation.set(0.8, 0, 0);
     st.add(ring2);
     P.armR.add(st);
   } else if (kind === "rogue") {
-    /* капюшон */
-    P.head.add(cone(0.34, 0.42, 0x2f7a45, 0, 0.32, -0.03, 10));
-    P.head.add(box(0.56, 0.1, 0.52, 0x2f7a45, 0, 0.16, 0));
-    /* маска */
-    P.head.add(box(0.54, 0.1, 0.04, 0x24491f, 0, 0.05, 0.26));
+    /* капюшон и маска */
+    P.head.add(cone(0.31, 0.42, 0x2f7a45, 0, 0.3, -0.03, 10));
+    P.head.add(box(0.5, 0.09, 0.46, 0x2f7a45, 0, 0.14, 0));
+    P.head.add(box(0.48, 0.09, 0.04, 0x24491f, 0, 0.04, 0.23));
     /* плащ */
     const cape = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.32, 0.5, 0.85, 10, 1, true, Math.PI * 0.7, Math.PI * 1.6),
+      new THREE.CylinderGeometry(0.26, 0.46, 1.0, 10, 1, true, Math.PI * 0.7, Math.PI * 1.6),
       M(0x2f7a45, { side: THREE.DoubleSide })
     );
-    cape.position.set(0, 0.72, 0);
+    cape.position.set(0, 1.0, 0);
     g.add(cape);
     P.cape = cape;
-    /* кинжалы с гардами */
-    const d1 = grp(0, -0.5, 0);
+    /* кинжалы */
+    const d1 = grp(0, -0.68, 0);
     d1.add(box(0.05, 0.28, 0.03, 0xd7dde8, 0, -0.2, 0));
     d1.add(box(0.12, 0.04, 0.05, 0x8a5a33, 0, -0.05, 0));
     d1.add(ball(0.035, 0x4a3220, 0, 0, 0));
     P.armR.add(d1);
-    const d2 = grp(0, -0.5, 0);
+    const d2 = grp(0, -0.68, 0);
     d2.add(box(0.05, 0.28, 0.03, 0xd7dde8, 0, -0.2, 0));
     d2.add(box(0.12, 0.04, 0.05, 0x8a5a33, 0, -0.05, 0));
     d2.add(ball(0.035, 0x4a3220, 0, 0, 0));
     P.armL.add(d2);
   } else if (kind === "vampire") {
-    /* причёска: зализанные пряди */
-    P.head.add(box(0.56, 0.14, 0.54, 0x14101f, 0, 0.28, 0));
-    P.head.add(box(0.1, 0.12, 0.06, 0x14101f, -0.2, 0.22, 0.26));
-    P.head.add(box(0.12, 0.1, 0.06, 0x14101f, 0.05, 0.24, 0.26));
-    P.head.add(box(0.08, 0.14, 0.06, 0x14101f, 0.24, 0.2, 0.26));
+    /* зализанные пряди */
+    P.head.add(box(0.5, 0.12, 0.48, 0x14101f, 0, 0.26, 0));
+    P.head.add(box(0.09, 0.11, 0.05, 0x14101f, -0.18, 0.2, 0.22));
+    P.head.add(box(0.11, 0.09, 0.05, 0x14101f, 0.05, 0.22, 0.22));
+    P.head.add(box(0.07, 0.13, 0.05, 0x14101f, 0.21, 0.18, 0.22));
     /* высокий воротник */
-    P.head.add(box(0.5, 0.14, 0.08, 0x8f1d3a, 0, -0.08, -0.26));
+    P.head.add(box(0.44, 0.14, 0.07, 0x8f1d3a, 0, -0.06, -0.22));
     /* плащ */
     const cape = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.32, 0.52, 0.85, 10, 1, true, Math.PI * 0.7, Math.PI * 1.6),
+      new THREE.CylinderGeometry(0.26, 0.48, 1.0, 10, 1, true, Math.PI * 0.7, Math.PI * 1.6),
       M(0x8f1d3a, { side: THREE.DoubleSide })
     );
-    cape.position.set(0, 0.72, 0);
+    cape.position.set(0, 1.0, 0);
     g.add(cape);
     P.cape = cape;
-    /* клыки */
-    P.head.add(cone(0.04, 0.13, 0xffffff, -0.14, -0.2, 0.22, 4));
-    P.head.add(cone(0.04, 0.13, 0xffffff, 0.14, -0.2, 0.22, 4));
-    /* медальон */
-    P.body.add(ball(0.05, 0xffd166, 0, 0.05, 0.19));
-    P.body.add(box(0.02, 0.14, 0.02, 0xffd166, 0, 0.16, 0.18));
+    /* клыки и медальон */
+    P.head.add(cone(0.035, 0.12, 0xffffff, -0.12, -0.18, 0.2, 4));
+    P.head.add(cone(0.035, 0.12, 0xffffff, 0.12, -0.18, 0.2, 4));
+    P.body.add(ball(0.05, 0xffd166, 0, 0.05, 0.16));
+    P.body.add(box(0.02, 0.14, 0.02, 0xffd166, 0, 0.16, 0.15));
   }
   g.add(P.legL, P.legR, P.body, P.armL, P.armR, P.head);
   g.userData.parts = P;
@@ -398,7 +491,7 @@ function buildMonster(id) {
       }
       g.add(a);
     });
-    /* задние лапы: бедро, голень, длинная ступня с пальцами */
+    /* задние лапки: бедро, голень, длинная ступня с пальцами */
     [[-0.48, 1], [0.48, -1]].forEach(([x, side]) => {
       const thigh = ball(0.24, 0x54b845, x, 0.36, -0.05);
       thigh.scale.set(0.8, 0.9, 1.3);
@@ -416,6 +509,8 @@ function buildMonster(id) {
     g.add(smile(0, 0.5, 0.56, 0.2, 0x2f7a3a));
     g.add(ball(0.05, 0xff9eb5, -0.3, 0.52, 0.42));
     g.add(ball(0.05, 0xff9eb5, 0.3, 0.52, 0.42));
+    /* жабка — маленькая и милая */
+    g.scale.setScalar(0.62);
   }
 
   else if (id === "mouse") {
@@ -844,13 +939,13 @@ function camUpdate() {
   az += (azT - az) * 0.08;
   pol += (polT - pol) * 0.08;
   const aspect = window.innerWidth / window.innerHeight;
-  const R = aspect < 0.75 ? 6.8 : (aspect < 1.1 ? 6.6 : 7.5);
+  const R = aspect < 0.75 ? 7.0 : (aspect < 1.1 ? 7.0 : 7.5);
   camera.position.set(
     Math.sin(az) * Math.sin(pol) * R,
     1 + Math.cos(pol) * R,
     Math.cos(az) * Math.sin(pol) * R
   );
-  camera.lookAt(0, aspect < 0.75 ? 0.2 : 1.9, 0);
+  camera.lookAt(0, aspect < 0.75 ? 0.6 : 1.9, 0);
 }
 canvas.addEventListener("pointerdown", (e) => { dragging = true; px = e.clientX; py = e.clientY; lastTouch = Date.now(); });
 window.addEventListener("pointermove", (e) => {
@@ -947,6 +1042,18 @@ function idle(t, dt) {
     mp.wingR.rotation.z = -Math.sin(t * 6) * 0.3;
   }
   if (mp.armL) { mp.armL.rotation.x = Math.sin(t * 2.5) * 0.15; mp.armR.rotation.x = -Math.sin(t * 2.5) * 0.15; }
+  /* бабочки порхают */
+  flies.forEach((b) => {
+    const u = b.userData;
+    b.position.set(
+      u.cx + Math.sin(t * 0.6 + u.ph) * 1.3,
+      2.1 + Math.sin(t * 1.7 + u.ph) * 0.35,
+      u.cz + Math.cos(t * 0.45 + u.ph) * 1.1
+    );
+    b.rotation.y = Math.sin(t * 0.6 + u.ph + Math.PI / 2) * 0.6;
+    u.w1.rotation.y = Math.sin(t * 16 + u.ph) * 0.9;
+    u.w2.rotation.y = -Math.sin(t * 16 + u.ph) * 0.9;
+  });
   /* кубик */
   if (anim) {
     anim.t += dt;
