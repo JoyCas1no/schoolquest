@@ -1,0 +1,14 @@
+{
+  "name": "schoolquest",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Школьный Квест — учебная браузерная игра для детей 1–11 классов",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "proto": "node tools/proto.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "three": "^0.180.0"
+  }
+}

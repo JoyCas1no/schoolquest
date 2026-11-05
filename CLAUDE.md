@@ -15,6 +15,7 @@
 - Исходники в `src/`: `head.html` (стили и каркас), `data.js` (вопросы, монстры, классы, реплики), `cloud.js` (вход и облачное сохранение, Supabase), `engine.js` (звук, состояние, экраны, бой), `tail.html`.
 - Облако: Supabase-проект `schoolquest`, схема в `supabase/schema.sql`. Вход по логину, служебная почта `<логин>@schoolquest.game`. Пароли не храним и не логируем, ключ `service_role` не копируем. Облачный тест: `node tools/_cloudtest.mjs` (потом удалить `sqtest_*`).
 - `node tools/build.mjs` собирает `index.html`. Собранный файл руками не править.
+- 3D-прототип: `proto3d.html` + `src/proto3d.js` (сцена), three.js подгружается с CDN через import map. Одиночная сборка без CDN: `node tools/proto.mjs` (нужен `npm install`). node_modules в репозиторий не коммитить.
 - `node tools/check.mjs 200` — сборка, синтаксис, проверка вопросов и математики, 200 случайных прохождений. Запускать перед каждым коммитом.
 - Игра без внешних библиотек, один HTML, графика эмодзи и CSS, звук WebAudio.
 
