@@ -1,1 +1,503 @@
-REAL
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Школьный Квест — Изометрия</title>
+<style>
+  html, body { margin:0; padding:0; height:100%; background:#101418; overflow:hidden;
+    font-family:"Segoe UI", system-ui, sans-serif; -webkit-user-select:none; user-select:none;
+    touch-action:none; }
+  #game { display:block; width:100vw; height:100vh; }
+  .hud { position:fixed; top:10px; left:10px; right:10px; display:flex; gap:10px;
+    align-items:center; pointer-events:none; z-index:5; }
+  .pill { background:rgba(10,14,20,.65); color:#fff; border-radius:999px; padding:8px 16px;
+    font-size:18px; font-weight:600; backdrop-filter:blur(4px); }
+  .btn { pointer-events:auto; background:rgba(10,14,20,.65); color:#fff; border:2px solid rgba(255,255,255,.15);
+    border-radius:50%; width:48px; height:48px; font-size:20px; cursor:pointer; }
+  .btn:active { transform:scale(.92); }
+  .spacer { flex:1; }
+  #joy { position:fixed; left:26px; bottom:26px; width:130px; height:130px; border-radius:50%;
+    background:rgba(255,255,255,.07); border:2px solid rgba(255,255,255,.16); z-index:6; display:none; }
+  #stick { position:absolute; left:41px; top:41px; width:48px; height:48px; border-radius:50%;
+    background:rgba(255,255,255,.35); }
+  #overlay { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; background:rgba(8,10,14,.72); z-index:10; color:#fff; text-align:center; padding:20px; }
+  #overlay h1 { font-size:42px; margin:0 0 8px; text-shadow:0 4px 18px rgba(0,0,0,.6); }
+  #overlay p { font-size:19px; margin:6px 0; opacity:.92; max-width:520px; }
+  .bigbtn { margin-top:22px; background:#ffb300; color:#3a2500; border:none; border-radius:16px;
+    padding:16px 44px; font-size:24px; font-weight:800; cursor:pointer; box-shadow:0 6px 0 #b97e00; }
+  .bigbtn:active { transform:translateY(4px); box-shadow:0 2px 0 #b97e00; }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div class="hud">
+  <div class="pill" id="books">📚 0/5</div>
+  <div class="pill" id="timer">0:00</div>
+  <div class="spacer"></div>
+  <button class="btn" id="mute" title="Звук">🔊</button>
+  <button class="btn" id="pause" title="Пауза">⏸</button>
+</div>
+<div id="joy"><div id="stick"></div></div>
+<div id="overlay">
+  <h1 id="ovTitle">Школьный Квест</h1>
+  <p id="ovText">Собери все учебники, спрятанные в классе, и выбегай через дверь!</p>
+  <p id="ovHint">Ходьба: WASD / стрелки / джойстик · Пауза: P</p>
+  <button class="bigbtn" id="ovBtn">Играть</button>
+</div>
+<script>
+"use strict";
+/* ============ ШКОЛЬНЫЙ КВЕСТ: ИЗОМЕТРИЯ ============
+   Спрайты нарисованы нейросетью, лежат рядом: assets/iso/ */
+const SPRITES = {
+  hero:  "assets/iso/hero.png",
+  cat:   "assets/iso/cat.png",
+  desk:  "assets/iso/desk.png",
+  shelf: "assets/iso/shelf.png",
+};
+
+const cv  = document.getElementById("game");
+const ctx = cv.getContext("2d");
+const TILE_W = 64, TILE_H = 32, WALL_H = 58;
+
+/* ---------- карта ----------
+   # стена · . пол · T парта · S шкаф · D дверь выхода */
+const MAP_SRC = [
+  "##################",
+  "#......B.........#",
+  "#..TT.....TT.....#",
+  "#..TT..B..TT..B..#",
+  "#................#",
+  "#......B.........#",
+  "#..SS............#",
+  "#................#",
+  "#..TT.....TT.....#",
+  "#..TT..B..TT.....#",
+  "#................#",
+  "#..........B.....#",
+  "#########D########",
+];
+const MAP_H = MAP_SRC.length, MAP_W = MAP_SRC[0].length;
+const SPAWN = { x: 2.5, y: 10.5 };
+
+const wallAt = (x, y) => {
+  if (x < 0 || y < 0 || y >= MAP_H || x >= MAP_W) return true;
+  return MAP_SRC[y][x] === "#";
+};
+const tileAt = (x, y) => {
+  if (x < 0 || y < 0 || y >= MAP_H || x >= MAP_W) return "#";
+  return MAP_SRC[y][x];
+};
+const passable = (x, y, doorOpen) => {
+  const c = tileAt(Math.floor(x), Math.floor(y));
+  if (c === "#" || c === "T" || c === "S") return false;
+  if (c === "D" && !doorOpen) return false;
+  return true;
+};
+
+// учебники
+const books = [];
+for (let y = 0; y < MAP_H; y++)
+  for (let x = 0; x < MAP_W; x++)
+    if (MAP_SRC[y][x] === "B") books.push({ x: x + 0.5, y: y + 0.5, got: false, phase: Math.random() * 6.28 });
+const TOTAL = books.length;
+
+/* ---------- состояние ---------- */
+let state = "title";           // title | play | pause | win
+let doorOpen = false;
+let hero, cat, parts = [];
+let camX = 0, camY = 0;
+let elapsed = 0, startT = 0;
+let muted = localStorage.getItem("sq_iso_mute") === "1";
+let best = +(localStorage.getItem("sq_iso_best") || 0);
+
+function resetGame() {
+  hero = { x: SPAWN.x, y: SPAWN.y, vx: 0, vy: 0, face: 1, moving: false, bob: 0 };
+  cat  = { x: SPAWN.x - 0.6, y: SPAWN.y + 0.4, trail: [], face: 1, bob: 0 };
+  books.forEach(b => b.got = false);
+  parts = [];
+  doorOpen = false;
+  elapsed = 0;
+  updateBooksHud();
+}
+
+/* ---------- изометрия ---------- */
+const isoX = (x, y) => (x - y) * TILE_W / 2;
+const isoY = (x, y) => (x + y) * TILE_H / 2;
+
+function diamond(x, y, h) {
+  const sx = isoX(x, y), sy = isoY(x, y) - (h || 0);
+  ctx.beginPath();
+  ctx.moveTo(sx, sy - TILE_H / 2);
+  ctx.lineTo(sx + TILE_W / 2, sy);
+  ctx.lineTo(sx, sy + TILE_H / 2);
+  ctx.lineTo(sx - TILE_W / 2, sy);
+  ctx.closePath();
+}
+
+function drawFloor() {
+  for (let y = 0; y < MAP_H; y++)
+    for (let x = 0; x < MAP_W; x++) {
+      const c = tileAt(x, y);
+      if (c === "#") continue;
+      diamond(x, y);
+      ctx.fillStyle = (x + y) % 2 ? "#d8c096" : "#e3cda6";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(120,90,50,.25)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  // ковёр у центра класса
+  ctx.fillStyle = "rgba(90,140,200,.28)";
+  for (let y = 4; y <= 6; y++)
+    for (let x = 7; x <= 10; x++) { diamond(x, y); ctx.fill(); }
+}
+
+function drawWallBox(x, y) {
+  const sx = isoX(x, y), sy = isoY(x, y);
+  const hw = TILE_W / 2, hh = TILE_H / 2;
+  // левая грань
+  ctx.fillStyle = "#8f6f4e";
+  ctx.beginPath();
+  ctx.moveTo(sx - hw, sy); ctx.lineTo(sx, sy + hh);
+  ctx.lineTo(sx, sy + hh - WALL_H); ctx.lineTo(sx - hw, sy - WALL_H);
+  ctx.closePath(); ctx.fill();
+  // правая грань
+  ctx.fillStyle = "#a5825d";
+  ctx.beginPath();
+  ctx.moveTo(sx + hw, sy); ctx.lineTo(sx, sy + hh);
+  ctx.lineTo(sx, sy + hh - WALL_H); ctx.lineTo(sx + hw, sy - WALL_H);
+  ctx.closePath(); ctx.fill();
+  // верх
+  ctx.fillStyle = "#c9a877";
+  ctx.beginPath();
+  ctx.moveTo(sx, sy - hh - WALL_H); ctx.lineTo(sx + hw, sy - WALL_H);
+  ctx.lineTo(sx, sy + hh - WALL_H); ctx.lineTo(sx - hw, sy - WALL_H);
+  ctx.closePath(); ctx.fill();
+}
+
+function drawDoor(x, y, t) {
+  const sx = isoX(x, y), sy = isoY(x, y);
+  diamond(x, y);
+  ctx.fillStyle = doorOpen ? "#7fd08a" : "#7a5a38";
+  ctx.fill();
+  if (doorOpen) {
+    ctx.save();
+    ctx.globalAlpha = .5 + .3 * Math.sin(t * 4);
+    ctx.strokeStyle = "#b6ffbe"; ctx.lineWidth = 3;
+    diamond(x, y); ctx.stroke();
+    ctx.restore();
+    label(sx, sy - WALL_H - 22, "ВЫХОД", "#b6ffbe");
+  } else {
+    label(sx, sy - WALL_H - 22, "🔒", "#fff");
+  }
+}
+
+function drawBook(b, t) {
+  const sx = isoX(b.x, b.y), sy = isoY(b.x, b.y) - 14 - Math.sin(t * 3 + b.phase) * 4;
+  ctx.save();
+  ctx.shadowColor = "#ffd54f"; ctx.shadowBlur = 14;
+  ctx.fillStyle = "#e53935";
+  roundRect(sx - 9, sy - 7, 18, 14, 3); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(sx - 9, sy - 2, 18, 3);
+  ctx.strokeStyle = "#8e1414"; ctx.lineWidth = 2;
+  roundRect(sx - 9, sy - 7, 18, 14, 3); ctx.stroke();
+  ctx.restore();
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function label(x, y, text, color) {
+  ctx.save();
+  ctx.font = "bold 15px system-ui";
+  ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(0,0,0,.45)";
+  ctx.fillText(text, x + 1, y + 1);
+  ctx.fillStyle = color || "#fff";
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+function drawSprite(img, x, y, w, h, flip, bobY) {
+  const sx = isoX(x, y), sy = isoY(x, y) - (bobY || 0);
+  ctx.save();
+  ctx.translate(sx, sy);
+  if (flip) ctx.scale(-1, 1);
+  ctx.drawImage(img, -w / 2, -h, w, h);
+  ctx.restore();
+}
+
+function drawBlackboard() {
+  // доска на северной стене
+  const sx = isoX(8.5, 0), sy = isoY(8.5, 0);
+  ctx.save();
+  ctx.fillStyle = "#2e5d43";
+  ctx.strokeStyle = "#c9a877"; ctx.lineWidth = 5;
+  roundRect(sx - 120, sy - WALL_H - 52, 240, 46, 4);
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,.85)";
+  ctx.font = "22px system-ui"; ctx.textAlign = "center";
+  ctx.fillText("2 + 2 = 4   🎒 + 📚 = 🎓", sx, sy - WALL_H - 22);
+  ctx.restore();
+}
+
+/* ---------- звук ---------- */
+let AC = null;
+function audio() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); return AC; }
+function tone(f, t0, dur, type, vol) {
+  if (muted) return;
+  const ac = audio(), o = ac.createOscillator(), g = ac.createGain();
+  o.type = type || "sine"; o.frequency.value = f;
+  g.gain.setValueAtTime(0, ac.currentTime + t0);
+  g.gain.linearRampToValueAtTime(vol || .15, ac.currentTime + t0 + .01);
+  g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + t0 + dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(ac.currentTime + t0); o.stop(ac.currentTime + t0 + dur + .05);
+}
+const sfxCollect = () => { tone(660, 0, .12, "triangle"); tone(880, .09, .15, "triangle"); };
+const sfxWin = () => { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .14, .3, "triangle", .18)); };
+const sfxClick = () => tone(440, 0, .06, "square", .06);
+
+/* ---------- ввод ---------- */
+const keys = {};
+addEventListener("keydown", e => {
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)) e.preventDefault();
+  keys[e.key.toLowerCase()] = true;
+  if (e.key.toLowerCase() === "p") togglePause();
+  if (e.key === " ") {
+    if (state === "title" || state === "win") startGame();
+    else if (state === "pause") togglePause();
+  }
+});
+addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+const joy = { active: false, id: -1, dx: 0, dy: 0 };
+const joyEl = document.getElementById("joy"), stickEl = document.getElementById("stick");
+if ("ontouchstart" in window) joyEl.style.display = "block";
+joyEl.addEventListener("pointerdown", e => { joy.active = true; joy.id = e.pointerId; joyEl.setPointerCapture(e.pointerId); moveStick(e); });
+joyEl.addEventListener("pointermove", e => { if (joy.active && e.pointerId === joy.id) moveStick(e); });
+const joyEnd = e => { if (e.pointerId === joy.id) { joy.active = false; joy.dx = joy.dy = 0; stickEl.style.left = "41px"; stickEl.style.top = "41px"; } };
+joyEl.addEventListener("pointerup", joyEnd);
+joyEl.addEventListener("pointercancel", joyEnd);
+function moveStick(e) {
+  const r = joyEl.getBoundingClientRect();
+  let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+  const m = Math.hypot(dx, dy), max = r.width / 2 - 14;
+  if (m > max) { dx *= max / m; dy *= max / m; }
+  joy.dx = dx / max; joy.dy = dy / max;
+  stickEl.style.left = (41 + dx) + "px"; stickEl.style.top = (41 + dy) + "px";
+}
+
+function inputVec() {
+  let x = 0, y = 0;
+  if (keys["a"] || keys["arrowleft"])  x -= 1;
+  if (keys["d"] || keys["arrowright"]) x += 1;
+  if (keys["w"] || keys["arrowup"])    y -= 1;
+  if (keys["s"] || keys["arrowdown"])  y += 1;
+  x += joy.dx; y += joy.dy;
+  // экранные направления -> тайловые (изометрия)
+  const len = Math.hypot(x, y);
+  if (len > 1) { x /= len; y /= len; }
+  const tx = x + y, ty = y - x;   // поворот осей на 45°
+  const tl = Math.hypot(tx, ty) || 1;
+  return { x: tx / tl, y: ty / tl, active: len > .15 };
+}
+
+/* ---------- UI ---------- */
+const overlay = document.getElementById("overlay"), ovTitle = document.getElementById("ovTitle"),
+      ovText = document.getElementById("ovText"), ovHint = document.getElementById("ovHint"),
+      ovBtn = document.getElementById("ovBtn"), booksEl = document.getElementById("books"),
+      timerEl = document.getElementById("timer");
+
+function showOverlay(title, text, btn, hint) {
+  ovTitle.textContent = title; ovText.innerHTML = text;
+  ovBtn.textContent = btn;
+  ovHint.style.display = hint ? "" : "none";
+  if (hint) ovHint.textContent = hint;
+  overlay.classList.remove("hidden");
+}
+function hideOverlay() { overlay.classList.add("hidden"); }
+
+ovBtn.addEventListener("click", () => {
+  sfxClick();
+  if (state === "title" || state === "win") startGame();
+  else if (state === "pause") togglePause();
+});
+document.getElementById("pause").addEventListener("click", () => { sfxClick(); togglePause(); });
+document.getElementById("mute").addEventListener("click", function () {
+  muted = !muted; localStorage.setItem("sq_iso_mute", muted ? "1" : "0");
+  this.textContent = muted ? "🔇" : "🔊";
+});
+document.getElementById("mute").textContent = muted ? "🔇" : "🔊";
+
+function updateBooksHud() { booksEl.textContent = "📚 " + books.filter(b => b.got).length + "/" + TOTAL; }
+function fmt(t) { const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ":" + String(s).padStart(2, "0"); }
+
+function startGame() { resetGame(); state = "play"; startT = performance.now(); hideOverlay(); }
+function togglePause() {
+  if (state === "play") { state = "pause"; showOverlay("Пауза", "Отдохни, школьник! 📖", "Продолжить", ""); }
+  else if (state === "pause") { state = "play"; hideOverlay(); }
+}
+function winGame() {
+  state = "win";
+  const t = elapsed;
+  let rec = "";
+  if (!best || t < best) { best = t; localStorage.setItem("sq_iso_best", String(best)); rec = " 🏆 Новый рекорд!"; }
+  sfxWin();
+  showOverlay("Победа! 🎉",
+    "Все учебники собраны, уроки сданы!<br>Время: <b>" + fmt(t) + "</b>" + rec +
+    (best ? "<br>Лучшее время: <b>" + fmt(best) + "</b>" : ""),
+    "Играть ещё", "Или нажми Пробел");
+}
+
+/* ---------- частицы ---------- */
+function burst(x, y, color) {
+  for (let i = 0; i < 12; i++) {
+    const a = Math.random() * 6.28, sp = 40 + Math.random() * 70;
+    parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40, life: .7, color });
+  }
+}
+
+/* ---------- обновление ---------- */
+const SPEED = 3.4;
+function update(dt, t) {
+  if (state !== "play") return;
+  elapsed = (performance.now() - startT) / 1000;
+
+  const iv = inputVec();
+  hero.moving = iv.active;
+  if (iv.active) {
+    hero.face = (iv.x - iv.y) < 0 ? -1 : 1;
+    const nx = hero.x + iv.x * SPEED * dt, ny = hero.y + iv.y * SPEED * dt;
+    // скольжение вдоль стен
+    if (passable(nx, hero.y, doorOpen)) hero.x = nx;
+    if (passable(hero.x, ny, doorOpen)) hero.y = ny;
+    hero.bob += dt * 10;
+  }
+
+  // кот следует по следу
+  cat.trail.push({ x: hero.x, y: hero.y });
+  if (cat.trail.length > 26) cat.trail.shift();
+  const tgt = cat.trail[0];
+  const ddx = tgt.x - cat.x, ddy = tgt.y - cat.y, dd = Math.hypot(ddx, ddy);
+  if (dd > .02) {
+    const sp = Math.min(dd, SPEED * .92 * dt);
+    cat.x += ddx / dd * sp; cat.y += ddy / dd * sp;
+    cat.face = (ddx - ddy) < 0 ? -1 : 1;
+    cat.bob += dt * 12;
+  }
+
+  // сбор учебников
+  for (const b of books) {
+    if (!b.got && Math.hypot(b.x - hero.x, b.y - hero.y) < .45) {
+      b.got = true; sfxCollect(); burst(b.x, b.y, "#ffd54f"); updateBooksHud();
+      if (books.every(k => k.got)) { doorOpen = true; burst(hero.x, hero.y, "#7fd08a"); }
+    }
+  }
+
+  // выход
+  if (doorOpen && tileAt(Math.floor(hero.x), Math.floor(hero.y)) === "D") winGame();
+
+  // частицы
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i];
+    p.life -= dt; p.x += p.vx * dt / 32; p.y += p.vy * dt / 32; p.vy += 180 * dt;
+    if (p.life <= 0) parts.splice(i, 1);
+  }
+
+  // камера
+  const tx = innerWidth / 2 - isoX(hero.x, hero.y);
+  const ty = innerHeight / 2 - isoY(hero.x, hero.y) + 20;
+  camX += (tx - camX) * Math.min(1, dt * 6);
+  camY += (ty - camY) * Math.min(1, dt * 6);
+}
+
+/* ---------- отрисовка ---------- */
+const IMG = {};
+function loadSprites() {
+  const jobs = Object.entries(SPRITES).map(([k, src]) => new Promise(res => {
+    const im = new Image();
+    im.onload = () => { IMG[k] = im; res(); };
+    im.onerror = () => res();
+    im.src = src;
+  }));
+  return Promise.all(jobs);
+}
+
+function render(t) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.save();
+  ctx.translate(camX, camY);
+  drawFloor();
+
+  // список отрисовки с глубиной
+  const items = [];
+  for (let y = 0; y < MAP_H; y++)
+    for (let x = 0; x < MAP_W; x++) {
+      const c = tileAt(x, y);
+      if (c === "#") items.push({ d: x + y, f: () => drawWallBox(x, y) });
+      else if (c === "D") items.push({ d: x + y, f: () => drawDoor(x, y, t) });
+      else if (c === "T" && IMG.desk) items.push({ d: x + y + .4, f: () => drawSprite(IMG.desk, x + .5, y + .5, 92, 92) });
+      else if (c === "S" && IMG.shelf) items.push({ d: x + y + .4, f: () => drawSprite(IMG.shelf, x + .5, y + .5, 100, 116) });
+    }
+  for (const b of books)
+    if (!b.got) items.push({ d: b.x + b.y + .2, f: () => drawBook(b, t) });
+  if (IMG.cat) items.push({ d: cat.x + cat.y + .6, f: () => drawSprite(IMG.cat, cat.x, cat.y, 62, 62, cat.face === -1, Math.abs(Math.sin(cat.bob)) * 3) });
+  if (IMG.hero) items.push({ d: hero.x + hero.y + .7, f: () => drawSprite(IMG.hero, hero.x, hero.y, 74, 74, hero.face === -1, hero.moving ? Math.abs(Math.sin(hero.bob)) * 5 : 0) });
+
+  items.sort((a, b) => a.d - b.d);
+  for (const it of items) it.f();
+
+  // частицы
+  for (const p of parts) {
+    ctx.globalAlpha = Math.max(0, p.life / .7);
+    ctx.fillStyle = p.color;
+    const sx = isoX(p.x, p.y), sy = isoY(p.x, p.y) - 10;
+    ctx.beginPath(); ctx.arc(sx, sy, 3, 0, 6.28); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  drawBlackboard();
+  ctx.restore();
+
+  // HUD таймер
+  if (state === "play") timerEl.textContent = fmt(elapsed);
+}
+
+/* ---------- цикл ---------- */
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  update(dt, now / 1000);
+  render(now / 1000);
+  requestAnimationFrame(loop);
+}
+
+/* ---------- запуск ---------- */
+function resize() {
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+addEventListener("resize", resize);
+resize();
+resetGame();
+// стартовая камера
+const tx0 = innerWidth / 2 - isoX(hero.x, hero.y), ty0 = innerHeight / 2 - isoY(hero.x, hero.y) + 20;
+camX = tx0; camY = ty0;
+loadSprites().then(() => requestAnimationFrame(loop));
+</script>
+</body>
+</html>
