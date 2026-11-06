@@ -248,7 +248,7 @@ function drawBlackboard() {
   // верх стены в изометрии — линия y = X/2 - WALL_H, доска повёрнута в эту плоскость
   const cx = 8.5, sx = isoX(cx, 0);
   const W = 190, H = 46, X0 = sx - W / 2;
-  const Y0 = X0 / 2 - WALL_H + 32;      // доска ниже линии верха стены, не торчит над ней
+  const Y0 = X0 / 2 - WALL_H + 52;      // доска целиком ниже линии верха стены
   ctx.save();
   ctx.transform(0.8944, 0.4472, 0, -1, X0, Y0);
   ctx.fillStyle = "#c9a877";                    // рама
@@ -256,11 +256,11 @@ function drawBlackboard() {
   ctx.fillStyle = "#2e5d43";
   ctx.fillRect(4, 4, W - 8, H - 8);
   ctx.fillStyle = "rgba(255,255,255,.85)";
-  ctx.font = "21px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.font = "15px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.save();
   ctx.translate(W / 2, H / 2);   // основной transform отражает Y — вернём текст «ногами вниз»
   ctx.scale(1, -1);
-  ctx.fillText("2 + 2 = 4    3 + 3 = 6", 0, 0);
+  ctx.fillText("2+2=4   3+3=6", 0, 0);
   ctx.restore();
   ctx.restore();
 }
