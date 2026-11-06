@@ -236,3 +236,4 @@ def preview(path, objects, size=2.0):
     sc.render.resolution_y = 640
     sc.render.filepath = path
     bpy.ops.render.render(write_still=True)
+    bpy.data.objects.remove(camera)
