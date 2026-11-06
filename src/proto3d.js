@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 /* ================= базовая проверка WebGL ================= */
 const canvas = document.getElementById("c3d");
@@ -98,6 +99,40 @@ function smile(x, y, z, r, color) {
 /* ================= мир ================= */
 const world = new THREE.Group();
 scene.add(world);
+/* примитивная природа — пока GLB грузятся и как фолбэк */
+const primNature = grp(0, 0, 0);
+world.add(primNature);
+
+/* ================= загрузка Blender-моделей (GLB) ================= */
+const TPL = {}; /* имя -> gltf.scene */
+let useGLB = false;
+const gltfLoader = new GLTFLoader();
+function loadGLB(name) {
+  return new Promise((res) => {
+    gltfLoader.load("assets/models/" + name + ".glb?v=2", (g) => { TPL[name] = g.scene; res(); },
+      undefined, () => res() /* при ошибке остаются примитивы */);
+  });
+}
+function prepClone(t) {
+  const c = t.clone(true);
+  c.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  return c;
+}
+/* масштаб клонированного объекта до нужной высоты */
+function scaleToHeight(obj, h) {
+  const b = new THREE.Box3().setFromObject(obj);
+  const s = new THREE.Vector3();
+  b.getSize(s);
+  if (s.y > 0.001) obj.scale.setScalar(h / s.y);
+}
+const GLB_NAMES = [
+  "hero_warrior", "hero_mage", "hero_rogue", "hero_vampire",
+  "mon_frog", "mon_mouse", "mon_fox", "mon_owl", "mon_dragon", "mon_robot",
+  "nat_oak", "nat_pine", "nat_flower_pink", "nat_flower_orange",
+  "nat_flower_violet", "nat_flower_yellow", "nat_shroom", "nat_rock",
+  "nat_bush", "nat_cloud", "nat_butterfly", "nat_grass"
+];
+Promise.all(GLB_NAMES.map(loadGLB)).then(swapToGLB);
 
 /* остров-платформа */
 const island = ball(7.5, 0x58b368, 0, -1.4, 0);
@@ -147,8 +182,8 @@ ground.receiveShadow = true;
 world.add(ground);
 
 /* трава: все стебли — одна отрисовка */
-const bladeGeo = new THREE.ConeGeometry(0.04, 0.3, 4);
-bladeGeo.translate(0, 0.15, 0);
+const bladeGeo = new THREE.ConeGeometry(0.026, 0.24, 4);
+bladeGeo.translate(0, 0.12, 0);
 const grass = new THREE.InstancedMesh(bladeGeo, M(0x4fae5c), 420);
 {
   const gd = new THREE.Object3D();
@@ -162,7 +197,7 @@ const grass = new THREE.InstancedMesh(bladeGeo, M(0x4fae5c), 420);
     gd.scale.set(s, s * (0.8 + Math.random() * 0.6), s);
     gd.updateMatrix();
     grass.setMatrixAt(i, gd.matrix);
-    grass.setColorAt(i, gcol.setHSL(0.31 + Math.random() * 0.05, 0.55, 0.32 + Math.random() * 0.16));
+    grass.setColorAt(i, gcol.setHSL(0.29 + Math.random() * 0.06, 0.48, 0.40 + Math.random() * 0.18));
   }
 }
 world.add(grass);
@@ -187,7 +222,7 @@ function treeOak(x, z, s) {
   /* яблоки */
   t.add(ball(0.09 * s, 0xe23b3b, 0.5 * s, 1.9 * s, 0.45 * s));
   t.add(ball(0.08 * s, 0xe23b3b, -0.55 * s, 1.72 * s, 0.35 * s));
-  world.add(t);
+  primNature.add(t);
 }
 function treePine(x, z, s) {
   const t = grp(x, 0.98, z);
@@ -195,7 +230,7 @@ function treePine(x, z, s) {
   t.add(cone(0.95 * s, 1.5 * s, 0x2c7a3e, 0, 1.5 * s, 0, 9));
   t.add(cone(0.72 * s, 1.2 * s, 0x35914b, 0, 2.2 * s, 0, 9));
   t.add(cone(0.5 * s, 0.95 * s, 0x3aa856, 0, 2.85 * s, 0, 9));
-  world.add(t);
+  primNature.add(t);
 }
 treeOak(-6.0, -3.4, 1); treePine(6.2, -3.0, 1.15); treeOak(-4.6, 4.8, 0.85);
 treePine(5.0, 5.2, 0.9); treePine(-6.4, 1.0, 0.8); treeOak(6.4, 1.9, 0.72);
@@ -211,7 +246,7 @@ function flower(x, z, color) {
     p.scale.y = 0.5;
     f.add(p);
   }
-  world.add(f);
+  primNature.add(f);
 }
 flower(2.4, 2.2, 0xff6b9d); flower(-2.6, 1.8, 0xff8c42); flower(1.8, -2.4, 0xc77dff);
 flower(-1.9, -2.2, 0xff6b9d); flower(3.4, 0.6, 0xffd166); flower(-3.5, -0.4, 0xff8c42);
@@ -228,7 +263,7 @@ function shroom(x, z, s) {
   m.add(ball(0.045 * s, 0xffffff, 0.1 * s, 0.4 * s, 0.08 * s));
   m.add(ball(0.04 * s, 0xffffff, -0.09 * s, 0.42 * s, -0.05 * s));
   m.add(ball(0.035 * s, 0xffffff, 0.02 * s, 0.44 * s, -0.1 * s));
-  world.add(m);
+  primNature.add(m);
 }
 shroom(-2.9, 2.9, 1); shroom(3.1, 2.6, 0.75); shroom(2.6, -3.1, 0.9);
 shroom(-3.7, -2.6, 0.7);
@@ -240,7 +275,7 @@ function rock(x, z, s) {
   r.scale.y = 0.65;
   r.rotation.set(Math.random(), Math.random(), Math.random());
   r.castShadow = true;
-  world.add(r);
+  primNature.add(r);
 }
 rock(-3.4, 0.9, 1); rock(3.8, -1.2, 0.8); rock(0.5, 3.3, 0.7);
 
@@ -250,7 +285,7 @@ function bush(x, z, s) {
   b.add(ball(0.4 * s, 0x2f8f46, 0, 0.3 * s, 0));
   b.add(ball(0.3 * s, 0x3aa856, 0.3 * s, 0.25 * s, 0.1 * s));
   b.add(ball(0.28 * s, 0x3aa856, -0.28 * s, 0.22 * s, -0.05 * s));
-  world.add(b);
+  primNature.add(b);
 }
 bush(4.3, 1.6, 1); bush(-4.6, -1.4, 0.9); bush(1.2, 4.4, 0.8);
 
@@ -262,7 +297,7 @@ for (let i = 0; i < 5; i++) {
   cl.add(ball(0.6, 0xffffff, 0.9, 0.1, 0.1));
   cl.add(ball(0.65, 0xffffff, -0.85, 0.05, -0.1));
   cl.userData.v = 0.15 + Math.random() * 0.2;
-  clouds.push(cl); world.add(cl);
+  clouds.push(cl); primNature.add(cl);
 }
 
 /* бабочки над поляной */
@@ -276,14 +311,29 @@ function butterfly(color, cx, cz, ph) {
   w2.position.x = 0.11;
   b.add(w1, w2);
   b.userData = { w1, w2, cx, cz, ph };
-  flies.push(b); world.add(b);
+  flies.push(b); primNature.add(b);
 }
 butterfly(0xff8fb3, -2.5, 1.5, 0);
 butterfly(0x8fc7ff, 2.8, -1.2, 2.1);
 butterfly(0xffd166, 0.5, 3.2, 4.2);
 
 /* ================= герой: человеческие пропорции ================= */
+/* GLB-версия из Блендера: пивоты Root/Head/ArmL/ArmR/LegL/LegR/Cape */
+function buildHeroGLB(kind) {
+  const g = prepClone(TPL["hero_" + kind]);
+  scaleToHeight(g, 1.95);
+  g.userData.parts = {
+    head: g.getObjectByName("Head"),
+    armL: g.getObjectByName("ArmL"),
+    armR: g.getObjectByName("ArmR"),
+    legL: g.getObjectByName("LegL"),
+    legR: g.getObjectByName("LegR"),
+    cape: g.getObjectByName("Cape")
+  };
+  return g;
+}
 function buildHero(kind) {
+  if (useGLB && TPL["hero_" + kind]) return buildHeroGLB(kind);
   const g = new THREE.Group();
   const skin = 0xffd9a0;
   const P = {};
@@ -454,7 +504,24 @@ function eye(x, y, z, rWhite, rPupil, irisColor) {
   return e;
 }
 
+/* GLB-версии монстров: высоты как у примитивов, крылья/руки — поименованные пивоты */
+const MON_H = { frog: 0.62, mouse: 1.3, fox: 1.45, owl: 1.35, dra: 1.5, robot: 1.75 };
+function buildMonsterGLB(id) {
+  const name = id === "dra" ? "dragon" : id;
+  const g = prepClone(TPL["mon_" + name]);
+  scaleToHeight(g, MON_H[id]);
+  const P = { id, baseY: 0 };
+  const wl = g.getObjectByName("WingL"), wr = g.getObjectByName("WingR");
+  const al = g.getObjectByName("ArmL"), ar = g.getObjectByName("ArmR");
+  if (wl) P.wingL = wl;
+  if (wr) P.wingR = wr;
+  if (al) P.armL = al;
+  if (ar) P.armR = ar;
+  g.userData.parts = P;
+  return g;
+}
 function buildMonster(id) {
+  if (useGLB && TPL["mon_" + (id === "dra" ? "dragon" : id)]) return buildMonsterGLB(id);
   const g = new THREE.Group();
   const P = { id, baseY: 0 };
 
@@ -491,7 +558,7 @@ function buildMonster(id) {
       }
       g.add(a);
     });
-    /* задние лапки: бедро, голень, длинная ступня с пальцами */
+    /* задние лапы: бедро, голень, длинная ступня с пальцами */
     [[-0.48, 1], [0.48, -1]].forEach(([x, side]) => {
       const thigh = ball(0.24, 0x54b845, x, 0.36, -0.05);
       thigh.scale.set(0.8, 0.9, 1.3);
@@ -812,7 +879,8 @@ function buildMonster(id) {
 
 /* ================= акторы ================= */
 const HERO_X = -1.15, MON_X = 1.15;
-let hero = buildHero("warrior");
+let heroKind = "warrior";
+let hero = buildHero(heroKind);
 hero.position.set(HERO_X, 1, 0);
 hero.rotation.y = 0.5;
 world.add(hero);
@@ -823,6 +891,85 @@ let monIdx = 0, monster = buildMonster(MONSTERS[0]);
 monster.position.set(MON_X, 1, 0);
 monster.rotation.y = -0.5;
 world.add(monster);
+
+/* ================= подмена примитивов на Blender-модели ================= */
+function swapToGLB() {
+  if (!TPL["hero_warrior"] || !TPL["nat_oak"]) return; /* не загрузилось — остаёмся на примитивах */
+  useGLB = true;
+  primNature.visible = false;
+
+  const GY = 0.98; /* уровень лужайки */
+  const put = (n, x, y, z, s, ry) => {
+    const t = prepClone(TPL[n]);
+    t.position.set(x, y, z);
+    if (s) t.scale.setScalar(s);
+    if (ry) t.rotation.y = ry;
+    world.add(t);
+    return t;
+  };
+
+  /* деревья */
+  put("nat_oak", -6.0, GY, -3.4, 1, 0.4);
+  put("nat_oak", -4.6, GY, 4.8, 0.85, 1.2);
+  put("nat_oak", 6.4, GY, 1.9, 0.72, 2.1);
+  put("nat_pine", 6.2, GY, -3.0, 1.15, -0.4);
+  put("nat_pine", 5.0, GY, 5.2, 0.9, 0.8);
+  put("nat_pine", -6.4, GY, 1.0, 0.8, 2.4);
+
+  /* цветы: те же точки и раскраска, что и у примитивов */
+  const fl = ["nat_flower_pink", "nat_flower_orange", "nat_flower_violet", "nat_flower_yellow"];
+  [[2.4, 2.2, 0], [-2.6, 1.8, 1], [1.8, -2.4, 2], [-1.9, -2.2, 0], [3.4, 0.6, 3],
+   [-3.5, -0.4, 1], [4.4, -2.2, 0], [-4.3, 2.7, 2], [0.6, -3.6, 1], [-0.8, 3.8, 0]]
+    .forEach(([x, z, c], i) => put(fl[c], x, GY, z, 0.9 + (i % 3) * 0.1, i * 1.3));
+
+  /* грибы, камни, кусты */
+  put("nat_shroom", -2.9, GY, 2.9, 1, 0.3);
+  put("nat_shroom", 3.1, GY, 2.6, 0.75, 1.8);
+  put("nat_shroom", 2.6, GY, -3.1, 0.9, -0.7);
+  put("nat_shroom", -3.7, GY, -2.6, 0.7, 2.2);
+  put("nat_rock", -3.4, GY, 0.9, 1, 0.5);
+  put("nat_rock", 3.8, GY, -1.2, 0.8, 1.1);
+  put("nat_rock", 0.5, GY, 3.3, 0.7, 2.2);
+  put("nat_bush", 4.3, GY, 1.6, 1, 0.6);
+  put("nat_bush", -4.6, GY, -1.4, 0.9, 2.3);
+  put("nat_bush", 1.2, GY, 4.4, 0.8, 4.0);
+
+  /* облака из Блендера, те же траектории */
+  clouds.length = 0;
+  [[-8, 5.2, -6.5, 0.16], [-3.8, 6.1, -7.5, 0.24], [0.4, 5.6, -8.2, 0.19],
+   [4.6, 6.5, -7.0, 0.3], [8.8, 5.4, -6.8, 0.21]].forEach(([x, y, z, v]) => {
+    const c = put("nat_cloud", x, y, z, 1, 0);
+    c.userData.v = v;
+    clouds.push(c);
+  });
+
+  /* бабочки из Блендера: крылья — пивоты WingL/WingR, мах — rotation.z */
+  flies.length = 0;
+  [[0xff8fb3, -2.5, 1.5, 0], [0x8fc7ff, 2.8, -1.2, 2.1], [0xffd166, 0.5, 3.2, 4.2]]
+    .forEach(([col, cx, cz, ph]) => {
+      const b = put("nat_butterfly", cx, 2.2, cz, 1, 0);
+      b.userData = { w1: b.getObjectByName("WingL"), w2: b.getObjectByName("WingR"), cx, cz, ph, z: true, col };
+      flies.push(b);
+    });
+
+  /* пучки травы для объёма */
+  for (let i = 0; i < 40; i++) {
+    const a = Math.random() * Math.PI * 2, r = 2.2 + Math.random() * 4.6;
+    put("nat_grass", Math.cos(a) * r, GY, Math.sin(a) * r * 0.8, 0.8 + Math.random() * 0.6, Math.random() * 6);
+  }
+
+  /* герой и монстр — заново из GLB */
+  const hp = hero.position.clone(), hr = hero.rotation.y;
+  world.remove(hero);
+  hero = buildHero(heroKind);
+  hero.position.copy(hp); hero.rotation.y = hr;
+  world.add(hero);
+  const mp = monster.position.clone(), mr = monster.rotation.y;
+  world.remove(monster);
+  monster = buildMonster(MONSTERS[monIdx]);
+  monster.position.copy(mp); monster.rotation.y = mr;
+  world.add(monster);
+}
 
 /* кубик d20 */
 const dice = new THREE.Mesh(
@@ -887,6 +1034,7 @@ function setMonster(i) {
 }
 
 function setHero(kind) {
+  heroKind = kind;
   const p = hero.position.clone(), r = hero.rotation.y;
   world.remove(hero);
   hero = buildHero(kind);
@@ -1051,8 +1199,13 @@ function idle(t, dt) {
       u.cz + Math.cos(t * 0.45 + u.ph) * 1.1
     );
     b.rotation.y = Math.sin(t * 0.6 + u.ph + Math.PI / 2) * 0.6;
-    u.w1.rotation.y = Math.sin(t * 16 + u.ph) * 0.9;
-    u.w2.rotation.y = -Math.sin(t * 16 + u.ph) * 0.9;
+    if (u.z) { /* GLB-бабочки: пивоты крыльев, мах по z */
+      u.w1.rotation.z = Math.sin(t * 16 + u.ph) * 0.9;
+      u.w2.rotation.z = -Math.sin(t * 16 + u.ph) * 0.9;
+    } else {
+      u.w1.rotation.y = Math.sin(t * 16 + u.ph) * 0.9;
+      u.w2.rotation.y = -Math.sin(t * 16 + u.ph) * 0.9;
+    }
   });
   /* кубик */
   if (anim) {
