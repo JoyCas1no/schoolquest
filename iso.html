@@ -52,10 +52,10 @@
 /* ============ ШКОЛЬНЫЙ КВЕСТ: ИЗОМЕТРИЯ ============
    Спрайты нарисованы нейросетью, лежат рядом: assets/iso/ */
 const SPRITES = {
-  hero:  "assets/iso/hero.png",
-  cat:   "assets/iso/cat.png",
-  desk:  "assets/iso/desk.png",
-  shelf: "assets/iso/shelf.png",
+  hero:  "assets/iso/hero.b64",
+  cat:   "assets/iso/cat.b64",
+  desk:  "assets/iso/desk.b64",
+  shelf: "assets/iso/shelf.b64",
 };
 
 const cv  = document.getElementById("game");
@@ -426,14 +426,15 @@ function update(dt, t) {
 
 /* ---------- отрисовка ---------- */
 const IMG = {};
-function loadSprites() {
-  const jobs = Object.entries(SPRITES).map(([k, src]) => new Promise(res => {
-    const im = new Image();
-    im.onload = () => { IMG[k] = im; res(); };
-    im.onerror = () => res();
-    im.src = src;
+async function loadSprites() {
+  await Promise.all(Object.entries(SPRITES).map(async ([k, src]) => {
+    try {
+      const txt = (await (await fetch(src)).text()).replace(/\s+/g, "");
+      const im = new Image();
+      await new Promise(res => { im.onload = res; im.onerror = res; im.src = "data:image/png;base64," + txt; });
+      if (im.width) IMG[k] = im;
+    } catch (e) { /* спрайт не загрузился — игра продолжит без него */ }
   }));
-  return Promise.all(jobs);
 }
 
 function render(t) {
