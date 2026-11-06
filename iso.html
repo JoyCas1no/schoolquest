@@ -556,12 +556,22 @@ function render(t) {
   ctx.translate(camX, camY);
   drawFloor();
 
+  // стены — отдельным нижним слоем (доска и всё в комнате рисуются поверх)
+  const walls = [];
+  for (let y = 0; y < MAP_H; y++)
+    for (let x = 0; x < MAP_W; x++)
+      if (tileAt(x, y) === "#") walls.push({ d: x + y, f: () => drawWallBox(x, y, wallHeightAt(x, y)) });
+  walls.sort((a, b) => a.d - b.d);
+  for (const w of walls) w.f();
+  // доска на стене — слоем выше стен, но ниже всех предметов и персонажей
+  drawBlackboard();
+
   // список отрисовки с глубиной
   const items = [];
   for (let y = 0; y < MAP_H; y++)
     for (let x = 0; x < MAP_W; x++) {
       const c = tileAt(x, y);
-      if (c === "#") items.push({ d: x + y, f: () => drawWallBox(x, y, wallHeightAt(x, y)) });
+      if (c === "#") continue;
       else if (c === "D") items.push({ d: x + y, f: () => drawDoor(x, y, t) });
       else if (c === "T" && IMG.desk) items.push({ d: x + y + .4, f: () => drawSprite(IMG.desk, x + .5, y + .5, 92, 92) });
       else if (c === "S" && IMG.shelf) items.push({ d: x + y + .4, f: () => drawSprite(IMG.shelf, x + .5, y + .5, 100, 116) });
@@ -584,7 +594,6 @@ function render(t) {
   }
   ctx.globalAlpha = 1;
 
-  drawBlackboard();
   ctx.restore();
 
   // HUD таймер
