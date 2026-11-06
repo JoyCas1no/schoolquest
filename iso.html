@@ -52,10 +52,10 @@
 /* ============ ШКОЛЬНЫЙ КВЕСТ: ИЗОМЕТРИЯ ============
    Спрайты нарисованы нейросетью, лежат рядом: assets/iso/ */
 const SPRITES = {
-  hero:  "assets/iso/hero.b64",
-  cat:   "assets/iso/cat.b64",
-  desk:  "assets/iso/desk.b64",
-  shelf: "assets/iso/shelf.b64",
+  hero:  ["assets/iso/hero.",  8],
+  cat:   ["assets/iso/cat.",   12],
+  desk:  ["assets/iso/desk.",  9],
+  shelf: ["assets/iso/shelf.", 9],
 };
 
 const cv  = document.getElementById("game");
@@ -427,11 +427,15 @@ function update(dt, t) {
 /* ---------- отрисовка ---------- */
 const IMG = {};
 async function loadSprites() {
-  await Promise.all(Object.entries(SPRITES).map(async ([k, src]) => {
+  await Promise.all(Object.entries(SPRITES).map(async ([k, [base, n]]) => {
     try {
-      const txt = (await (await fetch(src)).text()).replace(/\s+/g, "");
+      const parts = await Promise.all(Array.from({ length: n }, (_, i) =>
+        fetch(base + String(i).padStart(3, "0") + ".b64").then(r => {
+          if (!r.ok) throw new Error("chunk " + i);
+          return r.text();
+        })));
       const im = new Image();
-      await new Promise(res => { im.onload = res; im.onerror = res; im.src = "data:image/png;base64," + txt; });
+      await new Promise(res => { im.onload = res; im.onerror = res; im.src = "data:image/png;base64," + parts.join(""); });
       if (im.width) IMG[k] = im;
     } catch (e) { /* спрайт не загрузился — игра продолжит без него */ }
   }));
