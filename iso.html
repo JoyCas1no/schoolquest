@@ -34,17 +34,28 @@
 <body>
 <canvas id="game"></canvas>
 <div class="hud">
-  <div class="pill" id="books">📚 0/5</div>
+  <div class="pill" id="books">✅ 0/12</div>
   <div class="pill" id="timer">0:00</div>
+  <div class="pill">🔢 Математика</div>
   <div class="spacer"></div>
   <button class="btn" id="mute" title="Звук">🔊</button>
   <button class="btn" id="pause" title="Пауза">⏸</button>
 </div>
 <div id="joy"><div id="stick"></div></div>
+<button id="action" class="bigbtn hidden" style="position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:7;">▶ Начать задание</button>
+<div id="quiz" class="hidden" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,10,14,.62);z-index:9;">
+  <div style="background:#1c2530;border-radius:18px;padding:26px 28px;max-width:520px;width:92%;color:#fff;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.5);">
+    <div style="font-size:15px;opacity:.8;">🔢 Математика · 1 класс</div>
+    <div id="qText" style="font-size:25px;font-weight:700;margin:10px 0 18px;line-height:1.35;"></div>
+    <div id="qOpts" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+    <div id="qExpl" class="hidden" style="margin-top:16px;font-size:16px;line-height:1.45;background:rgba(255,255,255,.08);border-radius:10px;padding:12px 14px;text-align:left;"></div>
+    <button id="qNext" class="bigbtn hidden" style="font-size:18px;padding:10px 32px;">Продолжить</button>
+  </div>
+</div>
 <div id="overlay">
   <h1 id="ovTitle">Школьный Квест</h1>
-  <p id="ovText">Собери все учебники, спрятанные в классе, и выбегай через дверь!</p>
-  <p id="ovHint">Ходьба: WASD / стрелки / джойстик · Пауза: P</p>
+  <p id="ovText">Подойди к парте и нажми «Начать задание». Сдай все 12 заданий по математике — и выходи через дверь!</p>
+  <p id="ovHint">Ходьба: WASD / стрелки / джойстик · Задание: E · Пауза: P</p>
   <button class="bigbtn" id="ovBtn">Играть</button>
 </div>
 <script>
@@ -66,17 +77,17 @@ const TILE_W = 64, TILE_H = 32, WALL_H = 58;
    # стена · . пол · T парта · S шкаф · D дверь выхода */
 const MAP_SRC = [
   "##################",
-  "#......B.........#",
-  "#..TT.....TT.....#",
-  "#..TT..B..TT..B..#",
+  "#.SS..........SS.#",
+  "#...T...T...T....#",
   "#................#",
-  "#......B.........#",
-  "#..SS............#",
+  "#...T...T...T....#",
   "#................#",
-  "#..TT.....TT.....#",
-  "#..TT..B..TT.....#",
   "#................#",
-  "#..........B.....#",
+  "#................#",
+  "#...T...T...T....#",
+  "#................#",
+  "#...T...T...T....#",
+  "#................#",
   "#########D########",
 ];
 const MAP_H = MAP_SRC.length, MAP_W = MAP_SRC[0].length;
@@ -97,12 +108,13 @@ const passable = (x, y, doorOpen) => {
   return true;
 };
 
-// учебники
-const books = [];
+// парты с заданиями: этот класс — математика (уровень 1), все парты одного предмета,
+// чтобы одновременно могли учиться много «игроков»
+const desks = [];
 for (let y = 0; y < MAP_H; y++)
   for (let x = 0; x < MAP_W; x++)
-    if (MAP_SRC[y][x] === "B") books.push({ x: x + 0.5, y: y + 0.5, got: false, phase: Math.random() * 6.28 });
-const TOTAL = books.length;
+    if (MAP_SRC[y][x] === "T") desks.push({ x: x + 0.5, y: y + 0.5, done: false });
+const TOTAL = desks.length;
 
 /* ---------- состояние ---------- */
 let state = "title";           // title | play | pause | win
@@ -116,7 +128,7 @@ let best = +(localStorage.getItem("sq_iso_best") || 0);
 function resetGame() {
   hero = { x: SPAWN.x, y: SPAWN.y, vx: 0, vy: 0, face: 1, moving: false, bob: 0 };
   cat  = { x: SPAWN.x - 0.6, y: SPAWN.y + 0.4, trail: [], face: 1, bob: 0 };
-  books.forEach(b => b.got = false);
+  desks.forEach(d => d.done = false);
   parts = [];
   doorOpen = false;
   elapsed = 0;
@@ -126,6 +138,11 @@ function resetGame() {
 /* ---------- изометрия ---------- */
 const isoX = (x, y) => (x - y) * TILE_W / 2;
 const isoY = (x, y) => (x + y) * TILE_H / 2;
+
+// границы всей карты в экранных координатах (для камеры)
+const MAP_MIN_X = -MAP_H * TILE_W / 2, MAP_MAX_X = MAP_W * TILE_W / 2;
+const MAP_MIN_Y = 0, MAP_MAX_Y = (MAP_W + MAP_H - 2) * TILE_H / 2 + WALL_H;
+const clamp = (v, a, b) => Math.max(Math.min(a, b), Math.min(Math.max(a, b), v));
 
 function diamond(x, y, h) {
   const sx = isoX(x, y), sy = isoY(x, y) - (h || 0);
@@ -155,28 +172,34 @@ function drawFloor() {
     for (let x = 7; x <= 10; x++) { diamond(x, y); ctx.fill(); }
 }
 
-function drawWallBox(x, y) {
+function drawWallBox(x, y, h) {
+  const H = h == null ? WALL_H : h;
   const sx = isoX(x, y), sy = isoY(x, y);
   const hw = TILE_W / 2, hh = TILE_H / 2;
   // левая грань
   ctx.fillStyle = "#8f6f4e";
   ctx.beginPath();
   ctx.moveTo(sx - hw, sy); ctx.lineTo(sx, sy + hh);
-  ctx.lineTo(sx, sy + hh - WALL_H); ctx.lineTo(sx - hw, sy - WALL_H);
+  ctx.lineTo(sx, sy + hh - H); ctx.lineTo(sx - hw, sy - H);
   ctx.closePath(); ctx.fill();
   // правая грань
   ctx.fillStyle = "#a5825d";
   ctx.beginPath();
   ctx.moveTo(sx + hw, sy); ctx.lineTo(sx, sy + hh);
-  ctx.lineTo(sx, sy + hh - WALL_H); ctx.lineTo(sx + hw, sy - WALL_H);
+  ctx.lineTo(sx, sy + hh - H); ctx.lineTo(sx + hw, sy - H);
   ctx.closePath(); ctx.fill();
   // верх
   ctx.fillStyle = "#c9a877";
   ctx.beginPath();
-  ctx.moveTo(sx, sy - hh - WALL_H); ctx.lineTo(sx + hw, sy - WALL_H);
-  ctx.lineTo(sx, sy + hh - WALL_H); ctx.lineTo(sx - hw, sy - WALL_H);
+  ctx.moveTo(sx, sy - hh - H); ctx.lineTo(sx + hw, sy - H);
+  ctx.lineTo(sx, sy + hh - H); ctx.lineTo(sx - hw, sy - H);
   ctx.closePath(); ctx.fill();
 }
+
+// низкие «губы» вместо полных стен со стороны камеры — чтобы не закрывали героев
+const LIP_H = 16;
+const wallHeightAt = (x, y) =>
+  (x === MAP_W - 1 || y === MAP_H - 1) ? LIP_H : WALL_H;
 
 function drawDoor(x, y, t) {
   const sx = isoX(x, y), sy = isoY(x, y);
@@ -189,34 +212,10 @@ function drawDoor(x, y, t) {
     ctx.strokeStyle = "#b6ffbe"; ctx.lineWidth = 3;
     diamond(x, y); ctx.stroke();
     ctx.restore();
-    label(sx, sy - WALL_H - 22, "ВЫХОД", "#b6ffbe");
+    label(sx, sy - wallHeightAt(x, y) - 22, "ВЫХОД", "#b6ffbe");
   } else {
-    label(sx, sy - WALL_H - 22, "🔒", "#fff");
+    label(sx, sy - wallHeightAt(x, y) - 22, "🔒", "#fff");
   }
-}
-
-function drawBook(b, t) {
-  const sx = isoX(b.x, b.y), sy = isoY(b.x, b.y) - 14 - Math.sin(t * 3 + b.phase) * 4;
-  ctx.save();
-  ctx.shadowColor = "#ffd54f"; ctx.shadowBlur = 14;
-  ctx.fillStyle = "#e53935";
-  roundRect(sx - 9, sy - 7, 18, 14, 3); ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(sx - 9, sy - 2, 18, 3);
-  ctx.strokeStyle = "#8e1414"; ctx.lineWidth = 2;
-  roundRect(sx - 9, sy - 7, 18, 14, 3); ctx.stroke();
-  ctx.restore();
-}
-
-function roundRect(x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
 }
 
 function label(x, y, text, color) {
@@ -232,6 +231,11 @@ function label(x, y, text, color) {
 
 function drawSprite(img, x, y, w, h, flip, bobY) {
   const sx = isoX(x, y), sy = isoY(x, y) - (bobY || 0);
+  // мягкая тень под ногами
+  ctx.fillStyle = "rgba(40,25,10,.22)";
+  ctx.beginPath();
+  ctx.ellipse(sx, sy, w * .3, w * .13, 0, 0, 6.29);
+  ctx.fill();
   ctx.save();
   ctx.translate(sx, sy);
   if (flip) ctx.scale(-1, 1);
@@ -240,16 +244,24 @@ function drawSprite(img, x, y, w, h, flip, bobY) {
 }
 
 function drawBlackboard() {
-  // доска на северной стене
-  const sx = isoX(8.5, 0), sy = isoY(8.5, 0);
+  // доска висит на плоскости северной стены (не «летает»):
+  // верх стены в изометрии — линия y = X/2 - WALL_H, доска повёрнута в эту плоскость
+  const cx = 8.5, sx = isoX(cx, 0);
+  const W = 190, H = 46, X0 = sx - W / 2;
+  const Y0 = X0 / 2 - WALL_H + 8;      // низ доски с нахлёстом на стену
   ctx.save();
+  ctx.transform(0.8944, 0.4472, 0, -1, X0, Y0);
+  ctx.fillStyle = "#c9a877";                    // рама
+  ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = "#2e5d43";
-  ctx.strokeStyle = "#c9a877"; ctx.lineWidth = 5;
-  roundRect(sx - 120, sy - WALL_H - 52, 240, 46, 4);
-  ctx.fill(); ctx.stroke();
+  ctx.fillRect(4, 4, W - 8, H - 8);
   ctx.fillStyle = "rgba(255,255,255,.85)";
-  ctx.font = "22px system-ui"; ctx.textAlign = "center";
-  ctx.fillText("2 + 2 = 4   🎒 + 📚 = 🎓", sx, sy - WALL_H - 22);
+  ctx.font = "21px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.save();
+  ctx.translate(W / 2, H / 2);   // основной transform отражает Y — вернём текст «ногами вниз»
+  ctx.scale(1, -1);
+  ctx.fillText("2 + 2 = 4    3 + 3 = 6", 0, 0);
+  ctx.restore();
   ctx.restore();
 }
 
@@ -279,6 +291,9 @@ addEventListener("keydown", e => {
   if (e.key === " ") {
     if (state === "title" || state === "win") startGame();
     else if (state === "pause") togglePause();
+  }
+  if ((e.key.toLowerCase() === "e" || e.key === "Enter") && state === "play" && !quizOpen && nearDesk) {
+    e.preventDefault(); openQuiz(nearDesk);
   }
 });
 addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
@@ -342,7 +357,93 @@ document.getElementById("mute").addEventListener("click", function () {
 });
 document.getElementById("mute").textContent = muted ? "🔇" : "🔊";
 
-function updateBooksHud() { booksEl.textContent = "📚 " + books.filter(b => b.got).length + "/" + TOTAL; }
+function updateBooksHud() { booksEl.textContent = "✅ " + desks.filter(d => d.done).length + "/" + TOTAL; }
+
+/* ---------- задания (математика, 1 класс) ----------
+   формат вопроса: [вопрос, верный ответ, [3 неверных], объяснение] */
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const r2 = n => Math.floor(Math.random() * n);
+function wrongNums(r) {
+  const w = new Set(); let guard = 0;
+  while (w.size < 3 && guard++ < 60) {
+    const c = r + pick([-10, -3, -2, -1, 1, 2, 3, 10]);
+    if (c >= 0 && c !== r) w.add(String(c));
+  }
+  while (w.size < 3) w.add(String(r + w.size + 7));
+  return [...w];
+}
+function makeQ() {
+  const t = r2(6);
+  if (t === 0) { const a = 2 + r2(13), b = 2 + r2(9), r = a + b;
+    return [a + " + " + b + " = ?", String(r), wrongNums(r), a + " плюс " + b + " будет " + r + "."]; }
+  if (t === 1) { const a = 8 + r2(12), b = 1 + r2(a - 1), r = a - b;
+    return [a + " − " + b + " = ?", String(r), wrongNums(r), a + " минус " + b + " будет " + r + "."]; }
+  if (t === 2) { const a = 2 + r2(4), b = 2 + r2(4), r = a * b;
+    return [a + " × " + b + " = ?", String(r), wrongNums(r), a + " умножить на " + b + " будет " + r + "."]; }
+  if (t === 3) { const a = 5 + r2(16), b = 5 + r2(16);
+    if (a === b) return makeQ();
+    const big = Math.max(a, b), small = Math.min(a, b);
+    return ["Какое число больше: " + a + " или " + b + "?", String(big), wrongNums(big), "Сравниваем: " + big + " больше, чем " + small + "."]; }
+  if (t === 4) { const start = 2 + r2(6), r = start + 6;
+    return ["Продолжи ряд: " + start + ", " + (start + 2) + ", " + (start + 4) + ", __",
+      String(r), wrongNums(r), "Каждое число больше предыдущего на 2, значит " + (start + 4) + " + 2 = " + r + "."]; }
+  const a = 2 + r2(9), b = 2 + r2(9), r = a + b;
+  return ["У Миши " + a + " наклеек, у Гриши " + b + ". Сколько наклеек у них вместе?",
+    String(r), wrongNums(r), "Складываем: " + a + " + " + b + " = " + r + "."];
+}
+const usedQ = new Set();
+function genQ() {
+  for (let i = 0; i < 80; i++) { const q = makeQ(); if (!usedQ.has(q[0])) { usedQ.add(q[0]); return q; } }
+  return makeQ();
+}
+
+let nearDesk = null, quizOpen = false, curDesk = null, curQ = null;
+const quizEl = document.getElementById("quiz"), qText = document.getElementById("qText"),
+      qOpts = document.getElementById("qOpts"), qExpl = document.getElementById("qExpl"),
+      qNext = document.getElementById("qNext"), actionBtn = document.getElementById("action");
+
+function openQuiz(d) {
+  if (quizOpen || d.done) return;
+  curDesk = d; quizOpen = true;
+  hero.x = d.x; hero.y = d.y + .55; hero.moving = false;   // герой встаёт у парты (южная сторона — всегда проходимый пол)
+  cat.trail.length = 0; cat.trail.push({ x: hero.x, y: hero.y });
+  curQ = genQ();
+  qText.textContent = curQ[0];
+  qExpl.classList.add("hidden"); qNext.classList.add("hidden");
+  const opts = [curQ[1], ...curQ[2]];
+  for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
+  qOpts.innerHTML = "";
+  const btns = opts.map(o => {
+    const b = document.createElement("button");
+    b.className = "bigbtn"; b.style.cssText = "font-size:20px;padding:12px 10px;margin:0;box-shadow:0 4px 0 #b97e00;";
+    b.textContent = o;
+    b.addEventListener("click", () => answerQ(o, b, btns));
+    qOpts.appendChild(b);
+    return b;
+  });
+  actionBtn.classList.add("hidden");
+  quizEl.classList.remove("hidden");
+  sfxClick();
+}
+function answerQ(chosen, btn, btns) {
+  const right = chosen === curQ[1];
+  btns.forEach(b => {
+    b.disabled = true;
+    if (b.textContent === curQ[1]) { b.style.background = "#69c96f"; b.style.color = "#0c2b0e"; b.style.boxShadow = "0 4px 0 #3d8a43"; }
+    else if (b === btn) { b.style.background = "#e0605e"; b.style.color = "#3b0d0c"; b.style.boxShadow = "0 4px 0 #9e3736"; }
+    else b.style.opacity = ".45";
+  });
+  qExpl.textContent = (right ? "✅ Верно! " : "❌ Пока нет. ") + curQ[3];
+  qExpl.classList.remove("hidden"); qNext.classList.remove("hidden");
+  if (right) {
+    curDesk.done = true; sfxCollect(); burst(curDesk.x, curDesk.y, "#7fd08a"); updateBooksHud();
+    if (desks.every(k => k.done)) { doorOpen = true; burst(hero.x, hero.y, "#7fd08a"); }
+  } else {
+    tone(220, 0, .22, "sawtooth", .08);
+  }
+}
+qNext.addEventListener("click", () => { quizOpen = false; quizEl.classList.add("hidden"); sfxClick(); });
+actionBtn.addEventListener("click", () => { if (nearDesk) openQuiz(nearDesk); });
 function fmt(t) { const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ":" + String(s).padStart(2, "0"); }
 
 function startGame() { resetGame(); state = "play"; startT = performance.now(); hideOverlay(); }
@@ -357,7 +458,7 @@ function winGame() {
   if (!best || t < best) { best = t; localStorage.setItem("sq_iso_best", String(best)); rec = " 🏆 Новый рекорд!"; }
   sfxWin();
   showOverlay("Победа! 🎉",
-    "Все учебники собраны, уроки сданы!<br>Время: <b>" + fmt(t) + "</b>" + rec +
+    "Все 12 заданий по математике сданы, урок окончен!<br>Время: <b>" + fmt(t) + "</b>" + rec +
     (best ? "<br>Лучшее время: <b>" + fmt(best) + "</b>" : ""),
     "Играть ещё", "Или нажми Пробел");
 }
@@ -376,7 +477,7 @@ function update(dt, t) {
   if (state !== "play") return;
   elapsed = (performance.now() - startT) / 1000;
 
-  const iv = inputVec();
+  const iv = quizOpen ? { x: 0, y: 0, active: false } : inputVec();
   hero.moving = iv.active;
   if (iv.active) {
     hero.face = (iv.x - iv.y) < 0 ? -1 : 1;
@@ -399,13 +500,17 @@ function update(dt, t) {
     cat.bob += dt * 12;
   }
 
-  // сбор учебников
-  for (const b of books) {
-    if (!b.got && Math.hypot(b.x - hero.x, b.y - hero.y) < .45) {
-      b.got = true; sfxCollect(); burst(b.x, b.y, "#ffd54f"); updateBooksHud();
-      if (books.every(k => k.got)) { doorOpen = true; burst(hero.x, hero.y, "#7fd08a"); }
+  // парта рядом → показать кнопку «Начать задание»
+  nearDesk = null;
+  if (!quizOpen) {
+    let best = 1.15;
+    for (const d of desks) {
+      if (d.done) continue;
+      const dist = Math.hypot(d.x - hero.x, d.y - hero.y);
+      if (dist < best) { best = dist; nearDesk = d; }
     }
   }
+  actionBtn.classList.toggle("hidden", !(nearDesk && state === "play" && !quizOpen));
 
   // выход
   if (doorOpen && tileAt(Math.floor(hero.x), Math.floor(hero.y)) === "D") winGame();
@@ -417,9 +522,13 @@ function update(dt, t) {
     if (p.life <= 0) parts.splice(i, 1);
   }
 
-  // камера
-  const tx = innerWidth / 2 - isoX(hero.x, hero.y);
-  const ty = innerHeight / 2 - isoY(hero.x, hero.y) + 20;
+  // камера: класс меньше экрана — держим строго по центру;
+  // если экран мал — следуем за героем, не выпуская класс за края
+  const mapW = MAP_MAX_X - MAP_MIN_X, mapH = MAP_MAX_Y - MAP_MIN_Y;
+  const tx = mapW <= innerWidth ? (innerWidth - MAP_MIN_X - MAP_MAX_X) / 2
+           : clamp(innerWidth / 2 - isoX(hero.x, hero.y), innerWidth - MAP_MAX_X, -MAP_MIN_X);
+  const ty = mapH <= innerHeight - 60 ? (innerHeight - 60 - MAP_MIN_Y - MAP_MAX_Y) / 2 + 60
+           : clamp(innerHeight / 2 - isoY(hero.x, hero.y) + 20, innerHeight - MAP_MAX_Y, 60 - MAP_MIN_Y);
   camX += (tx - camX) * Math.min(1, dt * 6);
   camY += (ty - camY) * Math.min(1, dt * 6);
 }
@@ -452,13 +561,14 @@ function render(t) {
   for (let y = 0; y < MAP_H; y++)
     for (let x = 0; x < MAP_W; x++) {
       const c = tileAt(x, y);
-      if (c === "#") items.push({ d: x + y, f: () => drawWallBox(x, y) });
+      if (c === "#") items.push({ d: x + y, f: () => drawWallBox(x, y, wallHeightAt(x, y)) });
       else if (c === "D") items.push({ d: x + y, f: () => drawDoor(x, y, t) });
       else if (c === "T" && IMG.desk) items.push({ d: x + y + .4, f: () => drawSprite(IMG.desk, x + .5, y + .5, 92, 92) });
       else if (c === "S" && IMG.shelf) items.push({ d: x + y + .4, f: () => drawSprite(IMG.shelf, x + .5, y + .5, 100, 116) });
     }
-  for (const b of books)
-    if (!b.got) items.push({ d: b.x + b.y + .2, f: () => drawBook(b, t) });
+  // галочка над сданной партой
+  for (const d of desks)
+    if (d.done) items.push({ d: d.x + d.y + .2, f: () => label(isoX(d.x, d.y), isoY(d.x, d.y) - 96, "✅", "#b6ffbe") });
   if (IMG.cat) items.push({ d: cat.x + cat.y + .6, f: () => drawSprite(IMG.cat, cat.x, cat.y, 62, 62, cat.face === -1, Math.abs(Math.sin(cat.bob)) * 3) });
   if (IMG.hero) items.push({ d: hero.x + hero.y + .7, f: () => drawSprite(IMG.hero, hero.x, hero.y, 74, 74, hero.face === -1, hero.moving ? Math.abs(Math.sin(hero.bob)) * 5 : 0) });
 
@@ -499,9 +609,14 @@ function resize() {
 addEventListener("resize", resize);
 resize();
 resetGame();
-// стартовая камера
-const tx0 = innerWidth / 2 - isoX(hero.x, hero.y), ty0 = innerHeight / 2 - isoY(hero.x, hero.y) + 20;
-camX = tx0; camY = ty0;
+// стартовая камера (сразу по центру класса, без «пролёта»)
+{
+  const mapW = MAP_MAX_X - MAP_MIN_X, mapH = MAP_MAX_Y - MAP_MIN_Y;
+  camX = mapW <= innerWidth ? (innerWidth - MAP_MIN_X - MAP_MAX_X) / 2
+       : clamp(innerWidth / 2 - isoX(hero.x, hero.y), innerWidth - MAP_MAX_X, -MAP_MIN_X);
+  camY = mapH <= innerHeight - 60 ? (innerHeight - 60 - MAP_MIN_Y - MAP_MAX_Y) / 2 + 60
+       : clamp(innerHeight / 2 - isoY(hero.x, hero.y) + 20, innerHeight - MAP_MAX_Y, 60 - MAP_MIN_Y);
+}
 loadSprites().then(() => requestAnimationFrame(loop));
 </script>
 </body>
