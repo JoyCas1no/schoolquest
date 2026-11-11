@@ -295,11 +295,19 @@ function drawFloor() {
 
 const wallNearX = (x, y) => tileAt(x - 1, y) !== "#" || tileAt(x + 1, y) !== "#";
 const wallNearY = (x, y) => tileAt(x, y - 1) !== "#" || tileAt(x, y + 1) !== "#";
-const wallVisible = (x, y) => wallNearX(x, y) || wallNearY(x, y);
-const roomCornerAt = (x, y) => rooms.some(r =>
-  (x === r.x || x === r.x + r.w - 1) &&
-  (y === r.y || y === r.y + r.h - 1)
-);
+const wallVisible = (x, y) => {
+  const axes = roomWallAxesAt(x, y);
+  // Угловой тайл соприкасается с полом только диагонально, но рисовать его обязательно.
+  return axes.alongX || axes.alongY || wallNearX(x, y) || wallNearY(x, y);
+};
+const roomWallAxesAt = (x, y) => {
+  let alongX = false, alongY = false;
+  for (const r of rooms) {
+    if (x >= r.x && x < r.x + r.w && (y === r.y || y === r.y + r.h - 1)) alongX = true;
+    if (y >= r.y && y < r.y + r.h && (x === r.x || x === r.x + r.w - 1)) alongY = true;
+  }
+  return { alongX, alongY };
+};
 
 function drawWallBox(x, y, h) {
   const H = h == null ? WALL_H : h;
@@ -307,27 +315,28 @@ function drawWallBox(x, y, h) {
   const dimmed = dimmedAt(x + .5, y + .5);
   const sx = isoX(x, y), sy = isoY(x, y);
   const hw = TILE_W / 2, hh = TILE_H / 2;
-  // Направление задаёт прилегающий пол, а не сплошной блок стен вокруг карты.
-  // На углах оставляем полный блок, вдоль прямых участков — тонкую стену.
-  const nearX = wallNearX(x, y), nearY = wallNearY(x, y);
-  // На углу две тонкие стены должны входить в общий блок, иначе между ними пустота.
-  const corner = roomCornerAt(x, y);
-  const thinY = !corner && nearY && !nearX;
-  const thinX = !corner && nearX && !nearY;
-  const x0 = thinX ? -.14 : -.5, x1 = thinX ? .14 : .5;
-  const y0 = thinY ? -.14 : -.5, y1 = thinY ? .14 : .5;
-  const p = [[x0,y0],[x1,y0],[x1,y1],[x0,y1]].map(([dx,dy]) => ({
-    x: sx + (dx - dy) * hw, y: sy + (dx + dy) * hh
-  }));
   function face(points, color) {
     ctx.fillStyle = color; ctx.beginPath();
     points.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y));
     ctx.closePath(); ctx.fill();
   }
-  const top = p.map(q => ({ x: q.x, y: q.y - H }));
-  face([p[3],p[2],top[2],top[3]], dimmed ? "#49483f" : "#987858");
-  face([p[1],p[2],top[2],top[1]], dimmed ? "#565349" : "#ad8b65");
-  face(top, dimmed ? "#68645a" : "#d2b487");
+  // Каждый участок — тонкая призма точной длины. На углах две такие призмы
+  // перекрываются только своей толщиной, поэтому не образуют квадратных столбов.
+  function prism(x0, x1, y0, y1) {
+    const p = [[x0,y0],[x1,y0],[x1,y1],[x0,y1]].map(([dx,dy]) => ({
+      x: sx + (dx - dy) * hw, y: sy + (dx + dy) * hh
+    }));
+    const top = p.map(q => ({ x: q.x, y: q.y - H }));
+    face([p[3],p[2],top[2],top[3]], dimmed ? "#49483f" : "#987858");
+    face([p[1],p[2],top[2],top[1]], dimmed ? "#565349" : "#ad8b65");
+    face(top, dimmed ? "#68645a" : "#d2b487");
+  }
+  const axes = roomWallAxesAt(x, y);
+  const alongX = axes.alongX || (!axes.alongX && !axes.alongY && wallNearY(x, y));
+  const alongY = axes.alongY || (!axes.alongX && !axes.alongY && wallNearX(x, y));
+  const t = .1, e = .02; // небольшой запас убирает даже волосяную щель между тайлами
+  if (alongX) prism(-.5 - e, .5 + e, -t, t);
+  if (alongY) prism(-t, t, -.5 - e, .5 + e);
   ctx.restore();
 }
 
