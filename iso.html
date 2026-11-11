@@ -269,7 +269,7 @@ function drawFloor() {
       const c = tileAt(x, y);
       if (c === "#") {
         // Основание под стеной закрывает просветы между тонкой стеной и полом.
-        if (wallVisible(x, y)) {
+        if (wallVisible(x, y) || wallNearX(x, y) || wallNearY(x, y)) {
           diamond(x, y);
           ctx.fillStyle = dimmedAt(x + .5, y + .5) ? "#65716c" : "#d8c5a4";
           ctx.fill();
@@ -297,8 +297,9 @@ const wallNearX = (x, y) => tileAt(x - 1, y) !== "#" || tileAt(x + 1, y) !== "#"
 const wallNearY = (x, y) => tileAt(x, y - 1) !== "#" || tileAt(x, y + 1) !== "#";
 const wallVisible = (x, y) => {
   const axes = roomWallAxesAt(x, y);
-  // Угловой тайл соприкасается с полом только диагонально, но рисовать его обязательно.
-  return axes.alongX || axes.alongY || wallNearX(x, y) || wallNearY(x, y);
+  // Рисуем только фактический периметр кабинетов. Плотный блок "#" вокруг карты
+  // не является стеной: иначе у дверей появляются лишние столбы с обратной стороны.
+  return axes.alongX || axes.alongY;
 };
 const roomWallAxesAt = (x, y) => {
   let alongX = false, alongY = false;
@@ -454,7 +455,7 @@ function drawBlackboard(onlyRoom) {
 
 /* ---------- звук ---------- */
 let AC = null;
-function audio() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); return AC; }
+function audio() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); return ac; }
 function tone(f, t0, dur, type, vol) {
   if (muted) return;
   const ac = audio(), o = ac.createOscillator(), g = ac.createGain();
