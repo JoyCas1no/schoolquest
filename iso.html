@@ -308,6 +308,17 @@ const roomWallAxesAt = (x, y) => {
   }
   return { alongX, alongY };
 };
+const roomCornerDirectionsAt = (x, y) => {
+  for (const r of rooms) {
+    const onX = x === r.x || x === r.x + r.w - 1;
+    const onY = y === r.y || y === r.y + r.h - 1;
+    if (onX && onY) return {
+      xDir: x === r.x ? 1 : -1,
+      yDir: y === r.y ? 1 : -1
+    };
+  }
+  return null;
+};
 
 function drawWallBox(x, y, h) {
   const H = h == null ? WALL_H : h;
@@ -331,12 +342,41 @@ function drawWallBox(x, y, h) {
     face([p[1],p[2],top[2],top[1]], dimmed ? "#565349" : "#ad8b65");
     face(top, dimmed ? "#68645a" : "#d2b487");
   }
+  function cornerPrism(xDir, yDir, t, e) {
+    // Единый Г-образный след вместо двух пересекающихся прямоугольников.
+    let points = [
+      [-t,-t], [.5+e,-t], [.5+e,t],
+      [t,t], [t,.5+e], [-t,.5+e]
+    ].map(([dx,dy]) => [dx * xDir, dy * yDir]);
+    let area = 0;
+    for (let i = 0; i < points.length; i++) {
+      const a = points[i], b = points[(i + 1) % points.length];
+      area += a[0] * b[1] - b[0] * a[1];
+    }
+    if (area < 0) points.reverse();
+    const p = points.map(([dx,dy]) => ({
+      x: sx + (dx - dy) * hw, y: sy + (dx + dy) * hh
+    }));
+    const top = p.map(q => ({ x: q.x, y: q.y - H }));
+    for (let i = 0; i < p.length; i++) {
+      const j = (i + 1) % p.length;
+      const dx = points[j][0] - points[i][0], dy = points[j][1] - points[i][1];
+      const nx = dy, ny = -dx;
+      if (nx > 0) face([p[i],p[j],top[j],top[i]], dimmed ? "#565349" : "#ad8b65");
+      else if (ny > 0) face([p[i],p[j],top[j],top[i]], dimmed ? "#49483f" : "#987858");
+    }
+    face(top, dimmed ? "#68645a" : "#d2b487");
+  }
   const axes = roomWallAxesAt(x, y);
   const alongX = axes.alongX || (!axes.alongX && !axes.alongY && wallNearY(x, y));
   const alongY = axes.alongY || (!axes.alongX && !axes.alongY && wallNearX(x, y));
   const t = .1, e = .02; // небольшой запас убирает даже волосяную щель между тайлами
-  if (alongX) prism(-.5 - e, .5 + e, -t, t);
-  if (alongY) prism(-t, t, -.5 - e, .5 + e);
+  const corner = roomCornerDirectionsAt(x, y);
+  if (corner) cornerPrism(corner.xDir, corner.yDir, t, e);
+  else {
+    if (alongX) prism(-.5 - e, .5 + e, -t, t);
+    if (alongY) prism(-t, t, -.5 - e, .5 + e);
+  }
   ctx.restore();
 }
 
