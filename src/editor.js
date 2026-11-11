@@ -498,8 +498,8 @@ function startEditor(gltf) {
 }
 async function loadFloorModel() {
   try {
-    const parts = await Promise.all(Array.from({ length: 9 }, async (_, index) => {
-      const name = String(index).padStart(2, "0");
+    const names = [...Array.from({ length: 7 }, (_, index) => String(index).padStart(2, "0")), "07-a", "07-b", "07-c", "07-d", "08"];
+    const parts = await Promise.all(names.map(async (name) => {
       const response = await fetch(`./assets/models/floor-parts/part-${name}`);
       if (!response.ok) throw new Error(`Floor model part ${name}: HTTP ${response.status}`);
       return response.text();
