@@ -267,7 +267,15 @@ function drawFloor() {
   for (let y = 0; y < MAP_H; y++)
     for (let x = 0; x < MAP_W; x++) {
       const c = tileAt(x, y);
-      if (c === "#") continue;
+      if (c === "#") {
+        // Основание под стеной закрывает просветы между тонкой стеной и полом.
+        if (wallVisible(x, y)) {
+          diamond(x, y);
+          ctx.fillStyle = dimmedAt(x + .5, y + .5) ? "#65716c" : "#d8c5a4";
+          ctx.fill();
+        }
+        continue;
+      }
       const dimmed = dimmedAt(x + .5, y + .5);
       diamond(x, y);
       ctx.fillStyle = dimmed ? ((x + y) % 2 ? "#68736f" : "#75807b")
@@ -372,9 +380,9 @@ function drawSprite(img, x, y, w, h, flip, bobY) {
 function drawBlackboard(onlyRoom) {
   for (const r of rooms) {
     if (onlyRoom && r !== onlyRoom) continue;
-    const cx = r.x + r.w / 2, sx = isoX(cx, r.y);
+    const cx = r.x + r.w / 2, sx = isoX(cx, r.y), sy = isoY(cx, r.y);
     const W = Math.min(190, (r.w - 2) * 45), H = 42, X0 = sx - W / 2;
-    const Y0 = X0 / 2 - WALL_H + 50;
+    const Y0 = sy - WALL_H + 50;
     const dimmed = (activeRoom ? activeRoom.id : "corridor") !== r.id;
     ctx.save();
     ctx.transform(0.8944, 0.4472, 0, -1, X0, Y0);
@@ -395,7 +403,7 @@ function audio() { if (!AC) AC = new (window.AudioContext || window.webkitAudioC
 function tone(f, t0, dur, type, vol) {
   if (muted) return;
   const ac = audio(), o = ac.createOscillator(), g = ac.createGain();
-  o.type = type || "sine"; o.frequency.value = f;
+  o.type = type || "sine"; o.frequency.setValueAtTime(f, ac.currentTime + t0);
   g.gain.setValueAtTime(0, ac.currentTime + t0);
   g.gain.linearRampToValueAtTime(vol || .15, ac.currentTime + t0 + .01);
   g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + t0 + dur);
@@ -634,7 +642,7 @@ function winGame() {
   state = "win";
   const t = elapsed;
   let rec = "";
-  if (!best || t < best) { best = t; localStorage.setItem("sq_iso_best", String(best)); rec = " Новый рекорд!"; }
+  if (!best || t < best) { best = t; localStorage.setItem("sq_iso_best", String(t)); rec = " Новый рекорд!"; }
   sfxWin();
   showOverlay("Урок завершён!",
     "Все 12 заданий по математике сданы, урок окончен!<br>Время: <b>" + fmt(t) + "</b>" + rec +
