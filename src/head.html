@@ -3,47 +3,79 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#eaf4f8">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <title>Школьный Квест</title>
 <style>
-:root{--bg:#1b1535;--card:#2a2250;--card2:#372d6b;--ink:#f4f0ff;--dim:#b7acd9;--acc:#ffcf4a;--ok:#4ade80;--bad:#fb7185;--blue:#60a5fa}
+:root{
+  --bg:#eaf4f8;--card:#fffefa;--card2:#edf3f7;--ink:#20344a;--dim:#60758a;
+  --acc:#ffd35a;--acc-dark:#d6a72d;--ok:#2f9e68;--bad:#d94f5c;--blue:#3978c5;
+  --line:#d7e3e9;--shadow:0 10px 30px rgba(43,75,96,.09)
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;min-height:100vh}
-#app{max-width:520px;margin:0 auto;padding:14px 14px 40px}
-h1{font-size:26px;margin:6px 0 4px}h2{font-size:20px;margin:14px 0 8px}
-.card{background:var(--card);border-radius:16px;padding:14px;margin:10px 0}
-.narr{background:var(--card2);border-left:5px solid var(--acc);border-radius:12px;padding:10px 12px;margin:10px 0;font-style:italic}
-.narr b{font-style:normal;color:var(--acc)}
-button{font:inherit;color:var(--ink);background:var(--card2);border:0;border-radius:14px;padding:13px 14px;cursor:pointer;width:100%;margin:5px 0;text-align:left}
-button:active{transform:scale(.98)}
-button.main{background:var(--acc);color:#2b1d00;font-weight:700;text-align:center}
-button.sm{width:auto;padding:8px 12px;font-size:15px}
-button[disabled]{opacity:.55}
-.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
-.top{display:flex;justify-content:space-between;align-items:center;font-size:15px;color:var(--dim)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.grid button{text-align:center;padding:14px 8px}
-.grid button span{display:block;font-size:30px}
-.mon{font-size:90px;text-align:center;line-height:1.1;transition:transform .2s}
+html{min-height:100%;background:var(--bg)}
+body{margin:0;background-color:var(--bg);background-image:linear-gradient(rgba(76,126,153,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(76,126,153,.055) 1px,transparent 1px);background-size:28px 28px;color:var(--ink);font-family:"Trebuchet MS","Segoe UI",sans-serif;font-size:17px;line-height:1.55;min-height:100dvh}
+body:before{content:"";display:block;height:7px;background:linear-gradient(90deg,#3978c5 0 34%,#62ad87 34% 67%,#ffd35a 67%)}
+#app{width:min(100%,720px);margin:0 auto;padding:28px 22px 48px}
+h1{font-size:clamp(28px,5vw,40px);line-height:1.15;letter-spacing:-.7px;margin:8px 0 12px}
+h2{font-size:22px;line-height:1.25;margin:22px 0 10px}
+p{line-height:1.6}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin:14px 0;box-shadow:var(--shadow)}
+.narr{background:#fff6d9;border:1px solid #eedc9c;border-radius:16px;padding:16px 18px;margin:16px 0;color:#594a25}
+.narr b{color:#775b12}
+button{font:inherit;font-weight:650;line-height:1.35;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;width:100%;margin:6px 0;text-align:left;box-shadow:0 3px 0 #cad8df;transition:transform .16s ease,box-shadow .16s ease,background-color .16s ease}
+button:hover{background:#f5f9fb;box-shadow:0 4px 0 #bdced7}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 #cad8df}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid rgba(57,120,197,.35);outline-offset:3px}
+button.main{background:var(--acc);color:#44330b;border-color:#e6b93f;font-weight:800;text-align:center;box-shadow:0 4px 0 var(--acc-dark);font-size:18px;padding:15px 20px}
+button.main:hover{background:#ffdd7b;box-shadow:0 5px 0 var(--acc-dark)}
+button.sm{width:auto;padding:9px 14px;font-size:15px}
+button[disabled]{opacity:.52;cursor:not-allowed;transform:none}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:140px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:15px;color:var(--dim);background:rgba(255,254,250,.86);border:1px solid var(--line);border-radius:14px;padding:11px 14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.grid button{text-align:center;padding:20px 12px;background:var(--card);border-top:4px solid #73a2d3}
+.grid button:nth-child(3n+2){border-top-color:#62ad87}.grid button:nth-child(3n){border-top-color:#e6b93f}
+.grid button span{display:block;font-size:34px;margin-bottom:5px}
+.mon{font-size:96px;text-align:center;line-height:1.15;transition:transform .2s;filter:drop-shadow(0 8px 8px rgba(43,75,96,.12))}
 .mon.hit{animation:hit .4s}.mon.dead{transform:scale(.2) rotate(40deg);opacity:0;transition:all .8s}
 @keyframes hit{0%{transform:translateX(0)}25%{transform:translateX(-14px)}75%{transform:translateX(14px)}100%{transform:translateX(0)}}
-.pips{text-align:center;font-size:22px;letter-spacing:3px}
-.q{font-size:20px;font-weight:600;margin:10px 0;text-align:center}
-.opt.right{background:#166534}.opt.wrong{background:#9f1239}
-.dice{font-size:44px;font-weight:800;text-align:center;color:var(--acc);min-height:56px}
-.msg{text-align:center;min-height:24px;margin:4px 0}
-.expl{background:#3b2f73;border-radius:12px;padding:10px;margin:8px 0;font-size:15px}
-.bar{height:12px;background:#1b1535;border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue)}
-.lb div{display:flex;justify-content:space-between;padding:6px 4px;border-bottom:1px solid #3b2f73}
-.lb .me{color:var(--acc);font-weight:700}
-.coll{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
-.coll div{background:var(--card2);border-radius:12px;padding:8px 2px;font-size:11px}.coll span{display:block;font-size:34px}
-.coll .no{opacity:.35;filter:grayscale(1)}
-.dim{color:var(--dim);font-size:14px}
-input{font:inherit;width:100%;padding:11px;border-radius:12px;border:2px solid var(--card2);background:var(--card2);color:var(--ink);margin:4px 0}
-input:focus{outline:none;border-color:var(--acc)}
-select{font:inherit;width:100%;padding:11px;border-radius:12px;border:0;background:var(--card2);color:var(--ink);margin:4px 0}
-.toast{position:fixed;left:12px;right:12px;bottom:16px;max-width:496px;margin:auto;background:var(--acc);color:#2b1d00;padding:12px;border-radius:14px;z-index:9}
+.pips{text-align:center;font-size:23px;letter-spacing:3px}
+.q{font-size:23px;line-height:1.4;font-weight:700;margin:16px 0;text-align:center}
+.opt.right{background:#dff3e7;color:#195c3b;border-color:#75bd96}.opt.wrong{background:#fde5e7;color:#8b2c36;border-color:#e59aa2}
+.dice{font-size:46px;font-weight:800;text-align:center;color:var(--blue);min-height:58px}
+.msg{text-align:center;min-height:26px;margin:8px 0}
+.expl{background:#edf5fa;border:1px solid #d2e3ee;border-radius:14px;padding:14px 16px;margin:12px 0;font-size:16px}
+.bar{height:12px;background:#dfe9ee;border-radius:8px;overflow:hidden;margin:7px 0 16px}.bar i{display:block;height:100%;background:#62ad87;border-radius:8px}
+.lb div{display:flex;justify-content:space-between;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line)}.lb div:last-child{border-bottom:0}
+.lb .me{color:#815f08;font-weight:800}
+.coll{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:center}
+.coll div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 4px;font-size:12px;box-shadow:0 3px 0 #d5e0e5}.coll span{display:block;font-size:36px;margin-bottom:5px}
+.coll .no{opacity:.42;filter:grayscale(1)}
+.dim{color:var(--dim);font-size:15px;line-height:1.55}
+input,select{font:inherit;width:100%;padding:13px 14px;border-radius:12px;border:1px solid #bfcfd8;background:#f8fbfc;color:var(--ink);margin:6px 0 18px;box-shadow:inset 0 1px 2px rgba(43,75,96,.04)}
+input::placeholder{color:#7d8f9e;opacity:1}
+input:focus,select:focus{border-color:var(--blue);background:#fffefa;outline:3px solid rgba(57,120,197,.14)}
+select{margin-bottom:16px}
+.toast{position:fixed;left:16px;right:16px;bottom:max(20px,env(safe-area-inset-bottom));max-width:620px;margin:auto;background:#20344a;color:#fffefa;padding:15px 18px;border-radius:14px;z-index:9;box-shadow:0 12px 32px rgba(32,52,74,.24);text-align:center}
+.brand{display:flex;align-items:center;gap:14px;margin:0 0 24px}
+.brand-mark{display:grid;place-items:center;width:54px;height:54px;flex:0 0 54px;border-radius:16px;background:#3978c5;box-shadow:0 4px 0 #285b99}
+.brand-mark svg{width:32px;height:32px}
+.brand-name{font-size:15px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#3978c5}
+.brand-sub{font-size:14px;color:var(--dim)}
+.auth-shell{max-width:560px;margin:4vh auto 0}
+.auth-shell .card{padding:24px;margin:18px 0}
+.auth-note{padding:0 4px;margin-top:18px}
+.clsb.selected{outline:3px solid #e6b93f;background:#fff8df}
+@media(max-width:560px){
+  #app{padding:20px 14px 36px}.brand{margin-bottom:18px}.auth-shell{margin-top:0}
+  .card,.auth-shell .card{padding:16px}.grid{gap:10px}.grid button{padding:16px 8px}
+  .coll{grid-template-columns:repeat(3,1fr)}.top{align-items:flex-start;flex-direction:column;gap:4px}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div id="app"></div>
+<script>
+"use strict";
