@@ -1,62 +1,600 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#dceef2">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <title>Школьный Квест — Класс математики</title>
-<style>
-:root{--ink:#20344a;--dim:#60758a;--blue:#3978c5;--yellow:#ffd35a;--line:#d5e2e8}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#dceef2;font-family:"Trebuchet MS","Segoe UI",sans-serif;color:var(--ink);-webkit-user-select:none;user-select:none;touch-action:none}body{background:radial-gradient(circle at 18% 12%,rgba(255,255,255,.8),transparent 30%),linear-gradient(180deg,#dceef2 0%,#edf5ee 100%)}#game{display:block;width:100vw;height:100dvh}.hud{position:fixed;top:max(14px,env(safe-area-inset-top));left:14px;right:14px;display:flex;gap:10px;align-items:center;pointer-events:none;z-index:5;transition:opacity .2s}.pill{display:flex;align-items:center;gap:7px;background:rgba(255,254,250,.94);color:var(--ink);border:1px solid rgba(185,204,213,.85);border-radius:13px;padding:10px 14px;font-size:16px;font-weight:700;box-shadow:0 4px 14px rgba(43,75,96,.09);white-space:nowrap}.pill .hud-label{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);font-weight:700}.pill.subject{color:#315f97;pointer-events:auto;cursor:pointer;text-align:left;font-family:inherit}.pill.subject:hover{background:#fff;box-shadow:0 5px 16px rgba(43,75,96,.14)}.btn{pointer-events:auto;flex:0 0 46px;width:46px;height:46px;padding:0;background:rgba(255,254,250,.96);color:var(--ink);border:1px solid #bdced7;border-radius:13px;font-size:22px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 #bdced7;transition:transform .15s,box-shadow .15s}.btn:hover{background:#fff;transform:translateY(-1px)}.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #bdced7}.btn:focus-visible,.bigbtn:focus-visible,.answer-btn:focus-visible{outline:3px solid rgba(57,120,197,.38);outline-offset:3px}.spacer{flex:1}.menu-open .hud{opacity:0;visibility:hidden}#joy{position:fixed;left:24px;bottom:max(24px,env(safe-area-inset-bottom));width:126px;height:126px;border-radius:50%;background:rgba(255,254,250,.38);border:2px solid rgba(57,120,197,.22);z-index:6;display:none;box-shadow:inset 0 0 0 12px rgba(255,255,255,.15)}#stick{position:absolute;left:39px;top:39px;width:48px;height:48px;border-radius:50%;background:rgba(57,120,197,.65);border:3px solid rgba(255,255,255,.7);box-shadow:0 4px 10px rgba(43,75,96,.18)}#action{position:fixed;bottom:max(34px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:7;margin:0;white-space:nowrap}#action:active{transform:translateX(-50%) translateY(3px)}#overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(220,238,242,.7);backdrop-filter:blur(7px);z-index:10;padding:20px}.menu-card{width:min(100%,520px);max-height:calc(100dvh - 40px);overflow:auto;background:#fffefa;border:1px solid #d5e2e8;border-radius:26px;padding:34px 38px;text-align:center;box-shadow:0 24px 70px rgba(43,75,96,.18)}.menu-logo{display:grid;place-items:center;width:66px;height:66px;margin:0 auto 18px;border-radius:20px;background:var(--blue);box-shadow:0 5px 0 #285b99}.menu-logo svg{width:39px;height:39px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:1.7px;color:var(--blue);text-transform:uppercase}#overlay h1{font-size:clamp(32px,6vw,46px);line-height:1.1;letter-spacing:-1px;margin:8px 0 14px}#overlay p{font-size:17px;line-height:1.55;margin:8px auto;max-width:430px;color:var(--dim)}.menu-tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:20px 0 4px}.menu-tags span{padding:7px 11px;background:#edf5fa;border:1px solid #d5e5ee;border-radius:9px;font-size:13px;font-weight:700;color:#49647b}#ovHint{font-size:13px!important;margin-top:18px!important}.bigbtn{display:inline-block;margin-top:22px;background:var(--yellow);color:#44330b;border:1px solid #e6b93f;border-radius:14px;padding:15px 38px;font:inherit;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 5px 0 #d6a72d;transition:transform .15s,box-shadow .15s,background .15s}.bigbtn:hover{background:#ffdf7d;box-shadow:0 6px 0 #d6a72d}.bigbtn:active{transform:translateY(3px);box-shadow:0 2px 0 #d6a72d}#quiz{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(32,52,74,.38);backdrop-filter:blur(5px);z-index:9;padding:18px}.quiz-card{background:#fffefa;border:1px solid #d5e2e8;border-radius:24px;padding:28px;max-width:540px;width:100%;max-height:calc(100dvh - 36px);overflow:auto;color:var(--ink);text-align:center;box-shadow:0 22px 60px rgba(32,52,74,.24)}.quiz-subject{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);font-weight:800}#qText{font-size:clamp(22px,4vw,28px);font-weight:800;margin:14px 0 22px;line-height:1.4}#qOpts{display:grid;grid-template-columns:1fr 1fr;gap:12px}.answer-btn{min-height:58px;background:#edf5fa;color:#234463;border:1px solid #c8dce9;border-radius:13px;padding:12px;font:inherit;font-size:21px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 #b7cede;transition:transform .15s,background .15s}.answer-btn:hover{background:#e1eff8;transform:translateY(-1px)}.answer-btn:active{transform:translateY(2px)}.answer-btn.right{background:#dff3e7;color:#195c3b;border-color:#75bd96;box-shadow:0 3px 0 #75bd96}.answer-btn.wrong{background:#fde5e7;color:#8b2c36;border-color:#e59aa2;box-shadow:0 3px 0 #e59aa2}.answer-btn:disabled{cursor:default;transform:none}#qExpl{margin-top:18px;font-size:16px;line-height:1.55;background:#edf5fa;border:1px solid #d2e3ee;border-radius:13px;padding:14px 16px;text-align:left}#qNext{font-size:17px;padding:12px 30px}#schoolMap{position:fixed;inset:0;z-index:12;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(220,238,242,.82);backdrop-filter:blur(8px)}.school-map-card{width:min(100%,880px);max-height:calc(100dvh - 40px);overflow:auto;background:#fffefa;border:1px solid var(--line);border-radius:26px;padding:26px 30px;text-align:center;box-shadow:0 24px 70px rgba(43,75,96,.18)}.school-map-card h1{margin:6px 0 8px;font-size:clamp(28px,5vw,40px);line-height:1.15}.school-map-card>p{margin:0;color:var(--dim)}.map-plan{display:block;width:100%;height:auto;margin:18px 0 8px;border-radius:18px;background:#edf4f5;border:1px solid #dce8e9}.room-shape{stroke-width:3}.room.locked{opacity:.34;filter:grayscale(.35)}.room.locked .room-shape{fill:#a9bbc1;stroke:#78909b}.room.locked text{fill:#425d68}.room.current .room-shape{fill:#ffe18a;stroke:#3978c5;stroke-width:5}.room.current{cursor:pointer}.room.current:hover .room-shape{fill:#ffcf55}.room text{font-family:"Trebuchet MS","Segoe UI",sans-serif;text-anchor:middle;fill:#20344a;font-size:22px;font-weight:800;pointer-events:none}.room .room-note{font-size:13px;font-weight:600;fill:#60758a}.corridor{fill:#c5d9d9;stroke:#8ca9aa;stroke-width:3}.corridor-label{font-family:"Trebuchet MS","Segoe UI",sans-serif;text-anchor:middle;font-size:18px;font-weight:800;letter-spacing:3px;fill:#527071}.you-dot{fill:#3978c5;stroke:#fffefa;stroke-width:4}.you-text{font-family:"Trebuchet MS","Segoe UI",sans-serif;text-anchor:middle;font-size:14px;font-weight:800;fill:#285b99}#mapPlayer{pointer-events:none}#mapPlayer.hidden{display:none}.map-legend{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin:8px 0;color:var(--dim);font-size:14px}.map-legend span{display:flex;align-items:center;gap:7px}.legend-dot{width:12px;height:12px;border-radius:3px;background:#a9bbc1}.legend-dot.active{background:#ffd35a;border:2px solid #3978c5}.hidden{display:none!important}@media(max-width:600px){.hud{left:10px;right:10px;gap:6px;top:max(10px,env(safe-area-inset-top))}.pill{padding:9px 10px;font-size:14px;border-radius:11px}.pill .hud-label{display:none}.pill.subject{max-width:130px;overflow:hidden}.btn{flex-basis:42px;width:42px;height:42px;border-radius:11px}.menu-card{padding:26px 20px;border-radius:22px}.menu-logo{width:58px;height:58px;margin-bottom:14px}.menu-tags{margin-top:16px}.bigbtn{padding:14px 30px}.quiz-card{padding:22px 16px}.answer-btn{font-size:19px;min-height:54px}#qOpts{gap:9px}#schoolMap{padding:12px}.school-map-card{padding:20px 12px;border-radius:20px}.map-plan{margin-top:14px}.map-legend{gap:10px;font-size:13px}#books::before{content:"✓ ";color:#2f9e68}#timer::before{content:"◷ ";color:#60758a}#action{left:auto;right:18px;bottom:max(42px,env(safe-area-inset-bottom));transform:none;font-size:16px;padding:14px 20px}#action:active{transform:translateY(3px)}}@media(max-height:620px){.menu-logo{display:none}.menu-card{padding-top:22px;padding-bottom:22px}.menu-tags{margin-top:10px}.bigbtn{margin-top:14px}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
-</style>
+<style>:root{--ink:#20344a;
+--dim:#60758a;
+--blue:#3978c5;
+--yellow:#ffd35a;
+--line:#d5e2e8}*{box-sizing:border-box;
+-webkit-tap-highlight-color:transparent}body,html{margin:0;
+padding:0;
+width:100%;
+height:100%;
+overflow:hidden;
+background:#dceef2;
+font-family:"Trebuchet MS","Segoe UI",sans-serif;
+color:var(--ink);
+-webkit-user-select:none;
+user-select:none;
+touch-action:none}body{background:radial-gradient(circle at 18% 12%,rgba(255,255,255,.8),transparent 30%),linear-gradient(180deg,#dceef2 0,#edf5ee 100%)}#game{display:block;
+width:100vw;
+height:100dvh}.hud{position:fixed;
+top:max(14px,env(safe-area-inset-top));
+left:14px;
+right:14px;
+display:flex;
+gap:10px;
+align-items:center;
+pointer-events:none;
+z-index:5;
+transition:opacity .2s}.pill{display:flex;
+align-items:center;
+gap:7px;
+background:rgba(255,254,250,.94);
+color:var(--ink);
+border:1px solid rgba(185,204,213,.85);
+border-radius:13px;
+padding:10px 14px;
+font-size:16px;
+font-weight:700;
+box-shadow:0 4px 14px rgba(43,75,96,.09);
+white-space:nowrap}.pill .hud-label{font-size:12px;
+text-transform:uppercase;
+letter-spacing:.5px;
+color:var(--dim);
+font-weight:700}.pill.subject{color:#315f97;
+pointer-events:auto;
+cursor:pointer;
+text-align:left;
+font-family:inherit}.pill.subject:hover{background:#fff;
+box-shadow:0 5px 16px rgba(43,75,96,.14)}.btn{pointer-events:auto;
+flex:0 0 46px;
+width:46px;
+height:46px;
+padding:0;
+background:rgba(255,254,250,.96);
+color:var(--ink);
+border:1px solid #bdced7;
+border-radius:13px;
+font-size:22px;
+font-weight:800;
+cursor:pointer;
+box-shadow:0 3px 0 #bdced7;
+transition:transform .15s,box-shadow .15s}.btn:hover{background:#fff;
+transform:translateY(-1px)}.btn:active{transform:translateY(2px);
+box-shadow:0 1px 0 #bdced7}.answer-btn:focus-visible,.bigbtn:focus-visible,.btn:focus-visible{outline:3px solid rgba(57,120,197,.38);
+outline-offset:3px}.spacer{flex:1}.menu-open .hud{opacity:0;
+visibility:hidden}#joy{position:fixed;
+left:24px;
+bottom:max(24px,env(safe-area-inset-bottom));
+width:126px;
+height:126px;
+border-radius:50%;
+background:rgba(255,254,250,.38);
+border:2px solid rgba(57,120,197,.22);
+z-index:6;
+display:none;
+box-shadow:inset 0 0 0 12px rgba(255,255,255,.15)}#stick{position:absolute;
+left:39px;
+top:39px;
+width:48px;
+height:48px;
+border-radius:50%;
+background:rgba(57,120,197,.65);
+border:3px solid rgba(255,255,255,.7);
+box-shadow:0 4px 10px rgba(43,75,96,.18)}#action{position:fixed;
+bottom:max(34px,env(safe-area-inset-bottom));
+left:50%;
+transform:translateX(-50%);
+z-index:7;
+margin:0;
+white-space:nowrap}#action:active{transform:translateX(-50%) translateY(3px)}#overlay{position:fixed;
+inset:0;
+display:flex;
+align-items:center;
+justify-content:center;
+background:rgba(220,238,242,.7);
+backdrop-filter:blur(7px);
+z-index:10;
+padding:20px}.menu-card{width:min(100%,520px);
+max-height:calc(100dvh - 40px);
+overflow:auto;
+background:#fffefa;
+border:1px solid #d5e2e8;
+border-radius:26px;
+padding:34px 38px;
+text-align:center;
+box-shadow:0 24px 70px rgba(43,75,96,.18)}.menu-logo{display:grid;
+place-items:center;
+width:66px;
+height:66px;
+margin:0 auto 18px;
+border-radius:20px;
+background:var(--blue);
+box-shadow:0 5px 0 #285b99}.menu-logo svg{width:39px;
+height:39px}.eyebrow{font-size:12px;
+font-weight:800;
+letter-spacing:1.7px;
+color:var(--blue);
+text-transform:uppercase}#overlay h1{font-size:clamp(32px, 6vw, 46px);
+line-height:1.1;
+letter-spacing:-1px;
+margin:8px 0 14px}#overlay p{font-size:17px;
+line-height:1.55;
+margin:8px auto;
+max-width:430px;
+color:var(--dim)}.menu-tags{display:flex;
+justify-content:center;
+gap:8px;
+flex-wrap:wrap;
+margin:20px 0 4px}.menu-tags span{padding:7px 11px;
+background:#edf5fa;
+border:1px solid #d5e5ee;
+border-radius:9px;
+font-size:13px;
+font-weight:700;
+color:#49647b}#ovHint{font-size:13px!important;
+margin-top:18px!important}.bigbtn{display:inline-block;
+margin-top:22px;
+background:var(--yellow);
+color:#44330b;
+border:1px solid #e6b93f;
+border-radius:14px;
+padding:15px 38px;
+font:inherit;
+font-size:20px;
+font-weight:800;
+cursor:pointer;
+box-shadow:0 5px 0 #d6a72d;
+transition:transform .15s,box-shadow .15s,background .15s}.bigbtn:hover{background:#ffdf7d;
+box-shadow:0 6px 0 #d6a72d}.bigbtn:active{transform:translateY(3px);
+box-shadow:0 2px 0 #d6a72d}#quiz{position:fixed;
+inset:0;
+display:flex;
+align-items:center;
+justify-content:center;
+background:rgba(32,52,74,.38);
+backdrop-filter:blur(5px);
+z-index:9;
+padding:18px}.quiz-card{background:#fffefa;
+border:1px solid #d5e2e8;
+border-radius:24px;
+padding:28px;
+max-width:540px;
+width:100%;
+max-height:calc(100dvh - 36px);
+overflow:auto;
+color:var(--ink);
+text-align:center;
+box-shadow:0 22px 60px rgba(32,52,74,.24)}.quiz-subject{font-size:13px;
+letter-spacing:1px;
+text-transform:uppercase;
+color:var(--blue);
+font-weight:800}#qText{font-size:clamp(22px, 4vw, 28px);
+font-weight:800;
+margin:14px 0 22px;
+line-height:1.4}#qOpts{display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px}.answer-btn{min-height:58px;
+background:#edf5fa;
+color:#234463;
+border:1px solid #c8dce9;
+border-radius:13px;
+padding:12px;
+font:inherit;
+font-size:21px;
+font-weight:800;
+cursor:pointer;
+box-shadow:0 3px 0 #b7cede;
+transition:transform .15s,background .15s}.answer-btn:hover{background:#e1eff8;
+transform:translateY(-1px)}.answer-btn:active{transform:translateY(2px)}.answer-btn.right{background:#dff3e7;
+color:#195c3b;
+border-color:#75bd96;
+box-shadow:0 3px 0 #75bd96}.answer-btn.wrong{background:#fde5e7;
+color:#8b2c36;
+border-color:#e59aa2;
+box-shadow:0 3px 0 #e59aa2}.answer-btn:disabled{cursor:default;
+transform:none}#qExpl{margin-top:18px;
+font-size:16px;
+line-height:1.55;
+background:#edf5fa;
+border:1px solid #d2e3ee;
+border-radius:13px;
+padding:14px 16px;
+text-align:left}#qNext{font-size:17px;
+padding:12px 30px}#schoolMap{position:fixed;
+inset:0;
+z-index:12;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+background:rgba(220,238,242,.82);
+backdrop-filter:blur(8px)}.school-map-card{width:min(100%,880px);
+max-height:calc(100dvh - 40px);
+overflow:auto;
+background:#fffefa;
+border:1px solid var(--line);
+border-radius:26px;
+padding:26px 30px;
+text-align:center;
+box-shadow:0 24px 70px rgba(43,75,96,.18)}.school-map-card h1{margin:6px 0 8px;
+font-size:clamp(28px, 5vw, 40px);
+line-height:1.15}.school-map-card>p{margin:0;
+color:var(--dim)}.map-plan{display:block;
+width:100%;
+height:auto;
+margin:18px 0 8px;
+border-radius:18px;
+background:#edf4f5;
+border:1px solid #dce8e9}.room-shape{stroke-width:3}.room.locked{opacity:.34;
+filter:grayscale(.35)}.room.locked .room-shape{fill:#a9bbc1;
+stroke:#78909b}.room.locked text{fill:#425d68}.room.current .room-shape{fill:#ffe18a;
+stroke:#3978c5;
+stroke-width:5}.room.current{cursor:pointer}.room.current:hover .room-shape{fill:#ffcf55}.room text{font-family:"Trebuchet MS","Segoe UI",sans-serif;
+text-anchor:middle;
+fill:#20344a;
+font-size:22px;
+font-weight:800;
+pointer-events:none}.room .room-note{font-size:13px;
+font-weight:600;
+fill:#60758a}.corridor{fill:#c5d9d9;
+stroke:#8ca9aa;
+stroke-width:3}.corridor-label{font-family:"Trebuchet MS","Segoe UI",sans-serif;
+text-anchor:middle;
+font-size:18px;
+font-weight:800;
+letter-spacing:3px;
+fill:#527071}.you-dot{fill:#3978c5;
+stroke:#fffefa;
+stroke-width:4}.you-text{font-family:"Trebuchet MS","Segoe UI",sans-serif;
+text-anchor:middle;
+font-size:14px;
+font-weight:800;
+fill:#285b99}#mapPlayer{pointer-events:none}#mapPlayer.hidden{display:none}.map-legend{display:flex;
+justify-content:center;
+gap:18px;
+flex-wrap:wrap;
+margin:8px 0;
+color:var(--dim);
+font-size:14px}.map-legend span{display:flex;
+align-items:center;
+gap:7px}.legend-dot{width:12px;
+height:12px;
+border-radius:3px;
+background:#a9bbc1}.legend-dot.active{background:#ffd35a;
+border:2px solid #3978c5}.hidden{display:none!important}@media (max-width:600px){.hud{left:10px;
+right:10px;
+gap:6px;
+top:max(10px,env(safe-area-inset-top))}.pill{padding:9px 10px;
+font-size:14px;
+border-radius:11px}.pill .hud-label{display:none}.pill.subject{max-width:130px;
+overflow:hidden}.btn{flex-basis:42px;
+width:42px;
+height:42px;
+border-radius:11px}.menu-card{padding:26px 20px;
+border-radius:22px}.menu-logo{width:58px;
+height:58px;
+margin-bottom:14px}.menu-tags{margin-top:16px}.bigbtn{padding:14px 30px}.quiz-card{padding:22px 16px}.answer-btn{font-size:19px;
+min-height:54px}#qOpts{gap:9px}#schoolMap{padding:12px}.school-map-card{padding:20px 12px;
+border-radius:20px}.map-plan{margin-top:14px}.map-legend{gap:10px;
+font-size:13px}#books::before{content:"✓ ";
+color:#2f9e68}#timer::before{content:"◷ ";
+color:#60758a}#action{left:auto;
+right:18px;
+bottom:max(42px,env(safe-area-inset-bottom));
+transform:none;
+font-size:16px;
+padding:14px 20px}#action:active{transform:translateY(3px)}}@media (max-height:620px){.menu-logo{display:none}.menu-card{padding-top:22px;
+padding-bottom:22px}.menu-tags{margin-top:10px}.bigbtn{margin-top:14px}}@media (prefers-reduced-motion:reduce){*{transition:none!important}}</style>
 </head>
 <body class="menu-open">
-<canvas id="game" aria-label="Изометрический класс математики"></canvas>
-<div class="hud"><div class="pill"><span class="hud-label">Задания</span><span id="books">0/12</span></div><div class="pill"><span class="hud-label">Время</span><span id="timer">0:00</span></div><button class="pill subject" id="schoolMapBtn" title="Открыть карту школы" aria-label="Открыть карту школы">Математика ▾</button><div class="spacer"></div><button class="btn" id="mute" title="Звук" aria-label="Выключить звук">♪</button><button class="btn" id="pause" title="Пауза" aria-label="Поставить игру на паузу">Ⅱ</button></div>
-<div id="joy" aria-label="Джойстик для движения"><div id="stick"></div></div><button id="action" class="bigbtn hidden">Начать задание</button>
-<div id="quiz" class="hidden" role="dialog" aria-modal="true" aria-labelledby="qText"><div class="quiz-card"><div class="quiz-subject">Математика · 1 класс</div><div id="qText"></div><div id="qOpts"></div><div id="qExpl" class="hidden"></div><button id="qNext" class="bigbtn hidden">Продолжить</button></div></div>
-<div id="overlay" role="dialog" aria-modal="true" aria-labelledby="ovTitle"><div class="menu-card"><div class="menu-logo" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M5 8c6-1 11 1 15 5 4-4 9-6 15-5v24c-6-1-11 1-15 5-4-4-9-6-15-5V8Z" fill="#fffefa"/><path d="M20 13v24M10 15c3 0 5 1 7 2M10 21c3 0 5 1 7 2M23 17c2-1 4-2 7-2M23 23c2-1 4-2 7-2" stroke="#3978c5" stroke-width="1.8" stroke-linecap="round"/></svg></div><div class="eyebrow">Учебная игра</div><h1 id="ovTitle">Школьный Квест</h1><p id="ovText">Исследуй открытую школу, заходи в разные классы и решай задания у парт в кабинете математики.</p><div class="menu-tags" id="menuTags"><span>12 заданий</span><span>6 классов</span><span>Кот-помощник</span></div><p id="ovHint">Движение: WASD или стрелки · Задание: E · Пауза: P</p><button class="bigbtn" id="ovBtn">Начать приключение</button></div></div>
-<div id="schoolMap" class="hidden" role="dialog" aria-modal="true" aria-labelledby="schoolMapTitle"><div class="school-map-card"><div class="eyebrow">План школы</div><h1 id="schoolMapTitle">Карта классов</h1><p>Текущий класс подсвечен. Во все кабинеты можно зайти через общий коридор.</p><svg class="map-plan" viewBox="0 0 900 590" role="img" aria-label="Общий коридор и шесть классов разного размера"><path class="corridor" d="M50 245H850V342H50Z"/><text class="corridor-label" x="450" y="304">КОРИДОР</text><g class="room locked" data-room="rus"><path class="room-shape" d="M62 52H238V245H62Z"/><text x="150" y="139">Русский</text><text class="room-note" x="150" y="166">открыт</text></g><g class="room locked" data-room="nat"><path class="room-shape" d="M238 78H405V245H238Z"/><text x="321" y="153">Природа</text><text class="room-note" x="321" y="180">открыт</text></g><g class="room locked" data-room="eng"><path class="room-shape" d="M405 38H838V245H405Z"/><text x="621" y="132">Английский</text><text class="room-note" x="621" y="159">открыт</text></g><g class="room locked" data-room="logic"><path class="room-shape" d="M62 342H288V548H62Z"/><text x="175" y="435">Логика</text><text class="room-note" x="175" y="462">открыт</text></g><g class="room locked" data-room="art"><path class="room-shape" d="M288 342H526V510H288Z"/><text x="407" y="416">Искусство</text><text class="room-note" x="407" y="443">открыт</text></g><g class="room current" id="mapMath" data-room="math" role="button" tabindex="0" aria-label="Вернуться в класс математики"><path class="room-shape" d="M526 342H838V560H526Z"/><text x="682" y="425">Математика</text><text class="room-note" x="682" y="452">1 класс · 12 заданий</text></g><g id="mapPlayer"><circle class="you-dot" cx="682" cy="492" r="11"/><text class="you-text" x="682" y="526">Ты здесь</text></g></svg><div class="map-legend"><span><i class="legend-dot active"></i>Текущий класс</span><span><i class="legend-dot"></i>Другие классы</span></div><button class="bigbtn" id="closeSchoolMap">Вернуться в класс</button></div></div>
-<script>
-"use strict";
-const SPRITES={hero:["assets/iso/hero.",8],cat:["assets/iso/cat.",12],desk:["assets/iso/desk.",9],shelf:["assets/iso/shelf.",9]},cv=document.getElementById("game"),ctx=cv.getContext("2d"),TILE_W=64,TILE_H=32,WALL_H=46,MAP_W=45,MAP_H=34,MAP_SRC=Array.from({length:MAP_H},()=>Array(MAP_W).fill("#"));
-const rooms=[{id:"rus",name:"Русский",x:2,y:2,w:10,h:12},{id:"nat",name:"Природа",x:13,y:4,w:11,h:10},{id:"eng",name:"Английский",x:25,y:1,w:18,h:13},{id:"logic",name:"Логика",x:2,y:20,w:11,h:12},{id:"art",name:"Искусство",x:14,y:20,w:12,h:10},{id:"math",name:"Математика",x:27,y:20,w:16,h:12}];
-function carve(x,y,w,h,tile){for(let yy=y+1;yy<y+h-1;yy++)for(let xx=x+1;xx<x+w-1;xx++)MAP_SRC[yy][xx]=tile||".";}rooms.forEach(r=>carve(r.x,r.y,r.w,r.h));for(let y=14;y<=19;y++)for(let x=2;x<=42;x++)MAP_SRC[y][x]=".";rooms.forEach(r=>{const doorX=Math.floor(r.x+r.w/2);if(r.y<14)MAP_SRC[r.y+r.h-1][doorX]=".";else MAP_SRC[r.y][doorX]=".";});
-// Одна общая перегородка вместо дублирующихся стен соседних кабинетов.
-for(let y=3;y<=12;y++)MAP_SRC[y][11]=".";for(let y=5;y<=12;y++){MAP_SRC[y][13]=".";MAP_SRC[y][23]=".";}for(let y=2;y<=12;y++)MAP_SRC[y][25]=".";for(let y=21;y<=30;y++){MAP_SRC[y][12]=".";MAP_SRC[y][27]=".";}for(let y=21;y<=28;y++){MAP_SRC[y][14]=".";MAP_SRC[y][25]=".";}
-for(const y of[23,26,29])for(const x of[30,33,36,39])MAP_SRC[y][x]="T";for(const y of[22,23,24,25])MAP_SRC[y][28]="S";for(const r of rooms.filter(r=>r.id!=="math"))for(let yy=r.y+3;yy<r.y+r.h-2;yy+=3)for(let xx=r.x+3;xx<r.x+r.w-2;xx+=4)MAP_SRC[yy][xx]="F";
-const SPAWN={x:31.5,y:28.5},tileAt=(x,y)=>{if(x<0||y<0||y>=MAP_H||x>=MAP_W)return"#";return MAP_SRC[y][x];},passable=(x,y,doorOpen)=>{const c=tileAt(Math.floor(x),Math.floor(y));if(c==="#"||c==="T"||c==="S"||c==="F")return false;if(c==="D"&&!doorOpen)return false;return true;},roomAt=(x,y)=>rooms.find(r=>x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h)||null,roomBoundsAt=(x,y)=>rooms.find(r=>x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h)||null;
-const dimmedAt=(x,y)=>{const room=roomBoundsAt(x,y),zone=room?room.id:"corridor",activeZone=activeRoom?activeRoom.id:"corridor";return zone!==activeZone;};let activeRoom=roomAt(SPAWN.x,SPAWN.y);const desks=[];for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++)if(MAP_SRC[y][x]==="T")desks.push({x:x+.5,y:y+.5,done:false});const TOTAL=desks.length;
-let state="title",doorOpen=false,hero,cat,parts=[],camX=0,camY=0,viewScale=1,elapsed=0,startT=0,muted=localStorage.getItem("sq_iso_mute")==="1",best=+(localStorage.getItem("sq_iso_best")||0);
-function resetGame(){hero={x:SPAWN.x,y:SPAWN.y,vx:0,vy:0,face:1,moving:false,bob:0};cat={x:SPAWN.x-.6,y:SPAWN.y+.4,trail:[],face:1,bob:0};desks.forEach(d=>d.done=false);parts=[];doorOpen=false;elapsed=0;updateBooksHud();}
-const isoX=(x,y)=>(x-y)*TILE_W/2,isoY=(x,y)=>(x+y)*TILE_H/2,MAP_MIN_X=-MAP_H*TILE_W/2,MAP_MAX_X=MAP_W*TILE_W/2,MAP_MIN_Y=0,MAP_MAX_Y=(MAP_W+MAP_H-2)*TILE_H/2+WALL_H,clamp=(v,a,b)=>Math.max(Math.min(a,b),Math.min(Math.max(a,b),v));
-function diamond(x,y,h){const sx=isoX(x,y),sy=isoY(x,y)-(h||0);ctx.beginPath();ctx.moveTo(sx,sy-TILE_H/2);ctx.lineTo(sx+TILE_W/2,sy);ctx.lineTo(sx,sy+TILE_H/2);ctx.lineTo(sx-TILE_W/2,sy);ctx.closePath();}
-function drawFloor(){for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){const c=tileAt(x,y);if(c==="#"){if(wallVisible(x,y)||wallNearX(x,y)||wallNearY(x,y)){diamond(x,y);ctx.fillStyle=dimmedAt(x+.5,y+.5)?"#65716c":"#d8c5a4";ctx.fill();}continue;}const dimmed=dimmedAt(x+.5,y+.5);diamond(x,y);ctx.fillStyle=dimmed?((x+y)%2?"#68736f":"#75807b"):((x+y)%2?"#dfcba7":"#ecdab9");ctx.fill();ctx.strokeStyle=dimmed?"rgba(70,90,85,.18)":"rgba(120,90,50,.25)";ctx.lineWidth=1;ctx.stroke();}if(activeRoom&&activeRoom.id==="math"){ctx.fillStyle="rgba(90,140,200,.28)";for(let y=24;y<=27;y++)for(let x=32;x<=37;x++){diamond(x,y);ctx.fill();}}}
-const wallNearX=(x,y)=>tileAt(x-1,y)!=="#"||tileAt(x+1,y)!=="#",wallNearY=(x,y)=>tileAt(x,y-1)!=="#"||tileAt(x,y+1)!=="#",wallVisible=(x,y)=>{const axes=roomWallAxesAt(x,y);return axes.alongX||axes.alongY;};
-const roomWallAxesAt=(x,y)=>{let alongX=false,alongY=false;for(const r of rooms){if(x>=r.x&&x<r.x+r.w&&(y===r.y||y===r.y+r.h-1))alongX=true;if(y>=r.y&&y<r.y+r.h&&(x===r.x||x===r.x+r.w-1))alongY=true;}if((x===12&&y>=2&&y<=12)||(x===24&&y>=1&&y<=12)||(x===13&&y>=21&&y<=31)||(x===26&&y>=21&&y<=31))alongY=true;if((y===13||y===20)&&x>=2&&x<=42)alongX=true;if((x===1||x===43)&&y>=14&&y<=19)alongY=true;return{alongX,alongY};};
-const roomCornerDirectionsAt=(x,y)=>{for(const r of rooms){const onX=x===r.x||x===r.x+r.w-1,onY=y===r.y||y===r.y+r.h-1;if(onX&&onY)return{xDir:x===r.x?1:-1,yDir:y===r.y?1:-1};}return null;};
-function drawWallBox(x,y,h){const H=h==null?WALL_H:h;ctx.save();const dimmed=dimmedAt(x+.5,y+.5),sx=isoX(x,y),sy=isoY(x,y),hw=TILE_W/2,hh=TILE_H/2;function face(points,color){ctx.fillStyle=color;ctx.beginPath();points.forEach((q,i)=>i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y));ctx.closePath();ctx.fill();}function prism(x0,x1,y0,y1){const p=[[x0,y0],[x1,y0],[x1,y1],[x0,y1]].map(([dx,dy])=>({x:sx+(dx-dy)*hw,y:sy+(dx+dy)*hh})),top=p.map(q=>({x:q.x,y:q.y-H}));face([p[3],p[2],top[2],top[3]],dimmed?"#49483f":"#987858");face([p[1],p[2],top[2],top[1]],dimmed?"#565349":"#ad8b65");face(top,dimmed?"#68645a":"#d2b487");}function cornerPrism(xDir,yDir,t,e){let points=[[-t,-t],[.5+e,-t],[.5+e,t],[t,t],[t,.5+e],[-t,.5+e]].map(([dx,dy])=>[dx*xDir,dy*yDir]);let area=0;for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+1)%points.length];area+=a[0]*b[1]-b[0]*a[1];}if(area<0)points.reverse();const p=points.map(([dx,dy])=>({x:sx+(dx-dy)*hw,y:sy+(dx+dy)*hh})),top=p.map(q=>({x:q.x,y:q.y-H}));for(let i=0;i<p.length;i++){const j=(i+1)%p.length,dx=points[j][0]-points[i][0],dy=points[j][1]-points[i][1],nx=dy,ny=-dx;if(nx>0)face([p[i],p[j],top[j],top[i]],dimmed?"#565349":"#ad8b65");else if(ny>0)face([p[i],p[j],top[j],top[i]],dimmed?"#49483f":"#987858");}face(top,dimmed?"#68645a":"#d2b487");}const axes=roomWallAxesAt(x,y),alongX=axes.alongX||(!axes.alongX&&!axes.alongY&&wallNearY(x,y)),alongY=axes.alongY||(!axes.alongX&&!axes.alongY&&wallNearX(x,y)),t=.1,e=.02,corner=roomCornerDirectionsAt(x,y);if(corner)cornerPrism(corner.xDir,corner.yDir,t,e);else{if(alongX)prism(-.5-e,.5+e,-t,t);if(alongY)prism(-t,t,-.5-e,.5+e);}ctx.restore();}
-const LIP_H=10,wallHeightAt=(x,y)=>(x===MAP_W-1||y===MAP_H-1)?LIP_H:WALL_H;
-function label(x,y,text,color){ctx.save();ctx.font="bold 15px system-ui";ctx.textAlign="center";ctx.fillStyle="rgba(0,0,0,.45)";ctx.fillText(text,x+1,y+1);ctx.fillStyle=color||"#fff";ctx.fillText(text,x,y);ctx.restore();}function drawSprite(img,x,y,w,h,flip,bobY){const sx=isoX(x,y),sy=isoY(x,y)-(bobY||0);ctx.fillStyle="rgba(40,25,10,.22)";ctx.beginPath();ctx.ellipse(sx,sy,w*.3,w*.13,0,0,6.29);ctx.fill();ctx.save();ctx.translate(sx,sy);if(flip)ctx.scale(-1,1);ctx.drawImage(img,-w/2,-h,w,h);ctx.restore();}
-function drawBlackboard(onlyRoom){for(const r of rooms){if(onlyRoom&&r!==onlyRoom)continue;const cx=r.x+r.w/2,sx=isoX(cx,r.y),sy=isoY(cx,r.y),W=Math.min(190,(r.w-2)*45),H=42,X0=sx-W/2,Y0=sy-8,dimmed=(activeRoom?activeRoom.id:"corridor")!==r.id;ctx.save();ctx.transform(.8944,.4472,0,-1,X0,Y0);ctx.fillStyle=dimmed?"#57544a":"#c9a877";ctx.fillRect(0,0,W,H);ctx.fillStyle=dimmed?"#35443e":"#2e5d43";ctx.fillRect(4,4,W-8,H-8);ctx.fillStyle=dimmed?"rgba(210,220,214,.48)":"rgba(255,255,255,.88)";ctx.font="bold 14px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";ctx.save();ctx.translate(W/2,H/2);ctx.scale(1,-1);ctx.fillText(r.id==="math"?"МАТЕМАТИКА · 2+2=4":r.name.toUpperCase(),0,0);ctx.restore();ctx.restore();}}
-let AC=null;function audio(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();return AC;}function tone(f,t0,dur,type,vol){if(muted)return;const ac=audio(),o=ac.createOscillator(),g=ac.createGain();o.type=type||"sine";o.frequency.setValueAtTime(f,ac.currentTime+t0);g.gain.setValueAtTime(0,ac.currentTime+t0);g.gain.linearRampToValueAtTime(vol||.15,ac.currentTime+t0+.01);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t0+dur);o.connect(g);g.connect(ac.destination);o.start(ac.currentTime+t0);o.stop(ac.currentTime+t0+dur+.05);}const sfxCollect=()=>{tone(660,0,.12,"triangle");tone(880,.09,.15,"triangle");},sfxWin=()=>{[523,659,784,1047].forEach((f,i)=>tone(f,i*.14,.3,"triangle",.18));},sfxClick=()=>tone(440,0,.06,"square",.06);
-const keys={};addEventListener("keydown",e=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==="p")togglePause();if(e.key===" "){if(state==="title"||state==="win")startGame();else if(state==="pause")togglePause();}if((e.key.toLowerCase()==="e"||e.key==="Enter")&&state==="play"&&!quizOpen&&nearDesk){e.preventDefault();openQuiz(nearDesk);}});addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
-const joy={active:false,id:-1,dx:0,dy:0},joyEl=document.getElementById("joy"),stickEl=document.getElementById("stick");if("ontouchstart"in window){joyEl.style.display="block";document.getElementById("ovHint").textContent="Движение: левый джойстик · Задание: кнопка на экране";}joyEl.addEventListener("pointerdown",e=>{joy.active=true;joy.id=e.pointerId;joyEl.setPointerCapture(e.pointerId);moveStick(e);});joyEl.addEventListener("pointermove",e=>{if(joy.active&&e.pointerId===joy.id)moveStick(e);});const joyEnd=e=>{if(joy.active){joy.active=false;joy.dx=joy.dy=0;stickEl.style.left="41px";stickEl.style.top="41px";}};joyEl.addEventListener("pointerup",joyEnd);joyEl.addEventListener("pointercancel",joyEnd);function moveStick(e){const r=joyEl.getBoundingClientRect();let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);const m=Math.hypot(dx,dy),max=r.width/2-14;if(m>max){dx*=max/m;dy*=max/m;}joy.dx=dx/max;joy.dy=dy/max;stickEl.style.left=41+dx+"px";stickEl.style.top=41+dy+"px";}
-function inputVec(){let x=0,y=0;if(keys["a"]||keys["arrowleft"])x-=1;if(keys["d"]||keys["arrowright"])x+=1;if(keys["w"]||keys["arrowup"])y-=1;if(keys["s"]||keys["arrowdown"])y+=1;x+=joy.dx;y+=joy.dy;const len=Math.hypot(x,y);if(len>1){x/=len;y/=len;}const tx=x+y,ty=y-x,tl=Math.hypot(tx,ty)||1;return{x:tx/tl,y:ty/tl,active:len>.15};}
-const overlay=document.getElementById("overlay"),ovTitle=document.getElementById("ovTitle"),ovText=document.getElementById("ovText"),ovHint=document.getElementById("ovHint"),ovBtn=document.getElementById("ovBtn"),booksEl=document.getElementById("books"),timerEl=document.getElementById("timer");function showOverlay(title,text,btn,hint){ovTitle.textContent=title;ovText.innerHTML=text;ovBtn.textContent=btn;ovHint.style.display=hint?"":"none";document.getElementById("menuTags").style.display=state==="title"?"flex":"none";if(hint)ovHint.textContent=hint;document.body.classList.add("menu-open");overlay.classList.remove("hidden");}function hideOverlay(){overlay.classList.add("hidden");document.body.classList.remove("menu-open");}
-const schoolMapEl=document.getElementById("schoolMap"),mapRooms=Array.from(document.querySelectorAll("#schoolMap .room")),mapPlayer=document.getElementById("mapPlayer"),mapPlayerSpots={rus:[150,200,228],nat:[321,211,239],eng:[621,190,218],logic:[175,490,520],art:[407,460,488],math:[682,492,526]};
-function openSchoolMap(){if(state!=="play")return;state="map";mapRooms.forEach(el=>{const room=rooms.find(r=>r.id===el.dataset.room),current=!!activeRoom&&el.dataset.room===activeRoom.id;el.classList.toggle("current",current);el.classList.toggle("locked",!current);el.setAttribute("tabindex",current?"0":"-1");el.setAttribute("role","button");el.setAttribute("aria-label",current?"Вернуться: "+room.name:room.name+", открыт для посещения");});mapPlayer.classList.toggle("hidden",!activeRoom);if(activeRoom){const[x,dotY,textY]=mapPlayerSpots[activeRoom.id],dot=mapPlayer.querySelector("circle"),label=mapPlayer.querySelector("text");dot.setAttribute("cx",x);dot.setAttribute("cy",dotY);label.setAttribute("x",x);label.setAttribute("y",textY);}document.body.classList.add("menu-open");schoolMapEl.classList.remove("hidden");document.getElementById("closeSchoolMap").focus();}function closeSchoolMap(){if(state!=="map")return;schoolMapEl.classList.add("hidden");document.body.classList.remove("menu-open");state="play";document.getElementById("schoolMapBtn").focus();}document.getElementById("schoolMapBtn").addEventListener("click",openSchoolMap);document.getElementById("closeSchoolMap").addEventListener("click",closeSchoolMap);mapRooms.forEach(el=>{el.addEventListener("click",()=>{if(el.classList.contains("current"))closeSchoolMap();});el.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&el.classList.contains("current")){e.preventDefault();closeSchoolMap();}});});addEventListener("keydown",e=>{if(e.key==="Escape")closeSchoolMap();});
-ovBtn.addEventListener("click",()=>{sfxClick();if(state==="title"||state==="win")startGame();else if(state==="pause")togglePause();});document.getElementById("pause").addEventListener("click",()=>{sfxClick();togglePause();});document.getElementById("mute").addEventListener("click",function(){muted=!muted;localStorage.setItem("sq_iso_mute",muted?"1":"0");this.textContent=muted?"×":"♪";this.setAttribute("aria-label",muted?"Включить звук":"Выключить звук");});document.getElementById("mute").textContent=muted?"×":"♪";function updateBooksHud(){booksEl.textContent=desks.filter(d=>d.done).length+"/"+TOTAL;}
-const pick=a=>a[Math.floor(Math.random()*a.length)],r2=n=>Math.floor(Math.random()*n);function wrongNums(r){const w=new Set();let guard=0;while(w.size<3&&guard++<60){const c=r+pick([-10,-3,-2,-1,1,2,3,10]);if(c>=0&&c!==r)w.add(String(c));}while(w.size<3)w.add(String(r+w.size+7));return[...w];}
-function makeQ(){const t=r2(6);if(t===0){const a=2+r2(13),b=2+r2(9),r=a+b;return[a+" + "+b+" = ?",String(r),wrongNums(r),a+" плюс "+b+" будет "+r+"."];}if(t===1){const a=8+r2(12),b=1+r2(a-1),r=a-b;return[a+" − "+b+" = ?",String(r),wrongNums(r),a+" минус "+b+" будет "+r+"."];}if(t===2){const a=2+r2(4),b=2+r2(4),r=a*b;return[a+" × "+b+" = ?",String(r),wrongNums(r),a+" умножить на "+b+" будет "+r+"."];}if(t===3){const a=5+r2(16),b=5+r2(16);if(a===b)return makeQ();const big=Math.max(a,b),small=Math.min(a,b);return["Какое число больше: "+a+" или "+b+"?",String(big),wrongNums(big),"Сравниваем: "+big+" больше, чем "+small+"."];}if(t===4){const start=2+r2(6),r=start+6;return["Продолжи ряд: "+start+", "+(start+2)+", "+(start+4)+", __",String(r),wrongNums(r),"Каждое число больше предыдущего на 2, значит "+(start+4)+" + 2 = "+r+"."];}const a=2+r2(9),b=2+r2(9),r=a+b;return["У Миши "+a+" наклеек, у Гриши "+b+". Сколько наклеек у них вместе?",String(r),wrongNums(r),"Складываем: "+a+" + "+b+" = "+r+"."];}const usedQ=new Set();function genQ(){for(let i=0;i<80;i++){const q=makeQ();if(!usedQ.has(q[0])){usedQ.add(q[0]);return q;}}return makeQ();}
-let nearDesk=null,quizOpen=false,curDesk=null,curQ=null;const quizEl=document.getElementById("quiz"),qText=document.getElementById("qText"),qOpts=document.getElementById("qOpts"),qExpl=document.getElementById("qExpl"),qNext=document.getElementById("qNext"),actionBtn=document.getElementById("action");
-function openQuiz(d){if(quizOpen||d.done)return;curDesk=d;quizOpen=true;hero.x=d.x;hero.y=d.y+.55;hero.moving=false;cat.trail.length=0;cat.trail.push({x:hero.x,y:hero.y});curQ=genQ();qText.textContent=curQ[0];qExpl.classList.add("hidden");qNext.classList.add("hidden");const opts=[curQ[1],...curQ[2]];for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}qOpts.innerHTML="";const btns=opts.map(o=>{const b=document.createElement("button");b.className="answer-btn";b.textContent=o;b.addEventListener("click",()=>answerQ(o,b,btns));qOpts.appendChild(b);return b;});actionBtn.classList.add("hidden");quizEl.classList.remove("hidden");sfxClick();}
-function answerQ(chosen,btn,btns){const right=chosen===curQ[1];btns.forEach(b=>{b.disabled=true;if(b.textContent===curQ[1])b.classList.add("right");else if(b===btn)b.classList.add("wrong");else b.style.opacity=".45";});qExpl.textContent=(right?"Верно! ":"Пока нет. ")+curQ[3];qExpl.classList.remove("hidden");qNext.classList.remove("hidden");if(right){curDesk.done=true;sfxCollect();burst(curDesk.x,curDesk.y,"#7fd08a");updateBooksHud();if(desks.every(k=>k.done)){doorOpen=true;burst(hero.x,hero.y,"#7fd08a");}}else tone(220,0,.22,"sawtooth",.08);}qNext.addEventListener("click",()=>{quizOpen=false;quizEl.classList.add("hidden");sfxClick();if(desks.every(d=>d.done))winGame();});actionBtn.addEventListener("click",()=>{if(nearDesk)openQuiz(nearDesk);});function fmt(t){const m=Math.floor(t/60),s=Math.floor(t%60);return m+":"+String(s).padStart(2,"0");}
-function startGame(){resetGame();state="play";startT=performance.now();hideOverlay();}function togglePause(){if(state==="play"){state="pause";showOverlay("Пауза","Можно перевести дух. Прогресс этого урока сохранится до конца игры.","Продолжить","");}else if(state==="pause"){state="play";hideOverlay();}}function winGame(){state="win";const t=elapsed;let rec="";if(!best||t<best){best=t;localStorage.setItem("sq_iso_best",String(t));rec=" Новый рекорд!";}sfxWin();showOverlay("Урок завершён!","Все 12 заданий по математике сданы, урок окончен!<br>Время: <b>"+fmt(t)+"</b>"+rec+(best?"<br>Лучшее время: <b>"+fmt(best)+"</b>":""),"Играть ещё","Или нажми Пробел");}function burst(x,y,color){for(let i=0;i<12;i++){const a=Math.random()*6.28,sp=40+Math.random()*70;parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,life:.7,color});}}
-const SPEED=3.4;function update(dt,t){if(state!=="play")return;elapsed=(performance.now()-startT)/1000;const iv=quizOpen?{x:0,y:0,active:false}:inputVec();hero.moving=iv.active;if(iv.active){hero.face=(iv.x-iv.y)<0?-1:1;const nx=hero.x+iv.x*SPEED*dt,ny=hero.y+iv.y*SPEED*dt;if(passable(nx,hero.y,doorOpen))hero.x=nx;if(passable(hero.x,ny,doorOpen))hero.y=ny;hero.bob+=dt*10;}activeRoom=roomAt(hero.x,hero.y);const zoneName=activeRoom?activeRoom.name+" ▾":"Коридор ▾",zoneBtn=document.getElementById("schoolMapBtn");if(zoneBtn.textContent!==zoneName)zoneBtn.textContent=zoneName;cat.trail.push({x:hero.x,y:hero.y});if(cat.trail.length>26)cat.trail.shift();const tgt=cat.trail[0],ddx=tgt.x-cat.x,ddy=tgt.y-cat.y,dd=Math.hypot(ddx,ddy);if(dd>.02){const sp=Math.min(dd,SPEED*.92*dt);cat.x+=ddx/dd*sp;cat.y+=ddy/dd*sp;cat.face=(ddx-ddy)<0?-1:1;cat.bob+=dt*12;}nearDesk=null;if(!quizOpen){let best=1.15;for(const d of desks){if(d.done)continue;const dist=Math.hypot(d.x-hero.x,d.y-hero.y);if(dist<best){best=dist;nearDesk=d;}}}actionBtn.classList.toggle("hidden",!(nearDesk&&state==="play"&&!quizOpen));for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life-=dt;p.x+=p.vx*dt/32;p.y+=p.vy*dt/32;p.vy+=180*dt;if(p.life<=0)parts.splice(i,1);}const mapW=(MAP_MAX_X-MAP_MIN_X)*viewScale,mapH=(MAP_MAX_Y-MAP_MIN_Y)*viewScale,minX=MAP_MIN_X*viewScale,maxX=MAP_MAX_X*viewScale,minY=MAP_MIN_Y*viewScale,maxY=MAP_MAX_Y*viewScale,tx=mapW<=innerWidth?(innerWidth-minX-maxX)/2:clamp(innerWidth/2-isoX(hero.x,hero.y)*viewScale,innerWidth-maxX,-minX),ty=mapH<=innerHeight-100?(innerHeight-100-minY-maxY)/2+72:clamp(innerHeight/2-isoY(hero.x,hero.y)*viewScale+20,innerHeight-maxY,80-minY);camX+=(tx-camX)*Math.min(1,dt*6);camY+=(ty-camY)*Math.min(1,dt*6);}
-const IMG={},DARK_SPRITES=new WeakMap();function darkSprite(img){if(!DARK_SPRITES.has(img)){const c=document.createElement("canvas");c.width=img.width;c.height=img.height;const g=c.getContext("2d");g.drawImage(img,0,0);g.globalCompositeOperation="source-atop";g.fillStyle="rgba(18,29,26,.64)";g.fillRect(0,0,c.width,c.height);DARK_SPRITES.set(img,c);}return DARK_SPRITES.get(img);}async function loadSprites(){await Promise.all(Object.entries(SPRITES).map(async([k,[base,n]])=>{try{const parts=await Promise.all(Array.from({length:n},(_,i)=>fetch(base+String(i).padStart(3,"0")+".b64").then(r=>{if(!r.ok)throw new Error("chunk "+i);return r.text();})));const im=new Image();await new Promise(res=>{im.onload=res;im.onerror=res;im.src="data:image/png;base64,"+parts.join("");});if(im.width)IMG[k]=im;}catch(e){}}));}
-function render(t){ctx.clearRect(0,0,cv.width,cv.height);ctx.save();ctx.translate(camX,camY);ctx.scale(viewScale,viewScale);drawFloor();const items=[],drawRoomSprite=(img,x,y,w,h)=>{drawSprite(dimmedAt(x,y)?darkSprite(img):img,x,y,w,h);};for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){const c=tileAt(x,y);if(c==="#"){if(wallVisible(x,y))items.push({d:x+y+.85,f:()=>drawWallBox(x,y,wallHeightAt(x,y))});}else if(c==="T"&&IMG.desk)items.push({d:x+y+.4,f:()=>drawRoomSprite(IMG.desk,x+.5,y+.5,92,92)});else if(c==="F"&&IMG.desk)items.push({d:x+y+.4,f:()=>drawRoomSprite(IMG.desk,x+.5,y+.5,82,82)});else if(c==="S"&&IMG.shelf)items.push({d:x+y+.4,f:()=>drawRoomSprite(IMG.shelf,x+.5,y+.5,100,116)});}for(const r of rooms)items.push({d:r.x+r.w/2+r.y+.95,f:()=>drawBlackboard(r)});for(const d of desks)if(d.done)items.push({d:d.x+d.y+.2,f:()=>label(isoX(d.x,d.y),isoY(d.x,d.y)-96,"✓",dimmedAt(d.x,d.y)?"#526a5b":"#3f9f62")});if(IMG.cat)items.push({d:cat.x+cat.y+.6,f:()=>drawSprite(dimmedAt(cat.x,cat.y)?darkSprite(IMG.cat):IMG.cat,cat.x,cat.y,62,62,cat.face===-1,Math.abs(Math.sin(cat.bob))*3)});if(IMG.hero)items.push({d:hero.x+hero.y+.7,f:()=>drawSprite(dimmedAt(hero.x,hero.y)?darkSprite(IMG.hero):IMG.hero,hero.x,hero.y,74,74,hero.face===-1,hero.moving?Math.abs(Math.sin(hero.bob))*5:0)});items.sort((a,b)=>a.d-b.d);for(const it of items)it.f();for(const p of parts){ctx.globalAlpha=Math.max(0,p.life/.7);ctx.fillStyle=p.color;const sx=isoX(p.x,p.y),sy=isoY(p.x,p.y)-10;ctx.beginPath();ctx.arc(sx,sy,3,0,6.28);ctx.fill();}ctx.globalAlpha=1;ctx.restore();if(state==="play")timerEl.textContent=fmt(elapsed);}
-let last=performance.now();function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt,now/1000);render(now/1000);requestAnimationFrame(loop);}function resize(){const dpr=Math.min(devicePixelRatio||1,2);viewScale=Math.max(.48,Math.min(1,innerWidth/850,innerHeight/620));cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);}addEventListener("resize",resize);resize();resetGame();{const mapW=(MAP_MAX_X-MAP_MIN_X)*viewScale,mapH=(MAP_MAX_Y-MAP_MIN_Y)*viewScale,minX=MAP_MIN_X*viewScale,maxX=MAP_MAX_X*viewScale,minY=MAP_MIN_Y*viewScale,maxY=MAP_MAX_Y*viewScale;camX=mapW<=innerWidth?(innerWidth-minX-maxX)/2:clamp(innerWidth/2-isoX(hero.x,hero.y)*viewScale,innerWidth-maxX,-minX);camY=mapH<=innerHeight-100?(innerHeight-100-minY-maxY)/2+72:clamp(innerHeight/2-isoY(hero.x,hero.y)*viewScale+20,innerHeight-maxY,80-minY);}loadSprites().then(()=>requestAnimationFrame(loop));
-</script>
-</body>
-</html>
+<canvas id="game" aria-label="Изометрический класс математики">
+</canvas>
+<div class="hud">
+<div class="pill">
+<span class="hud-label">Задания</span>
+<span id="books">0/12</span>
+</div>
+<div class="pill">
+<span class="hud-label">Время</span>
+<span id="timer">0:00</span>
+</div>
+<button class="pill subject" id="schoolMapBtn" title="Открыть карту школы" aria-label="Открыть карту школы"> Математика ▾ </button>
+<div class="spacer">
+</div>
+<button class="btn" id="mute" title="Звук" aria-label="Выключить звук"> ♪ </button>
+<button class="btn" id="pause" title="Пауза" aria-label="Поставить игру на паузу"> Ⅱ </button>
+</div>
+<div id="joy" aria-label="Джойстик для движения">
+<div id="stick">
+</div>
+</div>
+<button id="action" class="bigbtn hidden">Начать задание</button>
+<div id="quiz" class="hidden" role="dialog" aria-modal="true" aria-labelledby="qText">
+<div class="quiz-card">
+<div class="quiz-subject">Математика · 1 класс</div>
+<div id="qText">
+</div>
+<div id="qOpts">
+</div>
+<div id="qExpl" class="hidden">
+</div>
+<button id="qNext" class="bigbtn hidden">Продолжить</button>
+</div>
+</div>
+<div id="overlay" role="dialog" aria-modal="true" aria-labelledby="ovTitle">
+<div class="menu-card">
+<div class="menu-logo" aria-hidden="true">
+<svg viewBox="0 0 40 40" fill="none">
+<path d="M5 8c6-1 11 1 15 5 4-4 9-6 15-5v24c-6-1-11 1-15 5-4-4-9-6-15-5V8Z" fill="#fffefa"/>
+<path d="M20 13v24M10 15c3 0 5 1 7 2M10 21c3 0 5 1 7 2M23 17c2-1 4-2 7-2M23 23c2-1 4-2 7-2" stroke="#3978c5" stroke-width="1.8" stroke-linecap="round"/>
+</svg>
+</div>
+<div class="eyebrow">Учебная игра</div>
+<h1 id="ovTitle">Школьный Квест</h1>
+<p id="ovText"> Исследуй открытую школу, заходи в разные классы и решай задания у парт в кабинете математики. </p>
+<div class="menu-tags" id="menuTags">
+<span>12 заданий</span>
+<span>6 классов</span>
+<span>Кот-помощник</span>
+</div>
+<p id="ovHint">Движение: WASD или стрелки · Задание: E · Пауза: P</p>
+<button class="bigbtn" id="ovBtn">Начать приключение</button>
+</div>
+</div>
+<div id="schoolMap" class="hidden" role="dialog" aria-modal="true" aria-labelledby="schoolMapTitle">
+<div class="school-map-card">
+<div class="eyebrow">План школы</div>
+<h1 id="schoolMapTitle">Карта классов</h1>
+<p> Текущий класс подсвечен. Во все кабинеты можно зайти через общий коридор. </p>
+<svg class="map-plan" viewBox="0 0 900 590" role="img" aria-label="Общий коридор и шесть классов разного размера">
+<path class="corridor" d="M50 245H850V342H50Z"/>
+<text class="corridor-label" x="450" y="304">КОРИДОР</text>
+<g class="room locked" data-room="rus">
+<path class="room-shape" d="M62 52H238V245H62Z"/>
+<text x="150" y="139">Русский</text>
+<text class="room-note" x="150" y="166">открыт</text>
+</g>
+<g class="room locked" data-room="nat">
+<path class="room-shape" d="M238 78H405V245H238Z"/>
+<text x="321" y="153">Природа</text>
+<text class="room-note" x="321" y="180">открыт</text>
+</g>
+<g class="room locked" data-room="eng">
+<path class="room-shape" d="M405 38H838V245H405Z"/>
+<text x="621" y="132">Английский</text>
+<text class="room-note" x="621" y="159">открыт</text>
+</g>
+<g class="room locked" data-room="logic">
+<path class="room-shape" d="M62 342H288V548H62Z"/>
+<text x="175" y="435">Логика</text>
+<text class="room-note" x="175" y="462">открыт</text>
+</g>
+<g class="room locked" data-room="art">
+<path class="room-shape" d="M288 342H526V510H288Z"/>
+<text x="407" y="416">Искусство</text>
+<text class="room-note" x="407" y="443">открыт</text>
+</g>
+<g class="room current" id="mapMath" data-room="math" role="button" tabindex="0" aria-label="Вернуться в класс математики">
+<path class="room-shape" d="M526 342H838V560H526Z"/>
+<text x="682" y="425">Математика</text>
+<text class="room-note" x="682" y="452">1 класс · 12 заданий</text>
+</g>
+<g id="mapPlayer">
+<circle class="you-dot" cx="682" cy="492" r="11"/>
+<text class="you-text" x="682" y="526">Ты здесь</text>
+</g>
+</svg>
+<div class="map-legend">
+<span>
+<i class="legend-dot active">
+</i>Текущий класс</span>
+<span>
+<i class="legend-dot">
+</i>Другие классы</span>
+</div>
+<button class="bigbtn" id="closeSchoolMap">Вернуться в класс</button>
+</div>
+</div> <script>"use strict";
+const SPRITES={hero:["assets/iso/hero.",8],cat:["assets/iso/cat.",12],desk:["assets/iso/desk.",9],shelf:["assets/iso/shelf.",9]},cv=document.getElementById("game"),ctx=cv.getContext("2d"),TILE_W=64,TILE_H=32,WALL_H=46,MAP_W=45,MAP_H=34,MAP_SRC=Array.from({length:34},()=>Array(45).fill("#")),rooms=[{id:"rus",name:"Русский",x:2,y:2,w:10,h:12},{id:"nat",name:"Природа",x:13,y:4,w:11,h:10},{id:"eng",name:"Английский",x:25,y:1,w:18,h:13},{id:"logic",name:"Логика",x:2,y:20,w:11,h:12},{id:"art",name:"Искусство",x:14,y:20,w:12,h:10},{id:"math",name:"Математика",x:27,y:20,w:16,h:12}];
+function carve(t,e,o,n,a){for(let i=e+1;
+i<e+n-1;
+i++)for(let e=t+1;
+e<t+o-1;
+e++)MAP_SRC[i][e]=a||"."}rooms.forEach(t=>carve(t.x,t.y,t.w,t.h));
+for(let t=14;
+t<=19;
+t++)for(let e=2;
+e<=42;
+e++)MAP_SRC[t][e]=".";
+rooms.forEach(t=>{const e=Math.floor(t.x+t.w/2);
+t.y<14?MAP_SRC[t.y+t.h-1][e]=".":MAP_SRC[t.y][e]="."});
+for(let t=3;
+t<=12;
+t++)MAP_SRC[t][11]=".";
+for(let t=5;
+t<=12;
+t++)MAP_SRC[t][13]=".",MAP_SRC[t][23]=".";
+for(let t=2;
+t<=12;
+t++)MAP_SRC[t][25]=".";
+for(let t=21;
+t<=30;
+t++)MAP_SRC[t][12]=".",MAP_SRC[t][27]=".";
+for(let t=21;
+t<=28;
+t++)MAP_SRC[t][14]=".",MAP_SRC[t][25]=".";
+for(const t of[23,26,29])for(const e of[30,33,36,39])MAP_SRC[t][e]="T";
+for(const t of[22,23,24,25])MAP_SRC[t][28]="S";
+for(const t of rooms.filter(t=>"math"!==t.id))for(let e=t.y+3;
+e<t.y+t.h-2;
+e+=3)for(let o=t.x+3;
+o<t.x+t.w-2;
+o+=4)MAP_SRC[e][o]="F";
+const SPAWN={x:31.5,y:28.5},tileAt=(t,e)=>t<0||e<0||e>=34||t>=45?"#":MAP_SRC[e][t],passable=(t,e,o)=>{const n=tileAt(Math.floor(t),Math.floor(e));
+return"#"!==n&&"T"!==n&&"S"!==n&&"F"!==n&&!("D"===n&&!o)},roomAt=(t,e)=>rooms.find(o=>t>=o.x&&t<o.x+o.w&&e>=o.y&&e<o.y+o.h)||null,roomBoundsAt=(t,e)=>rooms.find(o=>t>=o.x&&t<o.x+o.w&&e>=o.y&&e<o.y+o.h)||null,dimmedAt=(t,e)=>{const o=roomBoundsAt(t,e);
+return(o?o.id:"corridor")!==(activeRoom?activeRoom.id:"corridor")};
+let activeRoom=roomAt(SPAWN.x,SPAWN.y);
+const desks=[];
+for(let t=0;
+t<34;
+t++)for(let e=0;
+e<45;
+e++)"T"===MAP_SRC[t][e]&&desks.push({x:e+.5,y:t+.5,done:!1});
+const TOTAL=desks.length;
+let hero,cat,state="title",doorOpen=!1,parts=[],camX=0,camY=0,viewScale=1,elapsed=0,startT=0,muted="1"===localStorage.getItem("sq_iso_mute"),best=+(localStorage.getItem("sq_iso_best")||0);
+function resetGame(){hero={x:SPAWN.x,y:SPAWN.y,vx:0,vy:0,face:1,moving:!1,bob:0},cat={x:SPAWN.x-.6,y:SPAWN.y+.4,trail:[],face:1,bob:0},desks.forEach(t=>t.done=!1),parts=[],doorOpen=!1,elapsed=0,updateBooksHud()}const isoX=(t,e)=>64*(t-e)/2,isoY=(t,e)=>32*(t+e)/2,MAP_MIN_X=-1088,MAP_MAX_X=1440,MAP_MIN_Y=0,MAP_MAX_Y=1278,clamp=(t,e,o)=>Math.max(Math.min(e,o),Math.min(Math.max(e,o),t));
+function diamond(t,e,o){const n=isoX(t,e),a=isoY(t,e)-(o||0);
+ctx.beginPath(),ctx.moveTo(n,a-16),ctx.lineTo(n+32,a),ctx.lineTo(n,a+16),ctx.lineTo(n-32,a),ctx.closePath()}function drawFloor(){for(let t=0;
+t<34;
+t++)for(let e=0;
+e<45;
+e++){if("#"===tileAt(e,t)){(wallVisible(e,t)||wallNearX(e,t)||wallNearY(e,t))&&(diamond(e,t),ctx.fillStyle=dimmedAt(e+.5,t+.5)?"#65716c":"#d8c5a4",ctx.fill());
+continue}const o=dimmedAt(e+.5,t+.5);
+diamond(e,t),ctx.fillStyle=o?(e+t)%2?"#68736f":"#75807b":(e+t)%2?"#dfcba7":"#ecdab9",ctx.fill(),ctx.strokeStyle=o?"rgba(70,90,85,.18)":"rgba(120,90,50,.25)",ctx.lineWidth=1,ctx.stroke()}if(activeRoom&&"math"===activeRoom.id){ctx.fillStyle="rgba(90,140,200,.28)";
+for(let t=24;
+t<=27;
+t++)for(let e=32;
+e<=37;
+e++)diamond(e,t),ctx.fill()}}const wallNearX=(t,e)=>"#"!==tileAt(t-1,e)||"#"!==tileAt(t+1,e),wallNearY=(t,e)=>"#"!==tileAt(t,e-1)||"#"!==tileAt(t,e+1),wallVisible=(t,e)=>{const o=roomWallAxesAt(t,e);
+return o.alongX||o.alongY},roomWallAxesAt=(t,e)=>{let o=!1,n=!1;
+for(const a of rooms)t>=a.x&&t<a.x+a.w&&(e===a.y||e===a.y+a.h-1)&&(o=!0),e>=a.y&&e<a.y+a.h&&(t===a.x||t===a.x+a.w-1)&&(n=!0);
+return(12===t&&e>=2&&e<=13||24===t&&e>=1&&e<=13||13===t&&e>=20&&e<=31||26===t&&e>=20&&e<=31)&&(n=!0),(13===e||20===e)&&t>=2&&t<=42&&(o=!0),(1===t||43===t)&&e>=14&&e<=19&&(n=!0),{alongX:o,alongY:n}},solidWallAt=(t,e)=>"#"===tileAt(t,e)&&wallVisible(t,e);
+function drawWallBox(t,e,o){const n=null==o?46:o;
+ctx.save();
+const a=dimmedAt(t+.5,e+.5),i=isoX(t,e),s=isoY(t,e);
+function r(t,e){ctx.fillStyle=e,ctx.beginPath(),t.forEach((t,e)=>e?ctx.lineTo(t.x,t.y):ctx.moveTo(t.x,t.y)),ctx.closePath(),ctx.fill()}!function(t,e,o,l,c,d){const m=[-.5-d,-c,c,.5+d],h=new Set(["1,1"]);
+t&&h.add("0,1"),e&&h.add("2,1"),o&&h.add("1,0"),l&&h.add("1,2");
+const u=[];
+for(const t of h){const[e,o]=t.split(",").map(Number);
+h.has(e+","+(o-1))||u.push([[e,o],[e+1,o]]),h.has(e+1+","+o)||u.push([[e+1,o],[e+1,o+1]]),h.has(e+","+(o+1))||u.push([[e+1,o+1],[e,o+1]]),h.has(e-1+","+o)||u.push([[e,o+1],[e,o]])}const y=[[m[u[0][0][0]],m[u[0][0][1]]]];
+let f=u[0][1],x=new Set([0]);
+for(;
+y.length<u.length;
+){const t=u.findIndex((t,e)=>!x.has(e)&&t[0][0]===f[0]&&t[0][1]===f[1]);
+if(t<0)break;
+x.add(t),f=u[t][1],y.push([m[f[0]],m[f[1]]])}y.length>1&&y[0][0]===y[y.length-1][0]&&y[0][1]===y[y.length-1][1]&&y.pop();
+const p=y.map(([t,e])=>({x:i+32*(t-e),y:s+16*(t+e)})),g=p.map(t=>({x:t.x,y:t.y-n}));
+for(let t=0;
+t<p.length;
+t++){const e=(t+1)%p.length,o=-(y[e][0]-y[t][0]);
+y[e][1]-y[t][1]>0?r([p[t],p[e],g[e],g[t]],a?"#565349":"#ad8b65"):o>0&&r([p[t],p[e],g[e],g[t]],a?"#49483f":"#987858")}r(g,a?"#68645a":"#d2b487")}(solidWallAt(t-1,e),solidWallAt(t+1,e),solidWallAt(t,e-1),solidWallAt(t,e+1),.1,.02),ctx.restore()}const LIP_H=10,wallHeightAt=(t,e)=>44===t||33===e?10:46;
+function drawDoor(t,e,o){ctx.save();
+const n=dimmedAt(t+.5,e+.5),a=isoX(t,e),i=isoY(t,e);
+diamond(t,e),ctx.fillStyle=n?"#414b43":doorOpen?"#7fd08a":"#7a5a38",ctx.fill(),doorOpen?(n||(ctx.save(),ctx.globalAlpha=.5+.3*Math.sin(4*o),ctx.strokeStyle="#b6ffbe",ctx.lineWidth=3,diamond(t,e),ctx.stroke(),ctx.restore()),label(a,i-wallHeightAt(t,e)-22,"ВЫХОД",n?"#78917e":"#b6ffbe")):label(a,i-wallHeightAt(t,e)-22,"ЗАКРЫТО",n?"#9aa69e":"#fff"),ctx.restore()}function label(t,e,o,n){ctx.save(),ctx.font="bold 15px system-ui",ctx.textAlign="center",ctx.fillStyle="rgba(0,0,0,.45)",ctx.fillText(o,t+1,e+1),ctx.fillStyle=n||"#fff",ctx.fillText(o,t,e),ctx.restore()}function drawSprite(t,e,o,n,a,i,s){const r=isoX(e,o),l=isoY(e,o)-(s||0);
+ctx.fillStyle="rgba(40,25,10,.22)",ctx.beginPath(),ctx.ellipse(r,l,.3*n,.13*n,0,0,6.29),ctx.fill(),ctx.save(),ctx.translate(r,l),i&&ctx.scale(-1,1),ctx.drawImage(t,-n/2,-a,n,a),ctx.restore()}function drawBlackboard(t){for(const e of rooms){if(t&&e!==t)continue;
+const o=e.x+e.w/2,n=isoX(o,e.y),a=isoY(o,e.y),i=Math.min(190,45*(e.w-2)),s=42,r=n-i/2,l=a-8,c=(activeRoom?activeRoom.id:"corridor")!==e.id;
+ctx.save(),ctx.transform(.8944,.4472,0,-1,r,l),ctx.fillStyle=c?"#57544a":"#c9a877",ctx.fillRect(0,0,i,s),ctx.fillStyle=c?"#35443e":"#2e5d43",ctx.fillRect(4,4,i-8,s-8),ctx.fillStyle=c?"rgba(210,220,214,.48)":"rgba(255,255,255,.88)",ctx.font="bold 14px system-ui",ctx.textAlign="center",ctx.textBaseline="middle",ctx.save(),ctx.translate(i/2,s/2),ctx.scale(1,-1),ctx.fillText("math"===e.id?"МАТЕМАТИКА · 2+2=4":e.name.toUpperCase(),0,0),ctx.restore(),ctx.restore()}}let AC=null;
+function audio(){return AC||(AC=new(window.AudioContext||window.webkitAudioContext)),AC}function tone(t,e,o,n,a){if(muted)return;
+const i=audio(),s=i.createOscillator(),r=i.createGain();
+s.type=n||"sine",s.frequency.setValueAtTime(t,i.currentTime+e),r.gain.setValueAtTime(0,i.currentTime+e),r.gain.linearRampToValueAtTime(a||.15,i.currentTime+e+.01),r.gain.exponentialRampToValueAtTime(.001,i.currentTime+e+o),s.connect(r),r.connect(i.destination),s.start(i.currentTime+e),s.stop(i.currentTime+e+o+.05)}const sfxCollect=()=>{tone(660,0,.12,"triangle"),tone(880,.09,.15,"triangle")},sfxWin=()=>{[523,659,784,1047].forEach((t,e)=>tone(t,.14*e,.3,"triangle",.18))},sfxClick=()=>tone(440,0,.06,"square",.06),keys={};
+addEventListener("keydown",t=>{["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(t.key)&&t.preventDefault(),keys[t.key.toLowerCase()]=!0,"p"===t.key.toLowerCase()&&togglePause()," "===t.key&&("title"===state||"win"===state?startGame():"pause"===state&&togglePause()),"e"!==t.key.toLowerCase()&&"Enter"!==t.key||"play"!==state||quizOpen||!nearDesk||(t.preventDefault(),openQuiz(nearDesk))}),addEventListener("keyup",t=>keys[t.key.toLowerCase()]=!1);
+const joy={active:!1,id:-1,dx:0,dy:0},joyEl=document.getElementById("joy"),stickEl=document.getElementById("stick");
+"ontouchstart"in window&&(joyEl.style.display="block",document.getElementById("ovHint").textContent="Движение: левый джойстик · Задание: кнопка на экране"),joyEl.addEventListener("pointerdown",t=>{joy.active=!0,joy.id=t.pointerId,joyEl.setPointerCapture(t.pointerId),moveStick(t)}),joyEl.addEventListener("pointermove",t=>{joy.active&&t.pointerId===joy.id&&moveStick(t)});
+const joyEnd=t=>{joy.active&&(joy.active=!1,joy.dx=joy.dy=0,stickEl.style.left="41px",stickEl.style.top="41px")};
+function moveStick(t){const e=joyEl.getBoundingClientRect();
+let o=t.clientX-(e.left+e.width/2),n=t.clientY-(e.top+e.height/2);
+const a=Math.hypot(o,n),i=e.width/2-14;
+a>i&&(o*=i/a,n*=i/a),joy.dx=o/i,joy.dy=n/i,stickEl.style.left=41+o+"px",stickEl.style.top=41+n+"px"}function inputVec(){let t=0,e=0;
+(keys.a||keys.arrowleft)&&(t-=1),(keys.d||keys.arrowright)&&(t+=1),(keys.w||keys.arrowup)&&(e-=1),(keys.s||keys.arrowdown)&&(e+=1),t+=joy.dx,e+=joy.dy;
+const o=Math.hypot(t,e);
+o>1&&(t/=o,e/=o);
+const n=t+e,a=e-t,i=Math.hypot(n,a)||1;
+return{x:n/i,y:a/i,active:o>.15}}joyEl.addEventListener("pointerup",joyEnd),joyEl.addEventListener("pointercancel",joyEnd);
+const overlay=document.getElementById("overlay"),ovTitle=document.getElementById("ovTitle"),ovText=document.getElementById("ovText"),ovHint=document.getElementById("ovHint"),ovBtn=document.getElementById("ovBtn"),booksEl=document.getElementById("books"),timerEl=document.getElementById("timer");
+function showOverlay(t,e,o,n){ovTitle.textContent=t,ovText.innerHTML=e,ovBtn.textContent=o,ovHint.style.display=n?"":"none",document.getElementById("menuTags").style.display="title"===state?"flex":"none",n&&(ovHint.textContent=n),document.body.classList.add("menu-open"),overlay.classList.remove("hidden")}function hideOverlay(){overlay.classList.add("hidden"),document.body.classList.remove("menu-open")}const schoolMapEl=document.getElementById("schoolMap"),mapRooms=Array.from(document.querySelectorAll("#schoolMap .room")),mapPlayer=document.getElementById("mapPlayer"),mapPlayerSpots={rus:[150,200,228],nat:[321,211,239],eng:[621,190,218],logic:[175,490,520],art:[407,460,488],math:[682,492,526]};
+function openSchoolMap(){if("play"===state){if(state="map",mapRooms.forEach(t=>{const e=rooms.find(e=>e.id===t.dataset.room),o=!!activeRoom&&t.dataset.room===activeRoom.id;
+t.classList.toggle("current",o),t.classList.toggle("locked",!o),t.setAttribute("tabindex",o?"0":"-1"),t.setAttribute("role","button"),t.setAttribute("aria-label",o?"Вернуться: "+e.name:e.name+", открыт для посещения")}),mapPlayer.classList.toggle("hidden",!activeRoom),activeRoom){const[t,e,o]=mapPlayerSpots[activeRoom.id],n=mapPlayer.querySelector("circle"),a=mapPlayer.querySelector("text");
+n.setAttribute("cx",t),n.setAttribute("cy",e),a.setAttribute("x",t),a.setAttribute("y",o)}document.body.classList.add("menu-open"),schoolMapEl.classList.remove("hidden"),document.getElementById("closeSchoolMap").focus()}}function closeSchoolMap(){"map"===state&&(schoolMapEl.classList.add("hidden"),document.body.classList.remove("menu-open"),state="play",document.getElementById("schoolMapBtn").focus())}function updateBooksHud(){booksEl.textContent=desks.filter(t=>t.done).length+"/"+TOTAL}document.getElementById("schoolMapBtn").addEventListener("click",openSchoolMap),document.getElementById("closeSchoolMap").addEventListener("click",closeSchoolMap),mapRooms.forEach(t=>{t.addEventListener("click",()=>{t.classList.contains("current")&&closeSchoolMap()}),t.addEventListener("keydown",e=>{"Enter"!==e.key&&" "!==e.key||!t.classList.contains("current")||(e.preventDefault(),closeSchoolMap())})}),addEventListener("keydown",t=>{"Escape"===t.key&&closeSchoolMap()}),ovBtn.addEventListener("click",()=>{sfxClick(),"title"===state||"win"===state?startGame():"pause"===state&&togglePause()}),document.getElementById("pause").addEventListener("click",()=>{sfxClick(),togglePause()}),document.getElementById("mute").addEventListener("click",function(){muted=!muted,localStorage.setItem("sq_iso_mute",muted?"1":"0"),this.textContent=muted?"×":"♪",this.setAttribute("aria-label",muted?"Включить звук":"Выключить звук")}),document.getElementById("mute").textContent=muted?"×":"♪";
+const pick=t=>t[Math.floor(Math.random()*t.length)],r2=t=>Math.floor(Math.random()*t);
+function wrongNums(t){const e=new Set;
+let o=0;
+for(;
+e.size<3&&o++<60;
+){const o=t+pick([-10,-3,-2,-1,1,2,3,10]);
+o>=0&&o!==t&&e.add(String(o))}for(;
+e.size<3;
+)e.add(String(t+e.size+7));
+return[...e]}function makeQ(){const t=r2(6);
+if(0===t){const t=2+r2(13),e=2+r2(9),o=t+e;
+return[t+" + "+e+" = ?",String(o),wrongNums(o),t+" плюс "+e+" будет "+o+"."]}if(1===t){const t=8+r2(12),e=1+r2(t-1),o=t-e;
+return[t+" − "+e+" = ?",String(o),wrongNums(o),t+" минус "+e+" будет "+o+"."]}if(2===t){const t=2+r2(4),e=2+r2(4),o=t*e;
+return[t+" × "+e+" = ?",String(o),wrongNums(o),t+" умножить на "+e+" будет "+o+"."]}if(3===t){const t=5+r2(16),e=5+r2(16);
+if(t===e)return makeQ();
+const o=Math.max(t,e),n=Math.min(t,e);
+return["Какое число больше: "+t+" или "+e+"?",String(o),wrongNums(o),"Сравниваем: "+o+" больше, чем "+n+"."]}if(4===t){const t=2+r2(6),e=t+6;
+return["Продолжи ряд: "+t+", "+(t+2)+", "+(t+4)+", __",String(e),wrongNums(e),"Каждое число больше предыдущего на 2, значит "+(t+4)+" + 2 = "+e+"."]}const e=2+r2(9),o=2+r2(9),n=e+o;
+return["У Миши "+e+" наклеек, у Гриши "+o+". Сколько наклеек у них вместе?",String(n),wrongNums(n),"Складываем: "+e+" + "+o+" = "+n+"."]}const usedQ=new Set;
+function genQ(){for(let t=0;
+t<80;
+t++){const t=makeQ();
+if(!usedQ.has(t[0]))return usedQ.add(t[0]),t}return makeQ()}let nearDesk=null,quizOpen=!1,curDesk=null,curQ=null;
+const quizEl=document.getElementById("quiz"),qText=document.getElementById("qText"),qOpts=document.getElementById("qOpts"),qExpl=document.getElementById("qExpl"),qNext=document.getElementById("qNext"),actionBtn=document.getElementById("action");
+function openQuiz(t){if(quizOpen||t.done)return;
+curDesk=t,quizOpen=!0,hero.x=t.x,hero.y=t.y+.55,hero.moving=!1,cat.trail.length=0,cat.trail.push({x:hero.x,y:hero.y}),curQ=genQ(),qText.textContent=curQ[0],qExpl.classList.add("hidden"),qNext.classList.add("hidden");
+const e=[curQ[1],...curQ[2]];
+for(let t=e.length-1;
+t>0;
+t--){const o=Math.floor(Math.random()*(t+1));
+[e[t],e[o]]=[e[o],e[t]]}qOpts.innerHTML="";
+const o=e.map(t=>{const e=document.createElement("button");
+return e.className="answer-btn",e.textContent=t,e.addEventListener("click",()=>answerQ(t,e,o)),qOpts.appendChild(e),e});
+actionBtn.classList.add("hidden"),quizEl.classList.remove("hidden"),sfxClick()}function answerQ(t,e,o){const n=t===curQ[1];
+o.forEach(t=>{t.disabled=!0,t.textContent===curQ[1]?t.classList.add("right"):t===e?t.classList.add("wrong"):t.style.opacity=".45"}),qExpl.textContent=(n?"Верно! ":"Пока нет. ")+curQ[3],qExpl.classList.remove("hidden"),qNext.classList.remove("hidden"),n?(curDesk.done=!0,sfxCollect(),burst(curDesk.x,curDesk.y,"#7fd08a"),updateBooksHud(),desks.every(t=>t.done)&&(doorOpen=!0,burst(hero.x,hero.y,"#7fd08a"))):tone(220,0,.22,"sawtooth",.08)}function fmt(t){const e=Math.floor(t/60),o=Math.floor(t%60);
+return e+":"+String(o).padStart(2,"0")}function startGame(){resetGame(),state="play",startT=performance.now(),hideOverlay()}function togglePause(){"play"===state?(state="pause",showOverlay("Пауза","Можно перевести дух. Прогресс этого урока сохранится до конца игры.","Продолжить","")):"pause"===state&&(state="play",hideOverlay())}function winGame(){state="win";
+const t=elapsed;
+let e="";
+(!best||t<best)&&(best=t,localStorage.setItem("sq_iso_best",String(t)),e=" Новый рекорд!"),sfxWin(),showOverlay("Урок завершён!","Все 12 заданий по математике сданы, урок окончен!<br>Время: <b>"+fmt(t)+"</b>"+e+(best?"<br>Лучшее время: <b>"+fmt(best)+"</b>":""),"Играть ещё","Или нажми Пробел")}function burst(t,e,o){for(let n=0;
+n<12;
+n++){const n=6.28*Math.random(),a=40+70*Math.random();
+parts.push({x:t,y:e,vx:Math.cos(n)*a,vy:Math.sin(n)*a-40,life:.7,color:o})}}qNext.addEventListener("click",()=>{quizOpen=!1,quizEl.classList.add("hidden"),sfxClick(),desks.every(t=>t.done)&&winGame()}),actionBtn.addEventListener("click",()=>{nearDesk&&openQuiz(nearDesk)});
+const SPEED=3.4;
+function update(t,e){if("play"!==state)return;
+elapsed=(performance.now()-startT)/1e3;
+const o=quizOpen?{x:0,y:0,active:!1}:inputVec();
+if(hero.moving=o.active,o.active){hero.face=o.x-o.y<0?-1:1;
+const e=hero.x+3.4*o.x*t,n=hero.y+3.4*o.y*t;
+passable(e,hero.y,doorOpen)&&(hero.x=e),passable(hero.x,n,doorOpen)&&(hero.y=n),hero.bob+=10*t}activeRoom=roomAt(hero.x,hero.y);
+const n=activeRoom?activeRoom.name+" ▾":"Коридор ▾",a=document.getElementById("schoolMapBtn");
+a.textContent!==n&&(a.textContent=n),cat.trail.push({x:hero.x,y:hero.y}),cat.trail.length>26&&cat.trail.shift();
+const i=cat.trail[0],s=i.x-cat.x,r=i.y-cat.y,l=Math.hypot(s,r);
+if(l>.02){const e=Math.min(l,3.128*t);
+cat.x+=s/l*e,cat.y+=r/l*e,cat.face=s-r<0?-1:1,cat.bob+=12*t}if(nearDesk=null,!quizOpen){let t=1.15;
+for(const e of desks){if(e.done)continue;
+const o=Math.hypot(e.x-hero.x,e.y-hero.y);
+o<t&&(t=o,nearDesk=e)}}actionBtn.classList.toggle("hidden",!(nearDesk&&"play"===state&&!quizOpen)),doorOpen&&"D"===tileAt(Math.floor(hero.x),Math.floor(hero.y))&&winGame();
+for(let e=parts.length-1;
+e>=0;
+e--){const o=parts[e];
+o.life-=t,o.x+=o.vx*t/32,o.y+=o.vy*t/32,o.vy+=180*t,o.life<=0&&parts.splice(e,1)}const c=1278*viewScale,d=-1088*viewScale,m=1440*viewScale,h=0*viewScale,u=1278*viewScale,y=2528*viewScale<=innerWidth?(innerWidth-d-m)/2:clamp(innerWidth/2-isoX(hero.x,hero.y)*viewScale,innerWidth-m,-d),f=c<=innerHeight-100?(innerHeight-100-h-u)/2+72:clamp(innerHeight/2-isoY(hero.x,hero.y)*viewScale+20,innerHeight-u,80-h);
+camX+=(y-camX)*Math.min(1,6*t),camY+=(f-camY)*Math.min(1,6*t)}const IMG={},DARK_SPRITES=new WeakMap;
+function darkSprite(t){if(!DARK_SPRITES.has(t)){const e=document.createElement("canvas");
+e.width=t.width,e.height=t.height;
+const o=e.getContext("2d");
+o.drawImage(t,0,0),o.globalCompositeOperation="source-atop",o.fillStyle="rgba(18,29,26,.64)",o.fillRect(0,0,e.width,e.height),DARK_SPRITES.set(t,e)}return DARK_SPRITES.get(t)}async function loadSprites(){await Promise.all(Object.entries(SPRITES).map(async([t,[e,o]])=>{try{const n=await Promise.all(Array.from({length:o},(t,o)=>fetch(e+String(o).padStart(3,"0")+".b64").then(t=>{if(!t.ok)throw new Error("chunk "+o);
+return t.text()}))),a=new Image;
+await new Promise(t=>{a.onload=t,a.onerror=t,a.src="data:image/png;base64,"+n.join("")}),a.width&&(IMG[t]=a)}catch(t){}}))}function render(t){ctx.clearRect(0,0,cv.width,cv.height),ctx.save(),ctx.translate(camX,camY),ctx.scale(viewScale,viewScale),drawFloor();
+const e=[],o=(t,e,o,n,a)=>{drawSprite(dimmedAt(e,o)?darkSprite(t):t,e,o,n,a)};
+for(let n=0;
+n<34;
+n++)for(let a=0;
+a<45;
+a++){const i=tileAt(a,n);
+"#"===i?wallVisible(a,n)&&e.push({d:a+n+.85,f:()=>drawWallBox(a,n,wallHeightAt(a,n))}):"D"===i?e.push({d:a+n+.85,f:()=>drawDoor(a,n,t)}):"T"===i&&IMG.desk?e.push({d:a+n+.4,f:()=>o(IMG.desk,a+.5,n+.5,92,92)}):"F"===i&&IMG.desk?e.push({d:a+n+.4,f:()=>o(IMG.desk,a+.5,n+.5,82,82)}):"S"===i&&IMG.shelf&&e.push({d:a+n+.4,f:()=>o(IMG.shelf,a+.5,n+.5,100,116)})}for(const t of rooms)e.push({d:t.x+t.w/2+t.y+.95,f:()=>drawBlackboard(t)});
+for(const t of desks)t.done&&e.push({d:t.x+t.y+.2,f:()=>label(isoX(t.x,t.y),isoY(t.x,t.y)-96,"✓",dimmedAt(t.x,t.y)?"#526a5b":"#3f9f62")});
+IMG.cat&&e.push({d:cat.x+cat.y+.6,f:()=>drawSprite(dimmedAt(cat.x,cat.y)?darkSprite(IMG.cat):IMG.cat,cat.x,cat.y,62,62,-1===cat.face,3*Math.abs(Math.sin(cat.bob)))}),IMG.hero&&e.push({d:hero.x+hero.y+.7,f:()=>drawSprite(dimmedAt(hero.x,hero.y)?darkSprite(IMG.hero):IMG.hero,hero.x,hero.y,74,74,-1===hero.face,hero.moving?5*Math.abs(Math.sin(hero.bob)):0)}),e.sort((t,e)=>t.d-e.d);
+for(const t of e)t.f();
+for(const t of parts){ctx.globalAlpha=Math.max(0,t.life/.7),ctx.fillStyle=t.color;
+const e=isoX(t.x,t.y),o=isoY(t.x,t.y)-10;
+ctx.beginPath(),ctx.arc(e,o,3,0,6.28),ctx.fill()}ctx.globalAlpha=1,ctx.restore(),"play"===state&&(timerEl.textContent=fmt(elapsed))}let last=performance.now();
+function loop(t){const e=Math.min(.05,(t-last)/1e3);
+last=t,update(e,t/1e3),render(t/1e3),requestAnimationFrame(loop)}function resize(){const t=Math.min(devicePixelRatio||1,2);
+viewScale=Math.max(.48,Math.min(1,innerWidth/850,innerHeight/620)),cv.width=innerWidth*t,cv.height=innerHeight*t,ctx.setTransform(t,0,0,t,0,0)}addEventListener("resize",resize),resize(),resetGame();
+{const t=1278*viewScale,e=-1088*viewScale,o=1440*viewScale,n=0*viewScale,a=1278*viewScale;
+camX=2528*viewScale<=innerWidth?(innerWidth-e-o)/2:clamp(innerWidth/2-isoX(hero.x,hero.y)*viewScale,innerWidth-o,-e),camY=t<=innerHeight-100?(innerHeight-100-n-a)/2+72:clamp(innerHeight/2-isoY(hero.x,hero.y)*viewScale+20,innerHeight-a,80-n)}loadSprites().then(()=>requestAnimationFrame(loop))</script> </body> </html> 
