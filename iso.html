@@ -2,61 +2,96 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Школьный Квест — Изометрия</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#dceef2">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<title>Школьный Квест — Класс математики</title>
 <style>
-  html, body { margin:0; padding:0; height:100%; background:#101418; overflow:hidden;
-    font-family:"Segoe UI", system-ui, sans-serif; -webkit-user-select:none; user-select:none;
-    touch-action:none; }
-  #game { display:block; width:100vw; height:100vh; }
-  .hud { position:fixed; top:10px; left:10px; right:10px; display:flex; gap:10px;
-    align-items:center; pointer-events:none; z-index:5; }
-  .pill { background:rgba(10,14,20,.65); color:#fff; border-radius:999px; padding:8px 16px;
-    font-size:18px; font-weight:600; backdrop-filter:blur(4px); }
-  .btn { pointer-events:auto; background:rgba(10,14,20,.65); color:#fff; border:2px solid rgba(255,255,255,.15);
-    border-radius:50%; width:48px; height:48px; font-size:20px; cursor:pointer; }
-  .btn:active { transform:scale(.92); }
-  .spacer { flex:1; }
-  #joy { position:fixed; left:26px; bottom:26px; width:130px; height:130px; border-radius:50%;
-    background:rgba(255,255,255,.07); border:2px solid rgba(255,255,255,.16); z-index:6; display:none; }
-  #stick { position:absolute; left:41px; top:41px; width:48px; height:48px; border-radius:50%;
-    background:rgba(255,255,255,.35); }
-  #overlay { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center;
-    justify-content:center; background:rgba(8,10,14,.72); z-index:10; color:#fff; text-align:center; padding:20px; }
-  #overlay h1 { font-size:42px; margin:0 0 8px; text-shadow:0 4px 18px rgba(0,0,0,.6); }
-  #overlay p { font-size:19px; margin:6px 0; opacity:.92; max-width:520px; }
-  .bigbtn { margin-top:22px; background:#ffb300; color:#3a2500; border:none; border-radius:16px;
-    padding:16px 44px; font-size:24px; font-weight:800; cursor:pointer; box-shadow:0 6px 0 #b97e00; }
-  .bigbtn:active { transform:translateY(4px); box-shadow:0 2px 0 #b97e00; }
-  .hidden { display:none !important; }
+  :root{--ink:#20344a;--dim:#60758a;--blue:#3978c5;--yellow:#ffd35a;--line:#d5e2e8}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#dceef2;
+    font-family:"Trebuchet MS","Segoe UI",sans-serif;color:var(--ink);-webkit-user-select:none;user-select:none;touch-action:none}
+  body{background:radial-gradient(circle at 18% 12%,rgba(255,255,255,.8),transparent 30%),linear-gradient(180deg,#dceef2 0%,#edf5ee 100%)}
+  #game{display:block;width:100vw;height:100dvh}
+  .hud{position:fixed;top:max(14px,env(safe-area-inset-top));left:14px;right:14px;display:flex;gap:10px;align-items:center;pointer-events:none;z-index:5;transition:opacity .2s}
+  .pill{display:flex;align-items:center;gap:7px;background:rgba(255,254,250,.94);color:var(--ink);border:1px solid rgba(185,204,213,.85);border-radius:13px;padding:10px 14px;font-size:16px;font-weight:700;box-shadow:0 4px 14px rgba(43,75,96,.09);white-space:nowrap}
+  .pill .hud-label{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);font-weight:700}
+  .pill.subject{color:#315f97}
+  .btn{pointer-events:auto;flex:0 0 46px;width:46px;height:46px;padding:0;background:rgba(255,254,250,.96);color:var(--ink);border:1px solid #bdced7;border-radius:13px;font-size:22px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 #bdced7;transition:transform .15s,box-shadow .15s}
+  .btn:hover{background:#fff;transform:translateY(-1px)}.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #bdced7}
+  .btn:focus-visible,.bigbtn:focus-visible,.answer-btn:focus-visible{outline:3px solid rgba(57,120,197,.38);outline-offset:3px}
+  .spacer{flex:1}.menu-open .hud{opacity:0;visibility:hidden}
+  #joy{position:fixed;left:24px;bottom:max(24px,env(safe-area-inset-bottom));width:126px;height:126px;border-radius:50%;background:rgba(255,254,250,.38);border:2px solid rgba(57,120,197,.22);z-index:6;display:none;box-shadow:inset 0 0 0 12px rgba(255,255,255,.15)}
+  #stick{position:absolute;left:39px;top:39px;width:48px;height:48px;border-radius:50%;background:rgba(57,120,197,.65);border:3px solid rgba(255,255,255,.7);box-shadow:0 4px 10px rgba(43,75,96,.18)}
+  #action{position:fixed;bottom:max(34px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:7;margin:0;white-space:nowrap}
+  #action:active{transform:translateX(-50%) translateY(3px)}
+  #overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(220,238,242,.7);backdrop-filter:blur(7px);z-index:10;padding:20px}
+  .menu-card{width:min(100%,520px);max-height:calc(100dvh - 40px);overflow:auto;background:#fffefa;border:1px solid #d5e2e8;border-radius:26px;padding:34px 38px;text-align:center;box-shadow:0 24px 70px rgba(43,75,96,.18)}
+  .menu-logo{display:grid;place-items:center;width:66px;height:66px;margin:0 auto 18px;border-radius:20px;background:var(--blue);box-shadow:0 5px 0 #285b99}
+  .menu-logo svg{width:39px;height:39px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:1.7px;color:var(--blue);text-transform:uppercase}
+  #overlay h1{font-size:clamp(32px,6vw,46px);line-height:1.1;letter-spacing:-1px;margin:8px 0 14px}
+  #overlay p{font-size:17px;line-height:1.55;margin:8px auto;max-width:430px;color:var(--dim)}
+  .menu-tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:20px 0 4px}
+  .menu-tags span{padding:7px 11px;background:#edf5fa;border:1px solid #d5e5ee;border-radius:9px;font-size:13px;font-weight:700;color:#49647b}
+  #ovHint{font-size:13px!important;margin-top:18px!important}
+  .bigbtn{display:inline-block;margin-top:22px;background:var(--yellow);color:#44330b;border:1px solid #e6b93f;border-radius:14px;padding:15px 38px;font:inherit;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 5px 0 #d6a72d;transition:transform .15s,box-shadow .15s,background .15s}
+  .bigbtn:hover{background:#ffdf7d;box-shadow:0 6px 0 #d6a72d}.bigbtn:active{transform:translateY(3px);box-shadow:0 2px 0 #d6a72d}
+  #quiz{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(32,52,74,.38);backdrop-filter:blur(5px);z-index:9;padding:18px}
+  .quiz-card{background:#fffefa;border:1px solid #d5e2e8;border-radius:24px;padding:28px;max-width:540px;width:100%;max-height:calc(100dvh - 36px);overflow:auto;color:var(--ink);text-align:center;box-shadow:0 22px 60px rgba(32,52,74,.24)}
+  .quiz-subject{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);font-weight:800}
+  #qText{font-size:clamp(22px,4vw,28px);font-weight:800;margin:14px 0 22px;line-height:1.4}
+  #qOpts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .answer-btn{min-height:58px;background:#edf5fa;color:#234463;border:1px solid #c8dce9;border-radius:13px;padding:12px;font:inherit;font-size:21px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 #b7cede;transition:transform .15s,background .15s}
+  .answer-btn:hover{background:#e1eff8;transform:translateY(-1px)}.answer-btn:active{transform:translateY(2px)}
+  .answer-btn.right{background:#dff3e7;color:#195c3b;border-color:#75bd96;box-shadow:0 3px 0 #75bd96}
+  .answer-btn.wrong{background:#fde5e7;color:#8b2c36;border-color:#e59aa2;box-shadow:0 3px 0 #e59aa2}
+  .answer-btn:disabled{cursor:default;transform:none}
+  #qExpl{margin-top:18px;font-size:16px;line-height:1.55;background:#edf5fa;border:1px solid #d2e3ee;border-radius:13px;padding:14px 16px;text-align:left}
+  #qNext{font-size:17px;padding:12px 30px}
+  .hidden{display:none!important}
+  @media(max-width:600px){
+    .hud{left:10px;right:10px;gap:6px;top:max(10px,env(safe-area-inset-top))}.pill{padding:9px 10px;font-size:14px;border-radius:11px}.pill .hud-label{display:none}.pill.subject{max-width:130px;overflow:hidden}.btn{flex-basis:42px;width:42px;height:42px;border-radius:11px}
+    .menu-card{padding:26px 20px;border-radius:22px}.menu-logo{width:58px;height:58px;margin-bottom:14px}.menu-tags{margin-top:16px}.bigbtn{padding:14px 30px}
+    .quiz-card{padding:22px 16px}.answer-btn{font-size:19px;min-height:54px}#qOpts{gap:9px}
+    #books::before{content:"✓ ";color:#2f9e68}#timer::before{content:"◷ ";color:#60758a}
+    #action{left:auto;right:18px;bottom:max(42px,env(safe-area-inset-bottom));transform:none;font-size:16px;padding:14px 20px}
+    #action:active{transform:translateY(3px)}
+  }
+  @media(max-height:620px){.menu-logo{display:none}.menu-card{padding-top:22px;padding-bottom:22px}.menu-tags{margin-top:10px}.bigbtn{margin-top:14px}}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
-<body>
-<canvas id="game"></canvas>
+<body class="menu-open">
+<canvas id="game" aria-label="Изометрический класс математики"></canvas>
 <div class="hud">
-  <div class="pill" id="books">✅ 0/12</div>
-  <div class="pill" id="timer">0:00</div>
-  <div class="pill">🔢 Математика</div>
+  <div class="pill"><span class="hud-label">Задания</span><span id="books">0/12</span></div>
+  <div class="pill"><span class="hud-label">Время</span><span id="timer">0:00</span></div>
+  <div class="pill subject">Математика</div>
   <div class="spacer"></div>
-  <button class="btn" id="mute" title="Звук">🔊</button>
-  <button class="btn" id="pause" title="Пауза">⏸</button>
+  <button class="btn" id="mute" title="Звук" aria-label="Выключить звук">♪</button>
+  <button class="btn" id="pause" title="Пауза" aria-label="Поставить игру на паузу">Ⅱ</button>
 </div>
-<div id="joy"><div id="stick"></div></div>
-<button id="action" class="bigbtn hidden" style="position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:7;">▶ Начать задание</button>
-<div id="quiz" class="hidden" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,10,14,.62);z-index:9;">
-  <div style="background:#1c2530;border-radius:18px;padding:26px 28px;max-width:520px;width:92%;color:#fff;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.5);">
-    <div style="font-size:15px;opacity:.8;">🔢 Математика · 1 класс</div>
-    <div id="qText" style="font-size:25px;font-weight:700;margin:10px 0 18px;line-height:1.35;"></div>
-    <div id="qOpts" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
-    <div id="qExpl" class="hidden" style="margin-top:16px;font-size:16px;line-height:1.45;background:rgba(255,255,255,.08);border-radius:10px;padding:12px 14px;text-align:left;"></div>
-    <button id="qNext" class="bigbtn hidden" style="font-size:18px;padding:10px 32px;">Продолжить</button>
+<div id="joy" aria-label="Джойстик для движения"><div id="stick"></div></div>
+<button id="action" class="bigbtn hidden">Начать задание</button>
+<div id="quiz" class="hidden" role="dialog" aria-modal="true" aria-labelledby="qText">
+  <div class="quiz-card">
+    <div class="quiz-subject">Математика · 1 класс</div>
+    <div id="qText"></div>
+    <div id="qOpts"></div>
+    <div id="qExpl" class="hidden"></div>
+    <button id="qNext" class="bigbtn hidden">Продолжить</button>
   </div>
 </div>
-<div id="overlay">
-  <h1 id="ovTitle">Школьный Квест</h1>
-  <p id="ovText">Подойди к парте и нажми «Начать задание». Сдай все 12 заданий по математике — и выходи через дверь!</p>
-  <p id="ovHint">Ходьба: WASD / стрелки / джойстик · Задание: E · Пауза: P</p>
-  <button class="bigbtn" id="ovBtn">Играть</button>
+<div id="overlay" role="dialog" aria-modal="true" aria-labelledby="ovTitle">
+  <div class="menu-card">
+    <div class="menu-logo" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M5 8c6-1 11 1 15 5 4-4 9-6 15-5v24c-6-1-11 1-15 5-4-4-9-6-15-5V8Z" fill="#fffefa"/><path d="M20 13v24M10 15c3 0 5 1 7 2M10 21c3 0 5 1 7 2M23 17c2-1 4-2 7-2M23 23c2-1 4-2 7-2" stroke="#3978c5" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+    <div class="eyebrow">Учебная игра</div>
+    <h1 id="ovTitle">Школьный Квест</h1>
+    <p id="ovText">Исследуй класс, решай задания у парт и открой дверь после всех побед.</p>
+    <div class="menu-tags" id="menuTags"><span>12 заданий</span><span>1 класс</span><span>Кот-помощник</span></div>
+    <p id="ovHint">Движение: WASD или стрелки · Задание: E · Пауза: P</p>
+    <button class="bigbtn" id="ovBtn">Начать приключение</button>
+  </div>
 </div>
 <script>
 "use strict";
@@ -120,7 +155,7 @@ const TOTAL = desks.length;
 let state = "title";           // title | play | pause | win
 let doorOpen = false;
 let hero, cat, parts = [];
-let camX = 0, camY = 0;
+let camX = 0, camY = 0, viewScale = 1;
 let elapsed = 0, startT = 0;
 let muted = localStorage.getItem("sq_iso_mute") === "1";
 let best = +(localStorage.getItem("sq_iso_best") || 0);
@@ -160,7 +195,7 @@ function drawFloor() {
       const c = tileAt(x, y);
       if (c === "#") continue;
       diamond(x, y);
-      ctx.fillStyle = (x + y) % 2 ? "#d8c096" : "#e3cda6";
+      ctx.fillStyle = (x + y) % 2 ? "#dfcba7" : "#ecdab9";
       ctx.fill();
       ctx.strokeStyle = "rgba(120,90,50,.25)";
       ctx.lineWidth = 1;
@@ -214,7 +249,7 @@ function drawDoor(x, y, t) {
     ctx.restore();
     label(sx, sy - wallHeightAt(x, y) - 22, "ВЫХОД", "#b6ffbe");
   } else {
-    label(sx, sy - wallHeightAt(x, y) - 22, "🔒", "#fff");
+    label(sx, sy - wallHeightAt(x, y) - 22, "ЗАКРЫТО", "#fff");
   }
 }
 
@@ -300,7 +335,10 @@ addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
 const joy = { active: false, id: -1, dx: 0, dy: 0 };
 const joyEl = document.getElementById("joy"), stickEl = document.getElementById("stick");
-if ("ontouchstart" in window) joyEl.style.display = "block";
+if ("ontouchstart" in window) {
+  joyEl.style.display = "block";
+  document.getElementById("ovHint").textContent = "Движение: левый джойстик · Задание: кнопка на экране";
+}
 joyEl.addEventListener("pointerdown", e => { joy.active = true; joy.id = e.pointerId; joyEl.setPointerCapture(e.pointerId); moveStick(e); });
 joyEl.addEventListener("pointermove", e => { if (joy.active && e.pointerId === joy.id) moveStick(e); });
 const joyEnd = e => { if (e.pointerId === joy.id) { joy.active = false; joy.dx = joy.dy = 0; stickEl.style.left = "41px"; stickEl.style.top = "41px"; } };
@@ -340,10 +378,12 @@ function showOverlay(title, text, btn, hint) {
   ovTitle.textContent = title; ovText.innerHTML = text;
   ovBtn.textContent = btn;
   ovHint.style.display = hint ? "" : "none";
+  document.getElementById("menuTags").style.display = state === "title" ? "flex" : "none";
   if (hint) ovHint.textContent = hint;
+  document.body.classList.add("menu-open");
   overlay.classList.remove("hidden");
 }
-function hideOverlay() { overlay.classList.add("hidden"); }
+function hideOverlay() { overlay.classList.add("hidden"); document.body.classList.remove("menu-open"); }
 
 ovBtn.addEventListener("click", () => {
   sfxClick();
@@ -353,11 +393,12 @@ ovBtn.addEventListener("click", () => {
 document.getElementById("pause").addEventListener("click", () => { sfxClick(); togglePause(); });
 document.getElementById("mute").addEventListener("click", function () {
   muted = !muted; localStorage.setItem("sq_iso_mute", muted ? "1" : "0");
-  this.textContent = muted ? "🔇" : "🔊";
+  this.textContent = muted ? "×" : "♪";
+  this.setAttribute("aria-label", muted ? "Включить звук" : "Выключить звук");
 });
-document.getElementById("mute").textContent = muted ? "🔇" : "🔊";
+document.getElementById("mute").textContent = muted ? "×" : "♪";
 
-function updateBooksHud() { booksEl.textContent = "✅ " + desks.filter(d => d.done).length + "/" + TOTAL; }
+function updateBooksHud() { booksEl.textContent = desks.filter(d => d.done).length + "/" + TOTAL; }
 
 /* ---------- задания (математика, 1 класс) ----------
    формат вопроса: [вопрос, верный ответ, [3 неверных], объяснение] */
@@ -415,7 +456,7 @@ function openQuiz(d) {
   qOpts.innerHTML = "";
   const btns = opts.map(o => {
     const b = document.createElement("button");
-    b.className = "bigbtn"; b.style.cssText = "font-size:20px;padding:12px 10px;margin:0;box-shadow:0 4px 0 #b97e00;";
+    b.className = "answer-btn";
     b.textContent = o;
     b.addEventListener("click", () => answerQ(o, b, btns));
     qOpts.appendChild(b);
@@ -429,11 +470,11 @@ function answerQ(chosen, btn, btns) {
   const right = chosen === curQ[1];
   btns.forEach(b => {
     b.disabled = true;
-    if (b.textContent === curQ[1]) { b.style.background = "#69c96f"; b.style.color = "#0c2b0e"; b.style.boxShadow = "0 4px 0 #3d8a43"; }
-    else if (b === btn) { b.style.background = "#e0605e"; b.style.color = "#3b0d0c"; b.style.boxShadow = "0 4px 0 #9e3736"; }
+    if (b.textContent === curQ[1]) b.classList.add("right");
+    else if (b === btn) b.classList.add("wrong");
     else b.style.opacity = ".45";
   });
-  qExpl.textContent = (right ? "✅ Верно! " : "❌ Пока нет. ") + curQ[3];
+  qExpl.textContent = (right ? "Верно! " : "Пока нет. ") + curQ[3];
   qExpl.classList.remove("hidden"); qNext.classList.remove("hidden");
   if (right) {
     curDesk.done = true; sfxCollect(); burst(curDesk.x, curDesk.y, "#7fd08a"); updateBooksHud();
@@ -448,16 +489,16 @@ function fmt(t) { const m = Math.floor(t / 60), s = Math.floor(t % 60); return m
 
 function startGame() { resetGame(); state = "play"; startT = performance.now(); hideOverlay(); }
 function togglePause() {
-  if (state === "play") { state = "pause"; showOverlay("Пауза", "Отдохни, школьник! 📖", "Продолжить", ""); }
+  if (state === "play") { state = "pause"; showOverlay("Пауза", "Можно перевести дух. Прогресс этого урока сохранится до конца игры.", "Продолжить", ""); }
   else if (state === "pause") { state = "play"; hideOverlay(); }
 }
 function winGame() {
   state = "win";
   const t = elapsed;
   let rec = "";
-  if (!best || t < best) { best = t; localStorage.setItem("sq_iso_best", String(best)); rec = " 🏆 Новый рекорд!"; }
+  if (!best || t < best) { best = t; localStorage.setItem("sq_iso_best", String(best)); rec = " Новый рекорд!"; }
   sfxWin();
-  showOverlay("Победа! 🎉",
+  showOverlay("Урок завершён!",
     "Все 12 заданий по математике сданы, урок окончен!<br>Время: <b>" + fmt(t) + "</b>" + rec +
     (best ? "<br>Лучшее время: <b>" + fmt(best) + "</b>" : ""),
     "Играть ещё", "Или нажми Пробел");
@@ -524,11 +565,13 @@ function update(dt, t) {
 
   // камера: класс меньше экрана — держим строго по центру;
   // если экран мал — следуем за героем, не выпуская класс за края
-  const mapW = MAP_MAX_X - MAP_MIN_X, mapH = MAP_MAX_Y - MAP_MIN_Y;
-  const tx = mapW <= innerWidth ? (innerWidth - MAP_MIN_X - MAP_MAX_X) / 2
-           : clamp(innerWidth / 2 - isoX(hero.x, hero.y), innerWidth - MAP_MAX_X, -MAP_MIN_X);
-  const ty = mapH <= innerHeight - 60 ? (innerHeight - 60 - MAP_MIN_Y - MAP_MAX_Y) / 2 + 60
-           : clamp(innerHeight / 2 - isoY(hero.x, hero.y) + 20, innerHeight - MAP_MAX_Y, 60 - MAP_MIN_Y);
+  const mapW = (MAP_MAX_X - MAP_MIN_X) * viewScale, mapH = (MAP_MAX_Y - MAP_MIN_Y) * viewScale;
+  const minX = MAP_MIN_X * viewScale, maxX = MAP_MAX_X * viewScale;
+  const minY = MAP_MIN_Y * viewScale, maxY = MAP_MAX_Y * viewScale;
+  const tx = mapW <= innerWidth ? (innerWidth - minX - maxX) / 2
+           : clamp(innerWidth / 2 - isoX(hero.x, hero.y) * viewScale, innerWidth - maxX, -minX);
+  const ty = mapH <= innerHeight - 100 ? (innerHeight - 100 - minY - maxY) / 2 + 72
+           : clamp(innerHeight / 2 - isoY(hero.x, hero.y) * viewScale + 20, innerHeight - maxY, 80 - minY);
   camX += (tx - camX) * Math.min(1, dt * 6);
   camY += (ty - camY) * Math.min(1, dt * 6);
 }
@@ -554,6 +597,7 @@ function render(t) {
   ctx.clearRect(0, 0, cv.width, cv.height);
   ctx.save();
   ctx.translate(camX, camY);
+  ctx.scale(viewScale, viewScale);
   drawFloor();
 
   // стены — отдельным нижним слоем (доска и всё в комнате рисуются поверх)
@@ -578,7 +622,7 @@ function render(t) {
     }
   // галочка над сданной партой
   for (const d of desks)
-    if (d.done) items.push({ d: d.x + d.y + .2, f: () => label(isoX(d.x, d.y), isoY(d.x, d.y) - 96, "✅", "#b6ffbe") });
+    if (d.done) items.push({ d: d.x + d.y + .2, f: () => label(isoX(d.x, d.y), isoY(d.x, d.y) - 96, "✓", "#3f9f62") });
   if (IMG.cat) items.push({ d: cat.x + cat.y + .6, f: () => drawSprite(IMG.cat, cat.x, cat.y, 62, 62, cat.face === -1, Math.abs(Math.sin(cat.bob)) * 3) });
   if (IMG.hero) items.push({ d: hero.x + hero.y + .7, f: () => drawSprite(IMG.hero, hero.x, hero.y, 74, 74, hero.face === -1, hero.moving ? Math.abs(Math.sin(hero.bob)) * 5 : 0) });
 
@@ -612,6 +656,8 @@ function loop(now) {
 /* ---------- запуск ---------- */
 function resize() {
   const dpr = Math.min(devicePixelRatio || 1, 2);
+  const rawW = MAP_MAX_X - MAP_MIN_X, rawH = MAP_MAX_Y - MAP_MIN_Y;
+  viewScale = Math.max(.25, Math.min(1, (innerWidth - 24) / rawW, (innerHeight - 140) / rawH));
   cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
@@ -620,11 +666,13 @@ resize();
 resetGame();
 // стартовая камера (сразу по центру класса, без «пролёта»)
 {
-  const mapW = MAP_MAX_X - MAP_MIN_X, mapH = MAP_MAX_Y - MAP_MIN_Y;
-  camX = mapW <= innerWidth ? (innerWidth - MAP_MIN_X - MAP_MAX_X) / 2
-       : clamp(innerWidth / 2 - isoX(hero.x, hero.y), innerWidth - MAP_MAX_X, -MAP_MIN_X);
-  camY = mapH <= innerHeight - 60 ? (innerHeight - 60 - MAP_MIN_Y - MAP_MAX_Y) / 2 + 60
-       : clamp(innerHeight / 2 - isoY(hero.x, hero.y) + 20, innerHeight - MAP_MAX_Y, 60 - MAP_MIN_Y);
+  const mapW = (MAP_MAX_X - MAP_MIN_X) * viewScale, mapH = (MAP_MAX_Y - MAP_MIN_Y) * viewScale;
+  const minX = MAP_MIN_X * viewScale, maxX = MAP_MAX_X * viewScale;
+  const minY = MAP_MIN_Y * viewScale, maxY = MAP_MAX_Y * viewScale;
+  camX = mapW <= innerWidth ? (innerWidth - minX - maxX) / 2
+       : clamp(innerWidth / 2 - isoX(hero.x, hero.y) * viewScale, innerWidth - maxX, -minX);
+  camY = mapH <= innerHeight - 100 ? (innerHeight - 100 - minY - maxY) / 2 + 72
+       : clamp(innerHeight / 2 - isoY(hero.x, hero.y) * viewScale + 20, innerHeight - maxY, 80 - minY);
 }
 loadSprites().then(() => requestAnimationFrame(loop));
 </script>
