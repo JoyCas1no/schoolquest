@@ -498,9 +498,13 @@ function startEditor(gltf) {
 }
 async function loadFloorModel() {
   try {
-    const response = await fetch("./assets/models/floor.glb.b64");
-    if (!response.ok) throw new Error(`Floor model HTTP ${response.status}`);
-    const encoded = (await response.text()).replace(/\s/g, "");
+    const parts = await Promise.all(Array.from({ length: 9 }, async (_, index) => {
+      const name = String(index).padStart(2, "0");
+      const response = await fetch(`./assets/models/floor-parts/part-${name}`);
+      if (!response.ok) throw new Error(`Floor model part ${name}: HTTP ${response.status}`);
+      return response.text();
+    }));
+    const encoded = parts.join("").replace(/\s/g, "");
     const binary = atob(encoded);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);

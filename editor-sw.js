@@ -1,6 +1,7 @@
-const CACHE = "schoolquest-editor-v2";
+const CACHE = "schoolquest-editor-v3";
 const CORE = [
-  "./editor.html", "./src/editor.js", "./assets/models/floor.glb.b64", "./assets/favicon.svg", "./editor-manifest.webmanifest",
+  "./editor.html", "./src/editor.js", "./assets/favicon.svg", "./editor-manifest.webmanifest",
+  ...Array.from({ length: 9 }, (_, index) => `./assets/models/floor-parts/part-${String(index).padStart(2, "0")}`),
   "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js",
   "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js",
   "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/utils/BufferGeometryUtils.js"
