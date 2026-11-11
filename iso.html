@@ -211,6 +211,13 @@ const passable = (x, y, doorOpen) => {
   return true;
 };
 const roomAt = (x, y) => rooms.find(r => x > r.x && x < r.x + r.w - 1 && y > r.y && y < r.y + r.h - 1) || null;
+const roomBoundsAt = (x, y) => rooms.find(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) || null;
+const dimmedAt = (x, y) => {
+  const room = roomBoundsAt(x, y);
+  const zone = room ? room.id : "corridor";
+  const activeZone = activeRoom ? activeRoom.id : "corridor";
+  return zone !== activeZone;
+};
 let activeRoom = roomAt(SPAWN.x, SPAWN.y);
 const desks = [];
 for (let y = 0; y < MAP_H; y++)
@@ -261,10 +268,9 @@ function drawFloor() {
     for (let x = 0; x < MAP_W; x++) {
       const c = tileAt(x, y);
       if (c === "#") continue;
-      const room = roomAt(x + .5, y + .5);
-      const dimmed = room && activeRoom && room.id !== activeRoom.id;
+      const dimmed = dimmedAt(x + .5, y + .5);
       diamond(x, y);
-      ctx.fillStyle = dimmed ? ((x + y) % 2 ? "#bdc5c0" : "#cbd1cb")
+      ctx.fillStyle = dimmed ? ((x + y) % 2 ? "#68736f" : "#75807b")
         : ((x + y) % 2 ? "#dfcba7" : "#ecdab9");
       ctx.fill();
       ctx.strokeStyle = dimmed ? "rgba(70,90,85,.18)" : "rgba(120,90,50,.25)";
@@ -285,6 +291,8 @@ const wallVisible = (x, y) => wallNearX(x, y) || wallNearY(x, y);
 
 function drawWallBox(x, y, h) {
   const H = h == null ? WALL_H : h;
+  ctx.save();
+  const dimmed = dimmedAt(x + .5, y + .5);
   const sx = isoX(x, y), sy = isoY(x, y);
   const hw = TILE_W / 2, hh = TILE_H / 2;
   // Направление задаёт прилегающий пол, а не сплошной блок стен вокруг карты.
@@ -303,9 +311,10 @@ function drawWallBox(x, y, h) {
     ctx.closePath(); ctx.fill();
   }
   const top = p.map(q => ({ x: q.x, y: q.y - H }));
-  face([p[3],p[2],top[2],top[3]], "#987858");
-  face([p[1],p[2],top[2],top[1]], "#ad8b65");
-  face(top, "#d2b487");
+  face([p[3],p[2],top[2],top[3]], dimmed ? "#49483f" : "#987858");
+  face([p[1],p[2],top[2],top[1]], dimmed ? "#565349" : "#ad8b65");
+  face(top, dimmed ? "#68645a" : "#d2b487");
+  ctx.restore();
 }
 
 // низкие «губы» вместо полных стен со стороны камеры — чтобы не закрывали героев
@@ -314,20 +323,25 @@ const wallHeightAt = (x, y) =>
   (x === MAP_W - 1 || y === MAP_H - 1) ? LIP_H : WALL_H;
 
 function drawDoor(x, y, t) {
+  ctx.save();
+  const dimmed = dimmedAt(x + .5, y + .5);
   const sx = isoX(x, y), sy = isoY(x, y);
   diamond(x, y);
-  ctx.fillStyle = doorOpen ? "#7fd08a" : "#7a5a38";
+  ctx.fillStyle = dimmed ? "#414b43" : (doorOpen ? "#7fd08a" : "#7a5a38");
   ctx.fill();
   if (doorOpen) {
-    ctx.save();
-    ctx.globalAlpha = .5 + .3 * Math.sin(t * 4);
-    ctx.strokeStyle = "#b6ffbe"; ctx.lineWidth = 3;
-    diamond(x, y); ctx.stroke();
-    ctx.restore();
-    label(sx, sy - wallHeightAt(x, y) - 22, "ВЫХОД", "#b6ffbe");
+    if (!dimmed) {
+      ctx.save();
+      ctx.globalAlpha = .5 + .3 * Math.sin(t * 4);
+      ctx.strokeStyle = "#b6ffbe"; ctx.lineWidth = 3;
+      diamond(x, y); ctx.stroke();
+      ctx.restore();
+    }
+    label(sx, sy - wallHeightAt(x, y) - 22, "ВЫХОД", dimmed ? "#78917e" : "#b6ffbe");
   } else {
-    label(sx, sy - wallHeightAt(x, y) - 22, "ЗАКРЫТО", "#fff");
+    label(sx, sy - wallHeightAt(x, y) - 22, "ЗАКРЫТО", dimmed ? "#9aa69e" : "#fff");
   }
+  ctx.restore();
 }
 
 function label(x, y, text, color) {
@@ -355,17 +369,19 @@ function drawSprite(img, x, y, w, h, flip, bobY) {
   ctx.restore();
 }
 
-function drawBlackboard() {
+function drawBlackboard(onlyRoom) {
   for (const r of rooms) {
+    if (onlyRoom && r !== onlyRoom) continue;
     const cx = r.x + r.w / 2, sx = isoX(cx, r.y);
     const W = Math.min(190, (r.w - 2) * 45), H = 42, X0 = sx - W / 2;
     const Y0 = X0 / 2 - WALL_H + 50;
+    const dimmed = (activeRoom ? activeRoom.id : "corridor") !== r.id;
     ctx.save();
     ctx.transform(0.8944, 0.4472, 0, -1, X0, Y0);
-    ctx.fillStyle = "#c9a877"; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = activeRoom && activeRoom.id !== r.id ? "#65746b" : "#2e5d43";
+    ctx.fillStyle = dimmed ? "#57544a" : "#c9a877"; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = dimmed ? "#35443e" : "#2e5d43";
     ctx.fillRect(4, 4, W - 8, H - 8);
-    ctx.fillStyle = "rgba(255,255,255,.88)";
+    ctx.fillStyle = dimmed ? "rgba(210,220,214,.48)" : "rgba(255,255,255,.88)";
     ctx.font = "bold 14px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(1, -1);
     ctx.fillText(r.id === "math" ? "МАТЕМАТИКА · 2+2=4" : r.name.toUpperCase(), 0, 0);
@@ -705,6 +721,20 @@ function update(dt, t) {
 
 /* ---------- отрисовка ---------- */
 const IMG = {};
+const DARK_SPRITES = new WeakMap();
+function darkSprite(img) {
+  if (!DARK_SPRITES.has(img)) {
+    const c = document.createElement("canvas");
+    c.width = img.width; c.height = img.height;
+    const g = c.getContext("2d");
+    g.drawImage(img, 0, 0);
+    g.globalCompositeOperation = "source-atop";
+    g.fillStyle = "rgba(18,29,26,.64)";
+    g.fillRect(0, 0, c.width, c.height);
+    DARK_SPRITES.set(img, c);
+  }
+  return DARK_SPRITES.get(img);
+}
 async function loadSprites() {
   await Promise.all(Object.entries(SPRITES).map(async ([k, [base, n]]) => {
     try {
@@ -727,32 +757,32 @@ function render(t) {
   ctx.scale(viewScale, viewScale);
   drawFloor();
 
-  // стены — отдельным нижним слоем (доска и всё в комнате рисуются поверх)
-  const walls = [];
-  for (let y = 0; y < MAP_H; y++)
-    for (let x = 0; x < MAP_W; x++)
-      if (tileAt(x, y) === "#" && wallVisible(x, y)) walls.push({ d: x + y, f: () => drawWallBox(x, y, wallHeightAt(x, y)) });
-  walls.sort((a, b) => a.d - b.d);
-  for (const w of walls) w.f();
-  // доска на стене — слоем выше стен, но ниже всех предметов и персонажей
-  drawBlackboard();
-
-  // список отрисовки с глубиной
+  // Стены, доски, мебель и персонажи занимают один слой глубины.
+  // Поэтому передняя стена закрывает героя, а задняя остаётся позади него.
   const items = [];
+  const drawRoomSprite = (img, x, y, w, h) => {
+    drawSprite(dimmedAt(x, y) ? darkSprite(img) : img, x, y, w, h);
+  };
   for (let y = 0; y < MAP_H; y++)
     for (let x = 0; x < MAP_W; x++) {
       const c = tileAt(x, y);
-      if (c === "#") continue;
-      else if (c === "D") items.push({ d: x + y, f: () => drawDoor(x, y, t) });
-      else if (c === "T" && IMG.desk) items.push({ d: x + y + .4, f: () => drawSprite(IMG.desk, x + .5, y + .5, 92, 92) });
-      else if (c === "F" && IMG.desk) items.push({ d: x + y + .4, f: () => drawSprite(IMG.desk, x + .5, y + .5, 82, 82) });
-      else if (c === "S" && IMG.shelf) items.push({ d: x + y + .4, f: () => drawSprite(IMG.shelf, x + .5, y + .5, 100, 116) });
+      if (c === "#") {
+        if (wallVisible(x, y)) items.push({ d: x + y + .85, f: () => drawWallBox(x, y, wallHeightAt(x, y)) });
+      }
+      else if (c === "D") items.push({ d: x + y + .85, f: () => drawDoor(x, y, t) });
+      else if (c === "T" && IMG.desk) items.push({ d: x + y + .4, f: () => drawRoomSprite(IMG.desk, x + .5, y + .5, 92, 92) });
+      else if (c === "F" && IMG.desk) items.push({ d: x + y + .4, f: () => drawRoomSprite(IMG.desk, x + .5, y + .5, 82, 82) });
+      else if (c === "S" && IMG.shelf) items.push({ d: x + y + .4, f: () => drawRoomSprite(IMG.shelf, x + .5, y + .5, 100, 116) });
     }
+  for (const r of rooms)
+    items.push({ d: r.x + r.w / 2 + r.y + .95, f: () => drawBlackboard(r) });
   // галочка над сданной партой
   for (const d of desks)
-    if (d.done) items.push({ d: d.x + d.y + .2, f: () => label(isoX(d.x, d.y), isoY(d.x, d.y) - 96, "✓", "#3f9f62") });
-  if (IMG.cat) items.push({ d: cat.x + cat.y + .6, f: () => drawSprite(IMG.cat, cat.x, cat.y, 62, 62, cat.face === -1, Math.abs(Math.sin(cat.bob)) * 3) });
-  if (IMG.hero) items.push({ d: hero.x + hero.y + .7, f: () => drawSprite(IMG.hero, hero.x, hero.y, 74, 74, hero.face === -1, hero.moving ? Math.abs(Math.sin(hero.bob)) * 5 : 0) });
+    if (d.done) items.push({ d: d.x + d.y + .2, f: () =>
+      label(isoX(d.x, d.y), isoY(d.x, d.y) - 96, "✓", dimmedAt(d.x, d.y) ? "#526a5b" : "#3f9f62")
+    });
+  if (IMG.cat) items.push({ d: cat.x + cat.y + .6, f: () => drawSprite(dimmedAt(cat.x, cat.y) ? darkSprite(IMG.cat) : IMG.cat, cat.x, cat.y, 62, 62, cat.face === -1, Math.abs(Math.sin(cat.bob)) * 3) });
+  if (IMG.hero) items.push({ d: hero.x + hero.y + .7, f: () => drawSprite(dimmedAt(hero.x, hero.y) ? darkSprite(IMG.hero) : IMG.hero, hero.x, hero.y, 74, 74, hero.face === -1, hero.moving ? Math.abs(Math.sin(hero.bob)) * 5 : 0) });
 
   items.sort((a, b) => a.d - b.d);
   for (const it of items) it.f();
