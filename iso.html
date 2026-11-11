@@ -61,7 +61,7 @@
   .room text{font-family:"Trebuchet MS","Segoe UI",sans-serif;text-anchor:middle;fill:#20344a;font-size:22px;font-weight:800;pointer-events:none}
   .room .room-note{font-size:13px;font-weight:600;fill:#60758a}.corridor{fill:#c5d9d9;stroke:#8ca9aa;stroke-width:3}
   .corridor-label{font-family:"Trebuchet MS","Segoe UI",sans-serif;text-anchor:middle;font-size:18px;font-weight:800;letter-spacing:3px;fill:#527071}
-  .you-dot{fill:#3978c5;stroke:#fffefa;stroke-width:4}.you-text{font-family:"Trebuchet MS","Segoe UI",sans-serif;text-anchor:middle;font-size:14px;font-weight:800;fill:#285b99}
+  .you-dot{fill:#3978c5;stroke:#fffefa;stroke-width:4}.you-text{font-family:"Trebuchet MS","Segoe UI",sans-serif;text-anchor:middle;font-size:14px;font-weight:800;fill:#285b99}#mapPlayer{pointer-events:none}#mapPlayer.hidden{display:none}
   .map-legend{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin:8px 0;color:var(--dim);font-size:14px}
   .map-legend span{display:flex;align-items:center;gap:7px}.legend-dot{width:12px;height:12px;border-radius:3px;background:#a9bbc1}.legend-dot.active{background:#ffd35a;border:2px solid #3978c5}
   .hidden{display:none!important}
@@ -104,8 +104,8 @@
     <div class="menu-logo" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M5 8c6-1 11 1 15 5 4-4 9-6 15-5v24c-6-1-11 1-15 5-4-4-9-6-15-5V8Z" fill="#fffefa"/><path d="M20 13v24M10 15c3 0 5 1 7 2M10 21c3 0 5 1 7 2M23 17c2-1 4-2 7-2M23 23c2-1 4-2 7-2" stroke="#3978c5" stroke-width="1.8" stroke-linecap="round"/></svg></div>
     <div class="eyebrow">Учебная игра</div>
     <h1 id="ovTitle">Школьный Квест</h1>
-    <p id="ovText">Исследуй класс, решай задания у парт и открой дверь после всех побед.</p>
-    <div class="menu-tags" id="menuTags"><span>12 заданий</span><span>1 класс</span><span>Кот-помощник</span></div>
+    <p id="ovText">Исследуй открытую школу, заходи в разные классы и решай задания у парт в кабинете математики.</p>
+    <div class="menu-tags" id="menuTags"><span>12 заданий</span><span>6 классов</span><span>Кот-помощник</span></div>
     <p id="ovHint">Движение: WASD или стрелки · Задание: E · Пауза: P</p>
     <button class="bigbtn" id="ovBtn">Начать приключение</button>
   </div>
@@ -114,20 +114,37 @@
   <div class="school-map-card">
     <div class="eyebrow">План школы</div>
     <h1 id="schoolMapTitle">Карта классов</h1>
-    <p>Текущий класс подсвечен. Остальные кабинеты скоро откроются.</p>
-    <svg class="map-plan" viewBox="0 0 900 590" role="img" aria-label="Коридор и классы разного размера; математика выделена жёлтым">
+    <p>Текущий класс подсвечен. Во все кабинеты можно зайти через общий коридор.</p>
+    <svg class="map-plan" viewBox="0 0 900 590" role="img" aria-label="Общий коридор и шесть классов разного размера">
       <path class="corridor" d="M50 245H850V342H50Z"/>
       <text class="corridor-label" x="450" y="304">КОРИДОР</text>
-      <g class="room locked"><path class="room-shape" d="M62 52H238V245H62Z"/><text x="150" y="139">Русский</text><text class="room-note" x="150" y="166">скоро</text></g>
-      <g class="room locked"><path class="room-shape" d="M238 78H405V245H238Z"/><text x="321" y="153">Природа</text><text class="room-note" x="321" y="180">скоро</text></g>
-      <g class="room locked"><path class="room-shape" d="M405 38H654V245H405Z"/><text x="529" y="132">Английский</text><text class="room-note" x="529" y="159">скоро</text></g>
-      <g class="room locked"><path class="room-shape" d="M654 88H838V245H654Z"/><text x="746" y="158">География</text><text class="room-note" x="746" y="185">скоро</text></g>
-      <g class="room locked"><path class="room-shape" d="M62 342H288V548H62Z"/><text x="175" y="435">Логика</text><text class="room-note" x="175" y="462">скоро</text></g>
-      <g class="room locked"><path class="room-shape" d="M288 342H526V510H288Z"/><text x="407" y="416">Искусство</text><text class="room-note" x="407" y="443">скоро</text></g>
-      <g class="room current" id="mapMath" role="button" tabindex="0" aria-label="Вернуться в класс математики">
+      <g class="room locked" data-room="rus">
+        <path class="room-shape" d="M62 52H238V245H62Z"/>
+        <text x="150" y="139">Русский</text><text class="room-note" x="150" y="166">открыт</text>
+      </g>
+      <g class="room locked" data-room="nat">
+        <path class="room-shape" d="M238 78H405V245H238Z"/>
+        <text x="321" y="153">Природа</text><text class="room-note" x="321" y="180">открыт</text>
+      </g>
+      <g class="room locked" data-room="eng">
+        <path class="room-shape" d="M405 38H838V245H405Z"/>
+        <text x="621" y="132">Английский</text><text class="room-note" x="621" y="159">открыт</text>
+      </g>
+      <g class="room locked" data-room="logic">
+        <path class="room-shape" d="M62 342H288V548H62Z"/>
+        <text x="175" y="435">Логика</text><text class="room-note" x="175" y="462">открыт</text>
+      </g>
+      <g class="room locked" data-room="art">
+        <path class="room-shape" d="M288 342H526V510H288Z"/>
+        <text x="407" y="416">Искусство</text><text class="room-note" x="407" y="443">открыт</text>
+      </g>
+      <g class="room current" id="mapMath" data-room="math" role="button" tabindex="0" aria-label="Вернуться в класс математики">
         <path class="room-shape" d="M526 342H838V560H526Z"/>
         <text x="682" y="425">Математика</text><text class="room-note" x="682" y="452">1 класс · 12 заданий</text>
-        <circle class="you-dot" cx="682" cy="492" r="11"/><text class="you-text" x="682" y="526">Ты здесь</text>
+      </g>
+      <g id="mapPlayer">
+        <circle class="you-dot" cx="682" cy="492" r="11"/>
+        <text class="you-text" x="682" y="526">Ты здесь</text>
       </g>
     </svg>
     <div class="map-legend"><span><i class="legend-dot active"></i>Текущий класс</span><span><i class="legend-dot"></i>Другие классы</span></div>
@@ -138,79 +155,648 @@
 "use strict";
 /* ============ ШКОЛЬНЫЙ КВЕСТ: ИЗОМЕТРИЯ ============
    Спрайты нарисованы нейросетью, лежат рядом: assets/iso/ */
-const SPRITES = {hero:["assets/iso/hero.",8],cat:["assets/iso/cat.",12],desk:["assets/iso/desk.",9],shelf:["assets/iso/shelf.",9]};
-const cv=document.getElementById("game"),ctx=cv.getContext("2d");
-const TILE_W=64,TILE_H=32,WALL_H=46;
-const MAP_SRC=["##################","#................#","#S..T...T...T....#","#S...............#","#S..T...T...T....#","#S...............#","#S...............#","#................#","#...T...T...T....#","#................#","#...T...T...T....#","#................#","#########D########"];
-const MAP_H=MAP_SRC.length,MAP_W=MAP_SRC[0].length,SPAWN={x:2.5,y:10.5};
-const tileAt=(x,y)=>x<0||y<0||y>=MAP_H||x>=MAP_W?"#":MAP_SRC[y][x];
-const passable=(x,y,doorOpen)=>{const c=tileAt(Math.floor(x),Math.floor(y));return c!=="#"&&c!=="T"&&c!=="S"&&(c!=="D"||doorOpen)};
-const desks=[];
-for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++)if(MAP_SRC[y][x]==="T")desks.push({x:x+.5,y:y+.5,done:false});
-const TOTAL=desks.length;
-let state="title",doorOpen=false,hero,cat,parts=[];
-let camX=0,camY=0,viewScale=1,elapsed=0,startT=0;
-let muted=localStorage.getItem("sq_iso_mute")==="1",best=+(localStorage.getItem("sq_iso_best")||0);
-function resetGame(){hero={x:SPAWN.x,y:SPAWN.y,vx:0,vy:0,face:1,moving:false,bob:0};cat={x:SPAWN.x-.6,y:SPAWN.y+.4,trail:[],face:1,bob:0};desks.forEach(d=>d.done=false);parts=[];doorOpen=false;elapsed=0;updateBooksHud()}
-const isoX=(x,y)=>(x-y)*TILE_W/2,isoY=(x,y)=>(x+y)*TILE_H/2;
-const MAP_MIN_X=-MAP_H*TILE_W/2,MAP_MAX_X=MAP_W*TILE_W/2,MAP_MIN_Y=0,MAP_MAX_Y=(MAP_W+MAP_H-2)*TILE_H/2+WALL_H;
-const clamp=(v,a,b)=>Math.max(Math.min(a,b),Math.min(Math.max(a,b),v));
-function diamond(x,y,h){const sx=isoX(x,y),sy=isoY(x,y)-(h||0);ctx.beginPath();ctx.moveTo(sx,sy-TILE_H/2);ctx.lineTo(sx+TILE_W/2,sy);ctx.lineTo(sx,sy+TILE_H/2);ctx.lineTo(sx-TILE_W/2,sy);ctx.closePath()}
-function drawFloor(){for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){if(tileAt(x,y)==="#")continue;diamond(x,y);ctx.fillStyle=(x+y)%2?"#dfcba7":"#ecdab9";ctx.fill();ctx.strokeStyle="rgba(120,90,50,.25)";ctx.lineWidth=1;ctx.stroke()}ctx.fillStyle="rgba(90,140,200,.28)";for(let y=4;y<=6;y++)for(let x=7;x<=10;x++){diamond(x,y);ctx.fill()}}
-function drawWallBox(x,y,h){const H=h==null?WALL_H:h,sx=isoX(x,y),sy=isoY(x,y),hw=TILE_W/2,hh=TILE_H/2,thinX=x===0||x===MAP_W-1,thinY=y===0||y===MAP_H-1,x0=thinX?-.14:-.5,x1=thinX?.14:.5,y0=thinY?-.14:-.5,y1=thinY?.14:.5;const p=[[x0,y0],[x1,y0],[x1,y1],[x0,y1]].map(([dx,dy])=>({x:sx+(dx-dy)*hw,y:sy+(dx+dy)*hh}));function face(points,color){ctx.fillStyle=color;ctx.beginPath();points.forEach((q,i)=>i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y));ctx.closePath();ctx.fill()}const top=p.map(q=>({x:q.x,y:q.y-H}));face([p[3],p[2],top[2],top[3]],"#987858");face([p[1],p[2],top[2],top[1]],"#ad8b65");face(top,"#d2b487")}
-const LIP_H=10,wallHeightAt=(x,y)=>x===MAP_W-1||y===MAP_H-1?LIP_H:WALL_H;
-function drawDoor(x,y,t){const sx=isoX(x,y),sy=isoY(x,y);diamond(x,y);ctx.fillStyle=doorOpen?"#7fd08a":"#7a5a38";ctx.fill();if(doorOpen){ctx.save();ctx.globalAlpha=.5+.3*Math.sin(t*4);ctx.strokeStyle="#b6ffbe";ctx.lineWidth=3;diamond(x,y);ctx.stroke();ctx.restore();label(sx,sy-wallHeightAt(x,y)-22,"ВЫХОД","#b6ffbe")}else label(sx,sy-wallHeightAt(x,y)-22,"ЗАКРЫТО","#fff")}
-function label(x,y,text,color){ctx.save();ctx.font="bold 15px system-ui";ctx.textAlign="center";ctx.fillStyle="rgba(0,0,0,.45)";ctx.fillText(text,x+1,y+1);ctx.fillStyle=color||"#fff";ctx.fillText(text,x,y);ctx.restore()}
-function drawSprite(img,x,y,w,h,flip,bobY){const sx=isoX(x,y),sy=isoY(x,y)-(bobY||0);ctx.fillStyle="rgba(40,25,10,.22)";ctx.beginPath();ctx.ellipse(sx,sy,w*.3,w*.13,0,0,6.29);ctx.fill();ctx.save();ctx.translate(sx,sy);if(flip)ctx.scale(-1,1);ctx.drawImage(img,-w/2,-h,w,h);ctx.restore()}
-function drawBlackboard(){const cx=8.5,sx=isoX(cx,0),W=190,H=46,X0=sx-W/2,Y0=X0/2-WALL_H+52;ctx.save();ctx.transform(.8944,.4472,0,-1,X0,Y0);ctx.fillStyle="#c9a877";ctx.fillRect(0,0,W,H);ctx.fillStyle="#2e5d43";ctx.fillRect(4,4,W-8,H-8);ctx.fillStyle="rgba(255,255,255,.85)";ctx.font="15px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";ctx.save();ctx.translate(W/2,H/2);ctx.scale(1,-1);ctx.fillText("2+2=4   3+3=6",0,0);ctx.restore();ctx.restore()}
-let AC=null;
-function audio(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();return AC}
-function tone(f,t0,dur,type,vol){if(muted)return;const ac=audio(),o=ac.createOscillator(),g=ac.createGain();o.type=type||"sine";o.frequency.value=f;g.gain.setValueAtTime(0,ac.currentTime+t0);g.gain.linearRampToValueAtTime(vol||.15,ac.currentTime+t0+.01);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t0+dur);o.connect(g);g.connect(ac.destination);o.start(ac.currentTime+t0);o.stop(ac.currentTime+t0+dur+.05)}
-const sfxCollect=()=>{tone(660,0,.12,"triangle");tone(880,.09,.15,"triangle")},sfxWin=()=>{[523,659,784,1047].forEach((f,i)=>tone(f,i*.14,.3,"triangle",.18))},sfxClick=()=>tone(440,0,.06,"square",.06);
-const keys={};
-addEventListener("keydown",e=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==="p")togglePause();if(e.key===" "){if(state==="title"||state==="win")startGame();else if(state==="pause")togglePause()}if((e.key.toLowerCase()==="e"||e.key==="Enter")&&state==="play"&&!quizOpen&&nearDesk){e.preventDefault();openQuiz(nearDesk)}});
-addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
-const joy={active:false,id:-1,dx:0,dy:0},joyEl=document.getElementById("joy"),stickEl=document.getElementById("stick");
-if("ontouchstart"in window){joyEl.style.display="block";document.getElementById("ovHint").textContent="Движение: левый джойстик · Задание: кнопка на экране"}
-joyEl.addEventListener("pointerdown",e=>{joy.active=true;joy.id=e.pointerId;joyEl.setPointerCapture(e.pointerId);moveStick(e)});joyEl.addEventListener("pointermove",e=>{if(joy.active&&e.pointerId===joy.id)moveStick(e)});
-const joyEnd=e=>{if(e.pointerId===joy.id){joy.active=false;joy.dx=joy.dy=0;stickEl.style.left="41px";stickEl.style.top="41px"}};joyEl.addEventListener("pointerup",joyEnd);joyEl.addEventListener("pointercancel",joyEnd);
-function moveStick(e){const r=joyEl.getBoundingClientRect();let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);const m=Math.hypot(dx,dy),max=r.width/2-14;if(m>max){dx*=max/m;dy*=max/m}joy.dx=dx/max;joy.dy=dy/max;stickEl.style.left=41+dx+"px";stickEl.style.top=41+dy+"px"}
-function inputVec(){let x=0,y=0;if(keys["a"]||keys["arrowleft"])x-=1;if(keys["d"]||keys["arrowright"])x+=1;if(keys["w"]||keys["arrowup"])y-=1;if(keys["s"]||keys["arrowdown"])y+=1;x+=joy.dx;y+=joy.dy;const len=Math.hypot(x,y);if(len>1){x/=len;y/=len}const tx=x+y,ty=y-x,tl=Math.hypot(tx,ty)||1;return{x:tx/tl,y:ty/tl,active:len>.15}}
-const overlay=document.getElementById("overlay"),ovTitle=document.getElementById("ovTitle"),ovText=document.getElementById("ovText"),ovHint=document.getElementById("ovHint"),ovBtn=document.getElementById("ovBtn"),booksEl=document.getElementById("books"),timerEl=document.getElementById("timer");
-function showOverlay(title,text,btn,hint){ovTitle.textContent=title;ovText.innerHTML=text;ovBtn.textContent=btn;ovHint.style.display=hint?"":"none";document.getElementById("menuTags").style.display=state==="title"?"flex":"none";if(hint)ovHint.textContent=hint;document.body.classList.add("menu-open");overlay.classList.remove("hidden")}
-function hideOverlay(){overlay.classList.add("hidden");document.body.classList.remove("menu-open")}
-const schoolMapEl=document.getElementById("schoolMap");
-function openSchoolMap(){if(state!=="play")return;state="map";document.body.classList.add("menu-open");schoolMapEl.classList.remove("hidden");document.getElementById("closeSchoolMap").focus()}
-function closeSchoolMap(){if(state!=="map")return;schoolMapEl.classList.add("hidden");document.body.classList.remove("menu-open");state="play";document.getElementById("schoolMapBtn").focus()}
-document.getElementById("schoolMapBtn").addEventListener("click",openSchoolMap);document.getElementById("closeSchoolMap").addEventListener("click",closeSchoolMap);
-const mapMath=document.getElementById("mapMath");mapMath.addEventListener("click",closeSchoolMap);mapMath.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();closeSchoolMap()}});addEventListener("keydown",e=>{if(e.key==="Escape")closeSchoolMap()});
-ovBtn.addEventListener("click",()=>{sfxClick();if(state==="title"||state==="win")startGame();else if(state==="pause")togglePause()});
-document.getElementById("pause").addEventListener("click",()=>{sfxClick();togglePause()});document.getElementById("mute").addEventListener("click",function(){muted=!muted;localStorage.setItem("sq_iso_mute",muted?"1":"0");this.textContent=muted?"×":"♪";this.setAttribute("aria-label",muted?"Включить звук":"Выключить звук")});document.getElementById("mute").textContent=muted?"×":"♪";
-function updateBooksHud(){booksEl.textContent=desks.filter(d=>d.done).length+"/"+TOTAL}
-const pick=a=>a[Math.floor(Math.random()*a.length)],r2=n=>Math.floor(Math.random()*n);
-function wrongNums(r){const w=new Set();let guard=0;while(w.size<3&&guard++<60){const c=r+pick([-10,-3,-2,-1,1,2,3,10]);if(c>=0&&c!==r)w.add(String(c))}while(w.size<3)w.add(String(r+w.size+7));return[...w]}
-function makeQ(){const t=r2(6);if(t===0){const a=2+r2(13),b=2+r2(9),r=a+b;return[a+" + "+b+" = ?",String(r),wrongNums(r),a+" плюс "+b+" будет "+r+"."]}if(t===1){const a=8+r2(12),b=1+r2(a-1),r=a-b;return[a+" − "+b+" = ?",String(r),wrongNums(r),a+" минус "+b+" будет "+r+"."]}if(t===2){const a=2+r2(4),b=2+r2(4),r=a*b;return[a+" × "+b+" = ?",String(r),wrongNums(r),a+" умножить на "+b+" будет "+r+"."]}if(t===3){const a=5+r2(16),b=5+r2(16);if(a===b)return makeQ();const big=Math.max(a,b),small=Math.min(a,b);return["Какое число больше: "+a+" или "+b+"?",String(big),wrongNums(big),"Сравниваем: "+big+" больше, чем "+small+"."]}if(t===4){const start=2+r2(6),r=start+6;return["Продолжи ряд: "+start+", "+(start+2)+", "+(start+4)+", __",String(r),wrongNums(r),"Каждое число больше предыдущего на 2, значит "+(start+4)+" + 2 = "+r+"."]}const a=2+r2(9),b=2+r2(9),r=a+b;return["У Миши "+a+" наклеек, у Гриши "+b+". Сколько наклеек у них вместе?",String(r),wrongNums(r),"Складываем: "+a+" + "+b+" = "+r+"."]}
-const usedQ=new Set();function genQ(){for(let i=0;i<80;i++){const q=makeQ();if(!usedQ.has(q[0])){usedQ.add(q[0]);return q}}return makeQ()}
-let nearDesk=null,quizOpen=false,curDesk=null,curQ=null;
-const quizEl=document.getElementById("quiz"),qText=document.getElementById("qText"),qOpts=document.getElementById("qOpts"),qExpl=document.getElementById("qExpl"),qNext=document.getElementById("qNext"),actionBtn=document.getElementById("action");
-function openQuiz(d){if(quizOpen||d.done)return;curDesk=d;quizOpen=true;hero.x=d.x;hero.y=d.y+.55;hero.moving=false;cat.trail.length=0;cat.trail.push({x:hero.x,y:hero.y});curQ=genQ();qText.textContent=curQ[0];qExpl.classList.add("hidden");qNext.classList.add("hidden");const opts=[curQ[1],...curQ[2]];for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]]}qOpts.innerHTML="";const btns=opts.map(o=>{const b=document.createElement("button");b.className="answer-btn";b.textContent=o;b.addEventListener("click",()=>answerQ(o,b,btns));qOpts.appendChild(b);return b});actionBtn.classList.add("hidden");quizEl.classList.remove("hidden");sfxClick()}
-function answerQ(chosen,btn,btns){const right=chosen===curQ[1];btns.forEach(b=>{b.disabled=true;if(b.textContent===curQ[1])b.classList.add("right");else if(b===btn)b.classList.add("wrong");else b.style.opacity=".45"});qExpl.textContent=(right?"Верно! ":"Пока нет. ")+curQ[3];qExpl.classList.remove("hidden");qNext.classList.remove("hidden");if(right){curDesk.done=true;sfxCollect();burst(curDesk.x,curDesk.y,"#7fd08a");updateBooksHud();if(desks.every(k=>k.done)){doorOpen=true;burst(hero.x,hero.y,"#7fd08a")}}else tone(220,0,.22,"sawtooth",.08)}
-qNext.addEventListener("click",()=>{quizOpen=false;quizEl.classList.add("hidden");sfxClick()});actionBtn.addEventListener("click",()=>{if(nearDesk)openQuiz(nearDesk)});
-function fmt(t){const m=Math.floor(t/60),s=Math.floor(t%60);return m+":"+String(s).padStart(2,"0")}
-function startGame(){resetGame();state="play";startT=performance.now();hideOverlay()}
-function togglePause(){if(state==="play"){state="pause";showOverlay("Пауза","Можно перевести дух. Прогресс этого урока сохранится до конца игры.","Продолжить","")}else if(state==="pause"){state="play";hideOverlay()}}
-function winGame(){state="win";const t=elapsed;let rec="";if(!best||t<best){best=t;localStorage.setItem("sq_iso_best",String(best));rec=" Новый рекорд!"}sfxWin();showOverlay("Урок завершён!","Все 12 заданий по математике сданы, урок окончен!<br>Время: <b>"+fmt(t)+"</b>"+rec+(best?"<br>Лучшее время: <b>"+fmt(best)+"</b>":""),"Играть ещё","Или нажми Пробел")}
-function burst(x,y,color){for(let i=0;i<12;i++){const a=Math.random()*6.28,sp=40+Math.random()*70;parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,life:.7,color})}}
-const SPEED=3.4;
-function update(dt,t){if(state!=="play")return;elapsed=(performance.now()-startT)/1000;const iv=quizOpen?{x:0,y:0,active:false}:inputVec();hero.moving=iv.active;if(iv.active){hero.face=iv.x-iv.y<0?-1:1;const nx=hero.x+iv.x*SPEED*dt,ny=hero.y+iv.y*SPEED*dt;if(passable(nx,hero.y,doorOpen))hero.x=nx;if(passable(hero.x,ny,doorOpen))hero.y=ny;hero.bob+=dt*10}cat.trail.push({x:hero.x,y:hero.y});if(cat.trail.length>26)cat.trail.shift();const tgt=cat.trail[0],ddx=tgt.x-cat.x,ddy=tgt.y-cat.y,dd=Math.hypot(ddx,ddy);if(dd>.02){const sp=Math.min(dd,SPEED*.92*dt);cat.x+=ddx/dd*sp;cat.y+=ddy/dd*sp;cat.face=ddx-ddy<0?-1:1;cat.bob+=dt*12}nearDesk=null;if(!quizOpen){let best=1.15;for(const d of desks){if(d.done)continue;const dist=Math.hypot(d.x-hero.x,d.y-hero.y);if(dist<best){best=dist;nearDesk=d}}}actionBtn.classList.toggle("hidden",!(nearDesk&&state==="play"&&!quizOpen));if(doorOpen&&tileAt(Math.floor(hero.x),Math.floor(hero.y))==="D")winGame();for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life-=dt;p.x+=p.vx*dt/32;p.y+=p.vy*dt/32;p.vy+=180*dt;if(p.life<=0)parts.splice(i,1)}const mapW=(MAP_MAX_X-MAP_MIN_X)*viewScale,mapH=(MAP_MAX_Y-MAP_MIN_Y)*viewScale,minX=MAP_MIN_X*viewScale,maxX=MAP_MAX_X*viewScale,minY=MAP_MIN_Y*viewScale,maxY=MAP_MAX_Y*viewScale,tx=mapW<=innerWidth?(innerWidth-minX-maxX)/2:clamp(innerWidth/2-isoX(hero.x,hero.y)*viewScale,innerWidth-maxX,-minX),ty=mapH<=innerHeight-100?(innerHeight-100-minY-maxY)/2+72:clamp(innerHeight/2-isoY(hero.x,hero.y)*viewScale+20,innerHeight-maxY,80-minY);camX+=(tx-camX)*Math.min(1,dt*6);camY+=(ty-camY)*Math.min(1,dt*6)}
-const IMG={};
-async function loadSprites(){await Promise.all(Object.entries(SPRITES).map(async([k,[base,n]])=>{try{const parts=await Promise.all(Array.from({length:n},(_,i)=>fetch(base+String(i).padStart(3,"0")+".b64").then(r=>{if(!r.ok)throw new Error("chunk "+i);return r.text()})));const im=new Image();await new Promise(res=>{im.onload=res;im.onerror=res;im.src="data:image/png;base64,"+parts.join("")});if(im.width)IMG[k]=im}catch(e){}}))}
-function render(t){ctx.clearRect(0,0,cv.width,cv.height);ctx.save();ctx.translate(camX,camY);ctx.scale(viewScale,viewScale);drawFloor();const walls=[];for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++)if(tileAt(x,y)==="#")walls.push({d:x+y,f:()=>drawWallBox(x,y,wallHeightAt(x,y))});walls.sort((a,b)=>a.d-b.d);for(const w of walls)w.f();drawBlackboard();const items=[];for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){const c=tileAt(x,y);if(c==="#")continue;else if(c==="D")items.push({d:x+y,f:()=>drawDoor(x,y,t)});else if(c==="T"&&IMG.desk)items.push({d:x+y+.4,f:()=>drawSprite(IMG.desk,x+.5,y+.5,92,92)});else if(c==="S"&&IMG.shelf)items.push({d:x+y+.4,f:()=>drawSprite(IMG.shelf,x+.5,y+.5,100,116)})}for(const d of desks)if(d.done)items.push({d:d.x+d.y+.2,f:()=>label(isoX(d.x,d.y),isoY(d.x,d.y)-96,"✓","#3f9f62")});if(IMG.cat)items.push({d:cat.x+cat.y+.6,f:()=>drawSprite(IMG.cat,cat.x,cat.y,62,62,cat.face===-1,Math.abs(Math.sin(cat.bob))*3)});if(IMG.hero)items.push({d:hero.x+hero.y+.7,f:()=>drawSprite(IMG.hero,hero.x,hero.y,74,74,hero.face===-1,hero.moving?Math.abs(Math.sin(hero.bob))*5:0)});items.sort((a,b)=>a.d-b.d);for(const it of items)it.f();for(const p of parts){ctx.globalAlpha=Math.max(0,p.life/.7);ctx.fillStyle=p.color;const sx=isoX(p.x,p.y),sy=isoY(p.x,p.y)-10;ctx.beginPath();ctx.arc(sx,sy,3,0,6.28);ctx.fill()}ctx.globalAlpha=1;ctx.restore();if(state==="play")timerEl.textContent=fmt(elapsed)}
-let last=performance.now();function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt,now/1000);render(now/1000);requestAnimationFrame(loop)}
-function resize(){const dpr=Math.min(devicePixelRatio||1,2),rawW=MAP_MAX_X-MAP_MIN_X,rawH=MAP_MAX_Y-MAP_MIN_Y;viewScale=Math.max(.25,Math.min(1,(innerWidth-24)/rawW,(innerHeight-140)/rawH));cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
-addEventListener("resize",resize);resize();resetGame();
-{const mapW=(MAP_MAX_X-MAP_MIN_X)*viewScale,mapH=(MAP_MAX_Y-MAP_MIN_Y)*viewScale,minX=MAP_MIN_X*viewScale,maxX=MAP_MAX_X*viewScale,minY=MAP_MIN_Y*viewScale,maxY=MAP_MAX_Y*viewScale;camX=mapW<=innerWidth?(innerWidth-minX-maxX)/2:clamp(innerWidth/2-isoX(hero.x,hero.y)*viewScale,innerWidth-maxX,-minX);camY=mapH<=innerHeight-100?(innerHeight-100-minY-maxY)/2+72:clamp(innerHeight/2-isoY(hero.x,hero.y)*viewScale+20,innerHeight-maxY,80-minY)}
-loadSprites().then(()=>requestAnimationFrame(loop));
+const SPRITES = {
+  hero:  ["assets/iso/hero.",  8],
+  cat:   ["assets/iso/cat.",   12],
+  desk:  ["assets/iso/desk.",  9],
+  shelf: ["assets/iso/shelf.", 9],
+};
+
+const cv  = document.getElementById("game");
+const ctx = cv.getContext("2d");
+const TILE_W = 64, TILE_H = 32, WALL_H = 46;
+
+/* ---------- карта ----------
+   # стена · . пол · T парта · S шкаф · D дверь выхода */
+const MAP_W = 45, MAP_H = 34;
+const MAP_SRC = Array.from({ length: MAP_H }, () => Array(MAP_W).fill("#"));
+const rooms = [
+  { id:"rus", name:"Русский", x:2, y:2, w:10, h:12 },
+  { id:"nat", name:"Природа", x:13, y:4, w:11, h:10 },
+  { id:"eng", name:"Английский", x:25, y:1, w:18, h:13 },
+  { id:"logic", name:"Логика", x:2, y:20, w:11, h:12 },
+  { id:"art", name:"Искусство", x:14, y:20, w:12, h:10 },
+  { id:"math", name:"Математика", x:27, y:20, w:16, h:12 }
+];
+function carve(x, y, w, h, tile) {
+  for (let yy = y + 1; yy < y + h - 1; yy++)
+    for (let xx = x + 1; xx < x + w - 1; xx++) MAP_SRC[yy][xx] = tile || ".";
+}
+rooms.forEach(r => carve(r.x, r.y, r.w, r.h));
+for (let y = 14; y <= 19; y++)
+  for (let x = 2; x <= 42; x++) MAP_SRC[y][x] = "."; // общий коридор
+rooms.forEach(r => {
+  const doorX = Math.floor(r.x + r.w / 2);
+  if (r.y < 14) MAP_SRC[r.y + r.h - 1][doorX] = ".";
+  else MAP_SRC[r.y][doorX] = ".";
+});
+// Математика: 12 рабочих парт, книжный шкаф и отдельный выход после урока.
+for (const y of [23, 26, 29]) for (const x of [30, 33, 36, 39]) MAP_SRC[y][x] = "T";
+for (const y of [22, 23, 24, 25]) MAP_SRC[y][28] = "S";
+MAP_SRC[31][35] = "D";
+// В остальных кабинетах уже есть мебель; их задания появятся следующим этапом.
+for (const r of rooms.filter(r => r.id !== "math")) {
+  for (let yy = r.y + 3; yy < r.y + r.h - 2; yy += 3)
+    for (let xx = r.x + 3; xx < r.x + r.w - 2; xx += 4) MAP_SRC[yy][xx] = "F";
+}
+const SPAWN = { x: 31.5, y: 28.5 };
+const tileAt = (x, y) => {
+  if (x < 0 || y < 0 || y >= MAP_H || x >= MAP_W) return "#";
+  return MAP_SRC[y][x];
+};
+const passable = (x, y, doorOpen) => {
+  const c = tileAt(Math.floor(x), Math.floor(y));
+  if (c === "#" || c === "T" || c === "S" || c === "F") return false;
+  if (c === "D" && !doorOpen) return false;
+  return true;
+};
+const roomAt = (x, y) => rooms.find(r => x > r.x && x < r.x + r.w - 1 && y > r.y && y < r.y + r.h - 1) || null;
+let activeRoom = roomAt(SPAWN.x, SPAWN.y);
+const desks = [];
+for (let y = 0; y < MAP_H; y++)
+  for (let x = 0; x < MAP_W; x++)
+    if (MAP_SRC[y][x] === "T") desks.push({ x: x + 0.5, y: y + 0.5, done: false });
+const TOTAL = desks.length;
+
+/* ---------- состояние ---------- */
+let state = "title";           // title | play | pause | map | win
+let doorOpen = false;
+let hero, cat, parts = [];
+let camX = 0, camY = 0, viewScale = 1;
+let elapsed = 0, startT = 0;
+let muted = localStorage.getItem("sq_iso_mute") === "1";
+let best = +(localStorage.getItem("sq_iso_best") || 0);
+
+function resetGame() {
+  hero = { x: SPAWN.x, y: SPAWN.y, vx: 0, vy: 0, face: 1, moving: false, bob: 0 };
+  cat  = { x: SPAWN.x - 0.6, y: SPAWN.y + 0.4, trail: [], face: 1, bob: 0 };
+  desks.forEach(d => d.done = false);
+  parts = [];
+  doorOpen = false;
+  elapsed = 0;
+  updateBooksHud();
+}
+
+/* ---------- изометрия ---------- */
+const isoX = (x, y) => (x - y) * TILE_W / 2;
+const isoY = (x, y) => (x + y) * TILE_H / 2;
+
+// границы всей карты в экранных координатах (для камеры)
+const MAP_MIN_X = -MAP_H * TILE_W / 2, MAP_MAX_X = MAP_W * TILE_W / 2;
+const MAP_MIN_Y = 0, MAP_MAX_Y = (MAP_W + MAP_H - 2) * TILE_H / 2 + WALL_H;
+const clamp = (v, a, b) => Math.max(Math.min(a, b), Math.min(Math.max(a, b), v));
+
+function diamond(x, y, h) {
+  const sx = isoX(x, y), sy = isoY(x, y) - (h || 0);
+  ctx.beginPath();
+  ctx.moveTo(sx, sy - TILE_H / 2);
+  ctx.lineTo(sx + TILE_W / 2, sy);
+  ctx.lineTo(sx, sy + TILE_H / 2);
+  ctx.lineTo(sx - TILE_W / 2, sy);
+  ctx.closePath();
+}
+
+function drawFloor() {
+  for (let y = 0; y < MAP_H; y++)
+    for (let x = 0; x < MAP_W; x++) {
+      const c = tileAt(x, y);
+      if (c === "#") continue;
+      const room = roomAt(x + .5, y + .5);
+      const dimmed = room && activeRoom && room.id !== activeRoom.id;
+      diamond(x, y);
+      ctx.fillStyle = dimmed ? ((x + y) % 2 ? "#bdc5c0" : "#cbd1cb")
+        : ((x + y) % 2 ? "#dfcba7" : "#ecdab9");
+      ctx.fill();
+      ctx.strokeStyle = dimmed ? "rgba(70,90,85,.18)" : "rgba(120,90,50,.25)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  // Ковёр остаётся только в активной математике.
+  if (activeRoom && activeRoom.id === "math") {
+    ctx.fillStyle = "rgba(90,140,200,.28)";
+    for (let y = 24; y <= 27; y++)
+      for (let x = 32; x <= 37; x++) { diamond(x, y); ctx.fill(); }
+  }
+}
+
+function drawWallBox(x, y, h) {
+  const H = h == null ? WALL_H : h;
+  const sx = isoX(x, y), sy = isoY(x, y);
+  const hw = TILE_W / 2, hh = TILE_H / 2;
+  // Вдоль стены сегменты соединяются, а поперёк занимают лишь тонкую полосу.
+  const thinY = tileAt(x - 1, y) === "#" || tileAt(x + 1, y) === "#";
+  const thinX = !thinY && (tileAt(x, y - 1) === "#" || tileAt(x, y + 1) === "#");
+  const x0 = thinX ? -.14 : -.5, x1 = thinX ? .14 : .5;
+  const y0 = thinY ? -.14 : -.5, y1 = thinY ? .14 : .5;
+  const p = [[x0,y0],[x1,y0],[x1,y1],[x0,y1]].map(([dx,dy]) => ({
+    x: sx + (dx - dy) * hw, y: sy + (dx + dy) * hh
+  }));
+  function face(points, color) {
+    ctx.fillStyle = color; ctx.beginPath();
+    points.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y));
+    ctx.closePath(); ctx.fill();
+  }
+  const top = p.map(q => ({ x: q.x, y: q.y - H }));
+  face([p[3],p[2],top[2],top[3]], "#987858");
+  face([p[1],p[2],top[2],top[1]], "#ad8b65");
+  face(top, "#d2b487");
+}
+
+// низкие «губы» вместо полных стен со стороны камеры — чтобы не закрывали героев
+const LIP_H = 10;
+const wallHeightAt = (x, y) =>
+  (x === MAP_W - 1 || y === MAP_H - 1) ? LIP_H : WALL_H;
+
+function drawDoor(x, y, t) {
+  const sx = isoX(x, y), sy = isoY(x, y);
+  diamond(x, y);
+  ctx.fillStyle = doorOpen ? "#7fd08a" : "#7a5a38";
+  ctx.fill();
+  if (doorOpen) {
+    ctx.save();
+    ctx.globalAlpha = .5 + .3 * Math.sin(t * 4);
+    ctx.strokeStyle = "#b6ffbe"; ctx.lineWidth = 3;
+    diamond(x, y); ctx.stroke();
+    ctx.restore();
+    label(sx, sy - wallHeightAt(x, y) - 22, "ВЫХОД", "#b6ffbe");
+  } else {
+    label(sx, sy - wallHeightAt(x, y) - 22, "ЗАКРЫТО", "#fff");
+  }
+}
+
+function label(x, y, text, color) {
+  ctx.save();
+  ctx.font = "bold 15px system-ui";
+  ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(0,0,0,.45)";
+  ctx.fillText(text, x + 1, y + 1);
+  ctx.fillStyle = color || "#fff";
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+function drawSprite(img, x, y, w, h, flip, bobY) {
+  const sx = isoX(x, y), sy = isoY(x, y) - (bobY || 0);
+  // мягкая тень под ногами
+  ctx.fillStyle = "rgba(40,25,10,.22)";
+  ctx.beginPath();
+  ctx.ellipse(sx, sy, w * .3, w * .13, 0, 0, 6.29);
+  ctx.fill();
+  ctx.save();
+  ctx.translate(sx, sy);
+  if (flip) ctx.scale(-1, 1);
+  ctx.drawImage(img, -w / 2, -h, w, h);
+  ctx.restore();
+}
+
+function drawBlackboard() {
+  for (const r of rooms) {
+    const cx = r.x + r.w / 2, sx = isoX(cx, r.y);
+    const W = Math.min(190, (r.w - 2) * 45), H = 42, X0 = sx - W / 2;
+    const Y0 = X0 / 2 - WALL_H + 50;
+    ctx.save();
+    ctx.transform(0.8944, 0.4472, 0, -1, X0, Y0);
+    ctx.fillStyle = "#c9a877"; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = activeRoom && activeRoom.id !== r.id ? "#65746b" : "#2e5d43";
+    ctx.fillRect(4, 4, W - 8, H - 8);
+    ctx.fillStyle = "rgba(255,255,255,.88)";
+    ctx.font = "bold 14px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(1, -1);
+    ctx.fillText(r.id === "math" ? "МАТЕМАТИКА · 2+2=4" : r.name.toUpperCase(), 0, 0);
+    ctx.restore(); ctx.restore();
+  }
+}
+
+/* ---------- звук ---------- */
+let AC = null;
+function audio() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); return AC; }
+function tone(f, t0, dur, type, vol) {
+  if (muted) return;
+  const ac = audio(), o = ac.createOscillator(), g = ac.createGain();
+  o.type = type || "sine"; o.frequency.value = f;
+  g.gain.setValueAtTime(0, ac.currentTime + t0);
+  g.gain.linearRampToValueAtTime(vol || .15, ac.currentTime + t0 + .01);
+  g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + t0 + dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(ac.currentTime + t0); o.stop(ac.currentTime + t0 + dur + .05);
+}
+const sfxCollect = () => { tone(660, 0, .12, "triangle"); tone(880, .09, .15, "triangle"); };
+const sfxWin = () => { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .14, .3, "triangle", .18)); };
+const sfxClick = () => tone(440, 0, .06, "square", .06);
+
+/* ---------- ввод ---------- */
+const keys = {};
+addEventListener("keydown", e => {
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)) e.preventDefault();
+  keys[e.key.toLowerCase()] = true;
+  if (e.key.toLowerCase() === "p") togglePause();
+  if (e.key === " ") {
+    if (state === "title" || state === "win") startGame();
+    else if (state === "pause") togglePause();
+  }
+  if ((e.key.toLowerCase() === "e" || e.key === "Enter") && state === "play" && !quizOpen && nearDesk) {
+    e.preventDefault(); openQuiz(nearDesk);
+  }
+});
+addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+const joy = { active: false, id: -1, dx: 0, dy: 0 };
+const joyEl = document.getElementById("joy"), stickEl = document.getElementById("stick");
+if ("ontouchstart" in window) {
+  joyEl.style.display = "block";
+  document.getElementById("ovHint").textContent = "Движение: левый джойстик · Задание: кнопка на экране";
+}
+joyEl.addEventListener("pointerdown", e => { joy.active = true; joy.id = e.pointerId; joyEl.setPointerCapture(e.pointerId); moveStick(e); });
+joyEl.addEventListener("pointermove", e => { if (joy.active && e.pointerId === joy.id) moveStick(e); });
+const joyEnd = e => { if (joy.active) { joy.active = false; joy.dx = joy.dy = 0; stickEl.style.left = "41px"; stickEl.style.top = "41px"; } };
+joyEl.addEventListener("pointerup", joyEnd);
+joyEl.addEventListener("pointercancel", joyEnd);
+function moveStick(e) {
+  const r = joyEl.getBoundingClientRect();
+  let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+  const m = Math.hypot(dx, dy), max = r.width / 2 - 14;
+  if (m > max) { dx *= max / m; dy *= max / m; }
+  joy.dx = dx / max; joy.dy = dy / max;
+  stickEl.style.left = (41 + dx) + "px"; stickEl.style.top = (41 + dy) + "px";
+}
+
+function inputVec() {
+  let x = 0, y = 0;
+  if (keys["a"] || keys["arrowleft"])  x -= 1;
+  if (keys["d"] || keys["arrowright"]) x += 1;
+  if (keys["w"] || keys["arrowup"])    y -= 1;
+  if (keys["s"] || keys["arrowdown"])  y += 1;
+  x += joy.dx; y += joy.dy;
+  // экранные направления -> тайловые (изометрия)
+  const len = Math.hypot(x, y);
+  if (len > 1) { x /= len; y /= len; }
+  const tx = x + y, ty = y - x;   // поворот осей на 45°
+  const tl = Math.hypot(tx, ty) || 1;
+  return { x: tx / tl, y: ty / tl, active: len > .15 };
+}
+
+/* ---------- UI ---------- */
+const overlay = document.getElementById("overlay"), ovTitle = document.getElementById("ovTitle"),
+      ovText = document.getElementById("ovText"), ovHint = document.getElementById("ovHint"),
+      ovBtn = document.getElementById("ovBtn"), booksEl = document.getElementById("books"),
+      timerEl = document.getElementById("timer");
+
+function showOverlay(title, text, btn, hint) {
+  ovTitle.textContent = title; ovText.innerHTML = text;
+  ovBtn.textContent = btn;
+  ovHint.style.display = hint ? "" : "none";
+  document.getElementById("menuTags").style.display = state === "title" ? "flex" : "none";
+  if (hint) ovHint.textContent = hint;
+  document.body.classList.add("menu-open");
+  overlay.classList.remove("hidden");
+}
+function hideOverlay() { overlay.classList.add("hidden"); document.body.classList.remove("menu-open"); }
+
+const schoolMapEl = document.getElementById("schoolMap");
+const mapRooms = Array.from(document.querySelectorAll("#schoolMap .room"));
+const mapPlayer = document.getElementById("mapPlayer");
+const mapPlayerSpots = {
+  rus:[150,200,228], nat:[321,211,239], eng:[621,190,218],
+  logic:[175,490,520], art:[407,460,488], math:[682,492,526]
+};
+function openSchoolMap() {
+  if (state !== "play") return;
+  state = "map";
+  mapRooms.forEach(el => {
+    const room = rooms.find(r => r.id === el.dataset.room);
+    const current = !!activeRoom && el.dataset.room === activeRoom.id;
+    el.classList.toggle("current", current);
+    el.classList.toggle("locked", !current);
+    el.setAttribute("tabindex", current ? "0" : "-1");
+    el.setAttribute("role", "button");
+    el.setAttribute("aria-label", current ? "Вернуться: " + room.name : room.name + ", открыт для посещения");
+  });
+  mapPlayer.classList.toggle("hidden", !activeRoom);
+  if (activeRoom) {
+    const [x, dotY, textY] = mapPlayerSpots[activeRoom.id];
+    const dot = mapPlayer.querySelector("circle"), label = mapPlayer.querySelector("text");
+    dot.setAttribute("cx", x); dot.setAttribute("cy", dotY);
+    label.setAttribute("x", x); label.setAttribute("y", textY);
+  }
+  document.body.classList.add("menu-open");
+  schoolMapEl.classList.remove("hidden");
+  document.getElementById("closeSchoolMap").focus();
+}
+function closeSchoolMap() {
+  if (state !== "map") return;
+  schoolMapEl.classList.add("hidden");
+  document.body.classList.remove("menu-open");
+  state = "play";
+  document.getElementById("schoolMapBtn").focus();
+}
+document.getElementById("schoolMapBtn").addEventListener("click", openSchoolMap);
+document.getElementById("closeSchoolMap").addEventListener("click", closeSchoolMap);
+mapRooms.forEach(el => {
+  el.addEventListener("click", () => { if (el.classList.contains("current")) closeSchoolMap(); });
+  el.addEventListener("keydown", e => {
+    if ((e.key === "Enter" || e.key === " ") && el.classList.contains("current")) {
+      e.preventDefault(); closeSchoolMap();
+    }
+  });
+});
+addEventListener("keydown", e => { if (e.key === "Escape") closeSchoolMap(); });
+
+ovBtn.addEventListener("click", () => {
+  sfxClick();
+  if (state === "title" || state === "win") startGame();
+  else if (state === "pause") togglePause();
+});
+document.getElementById("pause").addEventListener("click", () => { sfxClick(); togglePause(); });
+document.getElementById("mute").addEventListener("click", function () {
+  muted = !muted; localStorage.setItem("sq_iso_mute", muted ? "1" : "0");
+  this.textContent = muted ? "×" : "♪";
+  this.setAttribute("aria-label", muted ? "Включить звук" : "Выключить звук");
+});
+document.getElementById("mute").textContent = muted ? "×" : "♪";
+
+function updateBooksHud() { booksEl.textContent = desks.filter(d => d.done).length + "/" + TOTAL; }
+
+/* ---------- задания (математика, 1 класс) ----------
+   формат вопроса: [вопрос, верный ответ, [3 неверных], объяснение] */
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const r2 = n => Math.floor(Math.random() * n);
+function wrongNums(r) {
+  const w = new Set(); let guard = 0;
+  while (w.size < 3 && guard++ < 60) {
+    const c = r + pick([-10, -3, -2, -1, 1, 2, 3, 10]);
+    if (c >= 0 && c !== r) w.add(String(c));
+  }
+  while (w.size < 3) w.add(String(r + w.size + 7));
+  return [...w];
+}
+function makeQ() {
+  const t = r2(6);
+  if (t === 0) { const a = 2 + r2(13), b = 2 + r2(9), r = a + b;
+    return [a + " + " + b + " = ?", String(r), wrongNums(r), a + " плюс " + b + " будет " + r + "."]; }
+  if (t === 1) { const a = 8 + r2(12), b = 1 + r2(a - 1), r = a - b;
+    return [a + " − " + b + " = ?", String(r), wrongNums(r), a + " минус " + b + " будет " + r + "."]; }
+  if (t === 2) { const a = 2 + r2(4), b = 2 + r2(4), r = a * b;
+    return [a + " × " + b + " = ?", String(r), wrongNums(r), a + " умножить на " + b + " будет " + r + "."]; }
+  if (t === 3) { const a = 5 + r2(16), b = 5 + r2(16);
+    if (a === b) return makeQ();
+    const big = Math.max(a, b), small = Math.min(a, b);
+    return ["Какое число больше: " + a + " или " + b + "?", String(big), wrongNums(big), "Сравниваем: " + big + " больше, чем " + small + "."]; }
+  if (t === 4) { const start = 2 + r2(6), r = start + 6;
+    return ["Продолжи ряд: " + start + ", " + (start + 2) + ", " + (start + 4) + ", __",
+      String(r), wrongNums(r), "Каждое число больше предыдущего на 2, значит " + (start + 4) + " + 2 = " + r + "."]; }
+  const a = 2 + r2(9), b = 2 + r2(9), r = a + b;
+  return ["У Миши " + a + " наклеек, у Гриши " + b + ". Сколько наклеек у них вместе?",
+    String(r), wrongNums(r), "Складываем: " + a + " + " + b + " = " + r + "."];
+}
+const usedQ = new Set();
+function genQ() {
+  for (let i = 0; i < 80; i++) { const q = makeQ(); if (!usedQ.has(q[0])) { usedQ.add(q[0]); return q; } }
+  return makeQ();
+}
+
+let nearDesk = null, quizOpen = false, curDesk = null, curQ = null;
+const quizEl = document.getElementById("quiz"), qText = document.getElementById("qText"),
+      qOpts = document.getElementById("qOpts"), qExpl = document.getElementById("qExpl"),
+      qNext = document.getElementById("qNext"), actionBtn = document.getElementById("action");
+
+function openQuiz(d) {
+  if (quizOpen || d.done) return;
+  curDesk = d; quizOpen = true;
+  hero.x = d.x; hero.y = d.y + .55; hero.moving = false;   // герой встаёт у парты (южная сторона — всегда проходимый пол)
+  cat.trail.length = 0; cat.trail.push({ x: hero.x, y: hero.y });
+  curQ = genQ();
+  qText.textContent = curQ[0];
+  qExpl.classList.add("hidden"); qNext.classList.add("hidden");
+  const opts = [curQ[1], ...curQ[2]];
+  for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
+  qOpts.innerHTML = "";
+  const btns = opts.map(o => {
+    const b = document.createElement("button");
+    b.className = "answer-btn";
+    b.textContent = o;
+    b.addEventListener("click", () => answerQ(o, b, btns));
+    qOpts.appendChild(b);
+    return b;
+  });
+  actionBtn.classList.add("hidden");
+  quizEl.classList.remove("hidden");
+  sfxClick();
+}
+function answerQ(chosen, btn, btns) {
+  const right = chosen === curQ[1];
+  btns.forEach(b => {
+    b.disabled = true;
+    if (b.textContent === curQ[1]) b.classList.add("right");
+    else if (b === btn) b.classList.add("wrong");
+    else b.style.opacity = ".45";
+  });
+  qExpl.textContent = (right ? "Верно! " : "Пока нет. ") + curQ[3];
+  qExpl.classList.remove("hidden"); qNext.classList.remove("hidden");
+  if (right) {
+    curDesk.done = true; sfxCollect(); burst(curDesk.x, curDesk.y, "#7fd08a"); updateBooksHud();
+    if (desks.every(k => k.done)) { doorOpen = true; burst(hero.x, hero.y, "#7fd08a"); }
+  } else {
+    tone(220, 0, .22, "sawtooth", .08);
+  }
+}
+qNext.addEventListener("click", () => { quizOpen = false; quizEl.classList.add("hidden"); sfxClick(); });
+actionBtn.addEventListener("click", () => { if (nearDesk) openQuiz(nearDesk); });
+function fmt(t) { const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ":" + String(s).padStart(2, "0"); }
+
+function startGame() { resetGame(); state = "play"; startT = performance.now(); hideOverlay(); }
+function togglePause() {
+  if (state === "play") { state = "pause"; showOverlay("Пауза", "Можно перевести дух. Прогресс этого урока сохранится до конца игры.", "Продолжить", ""); }
+  else if (state === "pause") { state = "play"; hideOverlay(); }
+}
+function winGame() {
+  state = "win";
+  const t = elapsed;
+  let rec = "";
+  if (!best || t < best) { best = t; localStorage.setItem("sq_iso_best", String(best)); rec = " Новый рекорд!"; }
+  sfxWin();
+  showOverlay("Урок завершён!",
+    "Все 12 заданий по математике сданы, урок окончен!<br>Время: <b>" + fmt(t) + "</b>" + rec +
+    (best ? "<br>Лучшее время: <b>" + fmt(best) + "</b>" : ""),
+    "Играть ещё", "Или нажми Пробел");
+}
+
+/* ---------- частицы ---------- */
+function burst(x, y, color) {
+  for (let i = 0; i < 12; i++) {
+    const a = Math.random() * 6.28, sp = 40 + Math.random() * 70;
+    parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40, life: .7, color });
+  }
+}
+
+/* ---------- обновление ---------- */
+const SPEED = 3.4;
+function update(dt, t) {
+  if (state !== "play") return;
+  elapsed = (performance.now() - startT) / 1000;
+
+  const iv = quizOpen ? { x: 0, y: 0, active: false } : inputVec();
+  hero.moving = iv.active;
+  if (iv.active) {
+    hero.face = (iv.x - iv.y) < 0 ? -1 : 1;
+    const nx = hero.x + iv.x * SPEED * dt, ny = hero.y + iv.y * SPEED * dt;
+    // скольжение вдоль стен
+    if (passable(nx, hero.y, doorOpen)) hero.x = nx;
+    if (passable(hero.x, ny, doorOpen)) hero.y = ny;
+    hero.bob += dt * 10;
+  }
+
+  activeRoom = roomAt(hero.x, hero.y);
+  const zoneName = activeRoom ? activeRoom.name + " ▾" : "Коридор ▾";
+  const zoneBtn = document.getElementById("schoolMapBtn");
+  if (zoneBtn.textContent !== zoneName) zoneBtn.textContent = zoneName;
+
+  // кот следует по следу
+  cat.trail.push({ x: hero.x, y: hero.y });
+  if (cat.trail.length > 26) cat.trail.shift();
+  const tgt = cat.trail[0];
+  const ddx = tgt.x - cat.x, ddy = tgt.y - cat.y, dd = Math.hypot(ddx, ddy);
+  if (dd > .02) {
+    const sp = Math.min(dd, SPEED * .92 * dt);
+    cat.x += ddx / dd * sp; cat.y += ddy / dd * sp;
+    cat.face = (ddx - ddy) < 0 ? -1 : 1;
+    cat.bob += dt * 12;
+  }
+
+  // парта рядом → показать кнопку «Начать задание»
+  nearDesk = null;
+  if (!quizOpen) {
+    let best = 1.15;
+    for (const d of desks) {
+      if (d.done) continue;
+      const dist = Math.hypot(d.x - hero.x, d.y - hero.y);
+      if (dist < best) { best = dist; nearDesk = d; }
+    }
+  }
+  actionBtn.classList.toggle("hidden", !(nearDesk && state === "play" && !quizOpen));
+
+  // выход
+  if (doorOpen && tileAt(Math.floor(hero.x), Math.floor(hero.y)) === "D") winGame();
+
+  // частицы
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i];
+    p.life -= dt; p.x += p.vx * dt / 32; p.y += p.vy * dt / 32; p.vy += 180 * dt;
+    if (p.life <= 0) parts.splice(i, 1);
+  }
+
+  // камера: класс меньше экрана — держим строго по центру;
+  // если экран мал — следуем за героем, не выпуская класс за края
+  const mapW = (MAP_MAX_X - MAP_MIN_X) * viewScale, mapH = (MAP_MAX_Y - MAP_MIN_Y) * viewScale;
+  const minX = MAP_MIN_X * viewScale, maxX = MAP_MAX_X * viewScale;
+  const minY = MAP_MIN_Y * viewScale, maxY = MAP_MAX_Y * viewScale;
+  const tx = mapW <= innerWidth ? (innerWidth - minX - maxX) / 2
+           : clamp(innerWidth / 2 - isoX(hero.x, hero.y) * viewScale, innerWidth - maxX, -minX);
+  const ty = mapH <= innerHeight - 100 ? (innerHeight - 100 - minY - maxY) / 2 + 72
+           : clamp(innerHeight / 2 - isoY(hero.x, hero.y) * viewScale + 20, innerHeight - maxY, 80 - minY);
+  camX += (tx - camX) * Math.min(1, dt * 6);
+  camY += (ty - camY) * Math.min(1, dt * 6);
+}
+
+/* ---------- отрисовка ---------- */
+const IMG = {};
+async function loadSprites() {
+  await Promise.all(Object.entries(SPRITES).map(async ([k, [base, n]]) => {
+    try {
+      const parts = await Promise.all(Array.from({ length: n }, (_, i) =>
+        fetch(base + String(i).padStart(3, "0") + ".b64").then(r => {
+          if (!r.ok) throw new Error("chunk " + i);
+          return r.text();
+        })));
+      const im = new Image();
+      await new Promise(res => { im.onload = res; im.onerror = res; im.src = "data:image/png;base64," + parts.join(""); });
+      if (im.width) IMG[k] = im;
+    } catch (e) { /* спрайт не загрузился — игра продолжит без него */ }
+  }));
+}
+
+function render(t) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.save();
+  ctx.translate(camX, camY);
+  ctx.scale(viewScale, viewScale);
+  drawFloor();
+
+  // стены — отдельным нижним слоем (доска и всё в комнате рисуются поверх)
+  const walls = [];
+  for (let y = 0; y < MAP_H; y++)
+    for (let x = 0; x < MAP_W; x++)
+      if (tileAt(x, y) === "#") walls.push({ d: x + y, f: () => drawWallBox(x, y, wallHeightAt(x, y)) });
+  walls.sort((a, b) => a.d - b.d);
+  for (const w of walls) w.f();
+  // доска на стене — слоем выше стен, но ниже всех предметов и персонажей
+  drawBlackboard();
+
+  // список отрисовки с глубиной
+  const items = [];
+  for (let y = 0; y < MAP_H; y++)
+    for (let x = 0; x < MAP_W; x++) {
+      const c = tileAt(x, y);
+      if (c === "#") continue;
+      else if (c === "D") items.push({ d: x + y, f: () => drawDoor(x, y, t) });
+      else if (c === "T" && IMG.desk) items.push({ d: x + y + .4, f: () => drawSprite(IMG.desk, x + .5, y + .5, 92, 92) });
+      else if (c === "F" && IMG.desk) items.push({ d: x + y + .4, f: () => drawSprite(IMG.desk, x + .5, y + .5, 82, 82) });
+      else if (c === "S" && IMG.shelf) items.push({ d: x + y + .4, f: () => drawSprite(IMG.shelf, x + .5, y + .5, 100, 116) });
+    }
+  // галочка над сданной партой
+  for (const d of desks)
+    if (d.done) items.push({ d: d.x + d.y + .2, f: () => label(isoX(d.x, d.y), isoY(d.x, d.y) - 96, "✓", "#3f9f62") });
+  if (IMG.cat) items.push({ d: cat.x + cat.y + .6, f: () => drawSprite(IMG.cat, cat.x, cat.y, 62, 62, cat.face === -1, Math.abs(Math.sin(cat.bob)) * 3) });
+  if (IMG.hero) items.push({ d: hero.x + hero.y + .7, f: () => drawSprite(IMG.hero, hero.x, hero.y, 74, 74, hero.face === -1, hero.moving ? Math.abs(Math.sin(hero.bob)) * 5 : 0) });
+
+  items.sort((a, b) => a.d - b.d);
+  for (const it of items) it.f();
+
+  // частицы
+  for (const p of parts) {
+    ctx.globalAlpha = Math.max(0, p.life / .7);
+    ctx.fillStyle = p.color;
+    const sx = isoX(p.x, p.y), sy = isoY(p.x, p.y) - 10;
+    ctx.beginPath(); ctx.arc(sx, sy, 3, 0, 6.28); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.restore();
+
+  // HUD таймер
+  if (state === "play") timerEl.textContent = fmt(elapsed);
+}
+
+/* ---------- цикл ---------- */
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  update(dt, now / 1000);
+  render(now / 1000);
+  requestAnimationFrame(loop);
+}
+
+/* ---------- запуск ---------- */
+function resize() {
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  // Открытый мир не уменьшаем целиком до экрана: камера следует за героем.
+  viewScale = Math.max(.48, Math.min(1, innerWidth / 850, innerHeight / 620));
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+addEventListener("resize", resize);
+resize();
+resetGame();
+// стартовая камера (сразу по центру класса, без «пролёта»)
+{
+  const mapW = (MAP_MAX_X - MAP_MIN_X) * viewScale, mapH = (MAP_MAX_Y - MAP_MIN_Y) * viewScale;
+  const minX = MAP_MIN_X * viewScale, maxX = MAP_MAX_X * viewScale;
+  const minY = MAP_MIN_Y * viewScale, maxY = MAP_MAX_Y * viewScale;
+  camX = mapW <= innerWidth ? (innerWidth - minX - maxX) / 2
+       : clamp(innerWidth / 2 - isoX(hero.x, hero.y) * viewScale, innerWidth - maxX, -minX);
+  camY = mapH <= innerHeight - 100 ? (innerHeight - 100 - minY - maxY) / 2 + 72
+       : clamp(innerHeight / 2 - isoY(hero.x, hero.y) * viewScale + 20, innerHeight - maxY, 80 - minY);
+}
+loadSprites().then(() => requestAnimationFrame(loop));
 </script>
 </body>
 </html>
