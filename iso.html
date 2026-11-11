@@ -106,7 +106,7 @@ const SPRITES = {
 
 const cv  = document.getElementById("game");
 const ctx = cv.getContext("2d");
-const TILE_W = 64, TILE_H = 32, WALL_H = 58;
+const TILE_W = 64, TILE_H = 32, WALL_H = 46;
 
 /* ---------- карта ----------
    # стена · . пол · T парта · S шкаф · D дверь выхода */
@@ -211,28 +211,27 @@ function drawWallBox(x, y, h) {
   const H = h == null ? WALL_H : h;
   const sx = isoX(x, y), sy = isoY(x, y);
   const hw = TILE_W / 2, hh = TILE_H / 2;
-  // левая грань
-  ctx.fillStyle = "#8f6f4e";
-  ctx.beginPath();
-  ctx.moveTo(sx - hw, sy); ctx.lineTo(sx, sy + hh);
-  ctx.lineTo(sx, sy + hh - H); ctx.lineTo(sx - hw, sy - H);
-  ctx.closePath(); ctx.fill();
-  // правая грань
-  ctx.fillStyle = "#a5825d";
-  ctx.beginPath();
-  ctx.moveTo(sx + hw, sy); ctx.lineTo(sx, sy + hh);
-  ctx.lineTo(sx, sy + hh - H); ctx.lineTo(sx + hw, sy - H);
-  ctx.closePath(); ctx.fill();
-  // верх
-  ctx.fillStyle = "#c9a877";
-  ctx.beginPath();
-  ctx.moveTo(sx, sy - hh - H); ctx.lineTo(sx + hw, sy - H);
-  ctx.lineTo(sx, sy + hh - H); ctx.lineTo(sx - hw, sy - H);
-  ctx.closePath(); ctx.fill();
+  // Вдоль стены сегменты соединяются, а поперёк занимают лишь тонкую полосу.
+  const thinX = x === 0 || x === MAP_W - 1;
+  const thinY = y === 0 || y === MAP_H - 1;
+  const x0 = thinX ? -.14 : -.5, x1 = thinX ? .14 : .5;
+  const y0 = thinY ? -.14 : -.5, y1 = thinY ? .14 : .5;
+  const p = [[x0,y0],[x1,y0],[x1,y1],[x0,y1]].map(([dx,dy]) => ({
+    x: sx + (dx - dy) * hw, y: sy + (dx + dy) * hh
+  }));
+  function face(points, color) {
+    ctx.fillStyle = color; ctx.beginPath();
+    points.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y));
+    ctx.closePath(); ctx.fill();
+  }
+  const top = p.map(q => ({ x: q.x, y: q.y - H }));
+  face([p[3],p[2],top[2],top[3]], "#987858");
+  face([p[1],p[2],top[2],top[1]], "#ad8b65");
+  face(top, "#d2b487");
 }
 
 // низкие «губы» вместо полных стен со стороны камеры — чтобы не закрывали героев
-const LIP_H = 16;
+const LIP_H = 10;
 const wallHeightAt = (x, y) =>
   (x === MAP_W - 1 || y === MAP_H - 1) ? LIP_H : WALL_H;
 
