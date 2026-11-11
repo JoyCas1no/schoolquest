@@ -1,11 +1,3 @@
-/* ===== звук ===== */
-var AC=null;
-function beep(f,d,t){if(!S||!S.sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
-  var o=AC.createOscillator(),g=AC.createGain();o.type=t||"sine";o.frequency.value=f;g.gain.value=.08;
-  o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.stop(AC.currentTime+d)}catch(e){}}
-var snd={ok:function(){beep(660,.15);setTimeout(function(){beep(880,.2)},120)},bad:function(){beep(180,.3,"sawtooth")},
-  tick:function(){beep(500,.04,"square")},win:function(){[523,659,784,1046].forEach(function(f,i){setTimeout(function(){beep(f,.25)},i*130)})}};
-
 /* ===== состояние ===== */
 var KEY="schoolquest_v1";
 var S=null;
@@ -65,11 +57,12 @@ var $app=document.getElementById("app"),timerStart=Date.now(),timeWarned=false,B
 function h(html){$app.innerHTML=html;window.scrollTo(0,0)}
 function toast(t){var d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove()},5000)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function brandHTML(){return"<div class='brand'><div class='brand-mark' aria-hidden='true'><svg viewBox='0 0 40 40' fill='none'><path d='M5 8c6-1 11 1 15 5 4-4 9-6 15-5v24c-6-1-11 1-15 5-4-4-9-6-15-5V8Z' fill='#fffefa'/><path d='M20 13v24M10 15c3 0 5 1 7 2M10 21c3 0 5 1 7 2M23 17c2-1 4-2 7-2M23 23c2-1 4-2 7-2' stroke='#3978c5' stroke-width='1.8' stroke-linecap='round'/></svg></div><div><div class='brand-name'>Школьный квест</div><div class='brand-sub'>Учись, играй и собирай достижения</div></div></div>"}
 
 function screenStart(){
   var opts=function(a){return a.map(function(x){return"<option>"+x+"</option>"}).join("")};
   var gr="";for(var g=1;g<=11;g++)gr+="<option value='"+g+"'"+(g===3?" selected":"")+">"+g+" класс</option>";
-  h("<h1>📖 Школьный Квест</h1><div class='narr'><b>Рассказчик:</b> "+say("intro")+"</div>"+
+  h(brandHTML()+"<h1>Создай своего героя</h1><div class='narr'><b>Рассказчик:</b> "+say("intro")+"</div>"+
   "<div class='card'><b>Своё имя героя</b><input id='cn' maxlength='16' placeholder='Напиши своё имя (2–16 букв)' autocomplete='off'>"+
   "<div class='dim'>Не хочешь писать — выбери готовое:</div><select id='na'>"+opts(ADJ)+"</select><select id='nn'>"+opts(NOUN)+"</select>"+
   "<b>Твой класс в школе</b><select id='gr'>"+gr+"</select>"+
@@ -79,7 +72,7 @@ function screenStart(){
   "<p class='dim'>Настоящее имя и фамилию писать не нужно — придумай прозвище. Потом можно создать логин и пароль, чтобы не потерять прогресс.</p>");
   if(!Cloud.online)document.getElementById("haveacc").onclick=function(){screenAccount("login")};
   var chosen="warrior";
-  function mark(){[].forEach.call(document.querySelectorAll(".clsb"),function(b){b.style.outline=b.dataset.c===chosen?"3px solid #ffcf4a":"none"})}
+  function mark(){[].forEach.call(document.querySelectorAll(".clsb"),function(b){b.classList.toggle("selected",b.dataset.c===chosen)})}
   [].forEach.call(document.querySelectorAll(".clsb"),function(b){b.onclick=function(){chosen=b.dataset.c;mark()}});mark();
   document.getElementById("go").onclick=function(){
     var raw=document.getElementById("cn").value,cn=cleanName(raw);
@@ -161,16 +154,16 @@ function screenAccount(mode){
       {Cloud.signOut();back()}};
     document.getElementById("back").onclick=back;return}
   var reg=mode==="register";
-  h("<h1>"+(reg?"💾 Создать логин":"🔑 Вход")+"</h1><div class='card'>"+
-    "<b>Логин</b><input id='al' maxlength='20' autocomplete='username' autocapitalize='none' autocorrect='off' spellcheck='false' placeholder='латинские буквы, цифры и _'>"+
-    "<b>Пароль</b><input id='ap' type='password' maxlength='72' autocomplete='"+(reg?"new-password":"current-password")+"' placeholder='минимум 6 символов'>"+
-    (reg?"<b>Почта родителя</b> <span class='dim'>(необязательно)</span><input id='ae' type='email' maxlength='120' autocomplete='off' placeholder='parent@mail.ru'>"+
-      "<div class='dim'>Нужна, чтобы родитель мог помочь вернуть доступ. Её видит только владелец игры. Запиши логин и пароль на бумажку: автоматического восстановления пока нет.</div>":"")+
-    "</div><p class='dim' id='aerr' style='color:#fb7185;min-height:20px'></p>"+
+  h("<div class='auth-shell'>"+brandHTML()+"<h1>"+(reg?"Создай логин":"С возвращением!")+"</h1><p class='dim'>"+(reg?"Сохрани прогресс и продолжи игру на любом устройстве.":"Войди, чтобы открыть сохранённый прогресс.")+"</p><div class='card'>"+
+    "<label for='al'><b>Логин</b></label><input id='al' maxlength='20' autocomplete='username' autocapitalize='none' autocorrect='off' spellcheck='false' placeholder='Например, dragon_mia7'>"+
+    "<label for='ap'><b>Пароль</b></label><input id='ap' type='password' maxlength='72' autocomplete='"+(reg?"new-password":"current-password")+"' placeholder='Минимум 6 символов'>"+
+    (reg?"<label for='ae'><b>Почта родителя</b> <span class='dim'>(необязательно)</span></label><input id='ae' type='email' maxlength='120' autocomplete='off' placeholder='parent@mail.ru'>"+
+      "<div class='dim'>Она нужна только для помощи с восстановлением доступа. Запиши логин и пароль на бумажку.</div>":"")+
+    "</div><p class='dim' id='aerr' style='color:#d94f5c;min-height:20px'></p>"+
     "<button class='main' id='ago'>"+(reg?(S&&S.nick?"Создать и сохранить прогресс":"Создать логин"):"Войти")+"</button>"+
-    "<button id='aswitch'>"+(reg?"🔑 У меня уже есть логин":"💾 Создать новый логин")+"</button>"+
-    "<button id='back'>"+(S&&S.nick?"← Назад":"🎮 Играть без логина")+"</button>"+
-    "<p class='dim'>Настоящее имя и фамилию в логине не используй — придумай что-нибудь вроде <b>dragon_mia7</b>.</p>");
+    "<button id='aswitch'>"+(reg?"У меня уже есть логин":"Создать новый логин")+"</button>"+
+    "<button id='back'>"+(S&&S.nick?"← Назад":"Играть без логина")+"</button>"+
+    "<p class='dim auth-note'>Не указывай настоящие имя и фамилию — лучше придумай игровое прозвище.</p></div>");
   var err=document.getElementById("aerr"),go=document.getElementById("ago");
   document.getElementById("aswitch").onclick=function(){screenAccount(reg?"login":"register")};
   document.getElementById("back").onclick=back;
