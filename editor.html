@@ -81,7 +81,7 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
  .view-controls{right:10px;padding:4px;top:43%}.view-controls .icon-btn{width:34px;height:34px}#mobileClearBtn{display:grid}
  .hint{font-size:11px;margin-bottom:9px;padding:7px 11px;max-width:calc(100% - 20px);overflow:hidden;text-overflow:ellipsis}
  .bottom-panel{border-radius:19px;padding:11px}.panel-head{margin-bottom:9px}.workspace{grid-template-columns:1fr;gap:9px}
- .tools{padding:4px}.tool{flex:1;width:auto;min-height:43px;flex-direction:row;font-size:12px}.tool svg{width:18px;height:18px}
+ .tools{padding:4px}.tool{flex:1;width:auto;min-height:50px;flex-direction:column;gap:3px;font-size:10px}.tool svg{width:18px;height:18px}
  .materials{grid-template-columns:repeat(4,1fr)}
  .material{min-height:50px;padding:6px 4px;gap:4px;justify-content:center}.swatch{width:24px;height:34px;border-radius:7px}.material-name{font-size:9px}.material-size{display:none}.material.active:after{right:4px;top:4px;width:6px;height:6px}
 }
@@ -120,6 +120,7 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
         <button class="tool" data-tool="wall" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3zM3 10h18M3 15h18M8 5v5M16 5v5M6 10v5M14 10v5M9 15v4M17 15v4"/></svg>Стена</button>
         <button class="tool" data-tool="door" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M5 21V3h14v18M8 21V6h8v15M12 13h.01"/></svg>Дверь</button>
         <button class="tool" data-tool="cabinet" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 3h16v17H4zM12 3v17M10 11v2M14 11v2M3 21h18"/></svg>Шкаф</button>
+        <button class="tool" data-tool="desk" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M3 7h18v4H3zM5 11v9M19 11v9M8 15h8M9 15v5M15 15v5"/></svg>Парта</button>
         <button class="tool" data-tool="eraser" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="m4 15 8-10 8 7-6 8H8zM9 20h11"/></svg>Ластик</button>
       </div>
       <div class="materials" role="group" aria-label="Покрытие пола">
@@ -137,11 +138,11 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="loading" id="loading"><div class="loader" id="loaderIcon"></div><div class="loading-title" id="loadingTitle">Собираем конструктор</div><div class="loading-sub" id="loadingSub">Загружаем модуль пола 1 × 1 м</div></div>
 <div class="modal-backdrop hidden" id="clearModal" role="dialog" aria-modal="true" aria-labelledby="clearTitle">
- <div class="modal"><h2 id="clearTitle">Очистить всю карту?</h2><p>Все плитки, стены, двери и шкафы будут удалены. После очистки действие можно отменить кнопкой со стрелкой.</p><div class="modal-actions"><button id="cancelClear">Отмена</button><button class="confirm-clear" id="confirmClear">Очистить</button></div></div>
+ <div class="modal"><h2 id="clearTitle">Очистить всю карту?</h2><p>Все плитки, стены, двери, шкафы и парты будут удалены. После очистки действие можно отменить кнопкой со стрелкой.</p><div class="modal-actions"><button id="cancelClear">Отмена</button><button class="confirm-clear" id="confirmClear">Очистить</button></div></div>
 </div>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}
 </script>
-<script type="module" src="./src/editor.js?v=5"></script>
+<script type="module" src="./src/editor.js?v=6"></script>
 </body>
 </html>
