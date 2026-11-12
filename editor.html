@@ -39,7 +39,7 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
 #mobileClearBtn{display:none}
 .control-sep{height:1px;background:var(--line);margin:2px 5px}
 .hint{align-self:center;margin-bottom:12px;background:rgba(36,54,47,.82);color:#fff;padding:8px 14px;border-radius:99px;font-size:12px;box-shadow:0 5px 18px rgba(36,54,47,.14);backdrop-filter:blur(10px);transition:opacity .2s;white-space:nowrap}
-.bottom-panel{align-self:center;width:min(920px,100%);background:rgba(251,252,249,.97);border:1px solid rgba(255,255,255,.8);border-radius:22px;padding:14px;box-shadow:var(--shadow);backdrop-filter:blur(16px)}
+.bottom-panel{align-self:center;width:min(1040px,100%);background:rgba(251,252,249,.97);border:1px solid rgba(255,255,255,.8);border-radius:22px;padding:14px;box-shadow:var(--shadow);backdrop-filter:blur(16px)}
 .panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;padding:0 2px}
 .panel-title{font-size:13px;font-weight:750}
 .cell-count{font-size:12px;color:var(--muted)}
@@ -47,7 +47,7 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
 .tools{display:flex;gap:6px;background:#edf1eb;border-radius:14px;padding:5px}
 .tool{width:64px;min-height:61px;border-radius:10px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:11px;font-weight:650}
 .tool.active{background:var(--paper);color:var(--green);box-shadow:0 2px 8px rgba(42,65,55,.1)}
-.materials{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.materials{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
 .material{position:relative;min-height:61px;border:1px solid var(--line);border-radius:13px;background:#fff;padding:7px 9px;display:flex;align-items:center;gap:9px;text-align:left}
 .material.active{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
 .material.active:after{content:"";position:absolute;right:7px;top:7px;width:7px;height:7px;border-radius:50%;background:var(--green)}
@@ -55,7 +55,7 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
 .swatch.tile{background-color:#dedcd3;background-image:linear-gradient(#bbb9b0 1px,transparent 1px),linear-gradient(90deg,#bbb9b0 1px,transparent 1px);background-size:9px 9px}
 .swatch.linoleum{background:linear-gradient(135deg,#aebfae,#c3cebd)}
 .swatch.wood{background:repeating-linear-gradient(0deg,#c89f70 0,#c89f70 10px,#b88d5e 11px,#d2ae81 12px,#d2ae81 22px,#ac8054 23px)}
-.swatch.blue{background:#a9c8d8}.swatch.sand{background:#d9c79f}.swatch.rose{background:#d8afb0}
+.swatch.blue{background:#a9c8d8}.swatch.sand{background:#d9c79f}.swatch.rose{background:#d8afb0}.swatch.violet{background:#b9afd3}
 .material-name{display:block;font-size:12px;font-weight:650;line-height:1.2}
 .material-size{display:block;font-size:10px;color:var(--muted);margin-top:4px}
 .toast{position:fixed;left:50%;top:calc(88px + env(safe-area-inset-top));transform:translate(-50%,-8px);background:#263c32;color:#fff;border-radius:12px;padding:10px 15px;font-size:13px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.2s;z-index:20;max-width:calc(100% - 32px);text-align:center}
@@ -82,10 +82,10 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
  .hint{font-size:11px;margin-bottom:9px;padding:7px 11px;max-width:calc(100% - 20px);overflow:hidden;text-overflow:ellipsis}
  .bottom-panel{border-radius:19px;padding:11px}.panel-head{margin-bottom:9px}.workspace{grid-template-columns:1fr;gap:9px}
  .tools{padding:4px}.tool{flex:1;width:auto;min-height:43px;flex-direction:row;font-size:12px}.tool svg{width:18px;height:18px}
- .materials{grid-template-columns:repeat(3,1fr)}
- .material{min-height:50px;padding:6px;gap:6px;justify-content:center}.swatch{width:28px;height:34px;border-radius:7px}.material-name{font-size:10px}.material-size{display:none}.material.active:after{right:5px;top:5px;width:6px;height:6px}
+ .materials{grid-template-columns:repeat(4,1fr)}
+ .material{min-height:50px;padding:6px 4px;gap:4px;justify-content:center}.swatch{width:24px;height:34px;border-radius:7px}.material-name{font-size:9px}.material-size{display:none}.material.active:after{right:4px;top:4px;width:6px;height:6px}
 }
-@media(max-width:370px){.brand-sub{display:none}.material-name{font-size:9px}.swatch{width:24px;height:32px}.brand{padding-right:9px}.icon-btn{width:35px;height:35px}}
+@media(max-width:370px){.brand-sub{display:none}.materials{grid-template-columns:repeat(3,1fr)}.material-name{font-size:9px}.swatch{width:24px;height:32px}.brand{padding-right:9px}.icon-btn{width:35px;height:35px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -121,12 +121,13 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
         <button class="tool" data-tool="eraser" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="m4 15 8-10 8 7-6 8H8zM9 20h11"/></svg>Ластик</button>
       </div>
       <div class="materials" role="group" aria-label="Покрытие пола">
-        <button class="material active" data-style="tile" aria-pressed="true"><span class="swatch tile"></span><span><span class="material-name">Плитка</span><span class="material-size">Светлая</span></span></button>
-        <button class="material" data-style="linoleum" aria-pressed="false"><span class="swatch linoleum"></span><span><span class="material-name">Линолеум</span><span class="material-size">Шалфей</span></span></button>
-        <button class="material" data-style="wood" aria-pressed="false"><span class="swatch wood"></span><span><span class="material-name">Дерево</span><span class="material-size">Светлый дуб</span></span></button>
-        <button class="material" data-style="blue" aria-pressed="false"><span class="swatch blue"></span><span><span class="material-name">Голубой</span><span class="material-size">Кабинет</span></span></button>
-        <button class="material" data-style="sand" aria-pressed="false"><span class="swatch sand"></span><span><span class="material-name">Песочный</span><span class="material-size">Коридор</span></span></button>
-        <button class="material" data-style="rose" aria-pressed="false"><span class="swatch rose"></span><span><span class="material-name">Розовый</span><span class="material-size">Творчество</span></span></button>
+        <button class="material active" data-style="tile" aria-pressed="true"><span class="swatch tile"></span><span><span class="material-name">Русский</span><span class="material-size">Светлый</span></span></button>
+        <button class="material" data-style="linoleum" aria-pressed="false"><span class="swatch linoleum"></span><span><span class="material-name">Природа</span><span class="material-size">Зелёный</span></span></button>
+        <button class="material" data-style="wood" aria-pressed="false"><span class="swatch wood"></span><span><span class="material-name">Английский</span><span class="material-size">Древесный</span></span></button>
+        <button class="material" data-style="blue" aria-pressed="false"><span class="swatch blue"></span><span><span class="material-name">Логика</span><span class="material-size">Голубой</span></span></button>
+        <button class="material" data-style="rose" aria-pressed="false"><span class="swatch rose"></span><span><span class="material-name">Искусство</span><span class="material-size">Розовый</span></span></button>
+        <button class="material" data-style="violet" aria-pressed="false"><span class="swatch violet"></span><span><span class="material-name">Математика</span><span class="material-size">Фиолетовый</span></span></button>
+        <button class="material" data-style="sand" aria-pressed="false"><span class="swatch sand"></span><span><span class="material-name">Коридор</span><span class="material-size">Песочный</span></span></button>
       </div>
     </div>
   </section>
@@ -139,6 +140,6 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}
 </script>
-<script type="module" src="./src/editor.js?v=2"></script>
+<script type="module" src="./src/editor.js?v=3"></script>
 </body>
 </html>
