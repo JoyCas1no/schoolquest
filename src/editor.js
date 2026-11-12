@@ -13,6 +13,8 @@ const STORAGE_KEY = "schoolquest.floor-editor.v1";
 const STYLE_NAMES = { tile: "Русский", linoleum: "Окружающий мир", wood: "Английский", blue: "Логика", rose: "Литература", violet: "Математика", sand: "Коридор" };
 const cells = new Map();
 const walls = new Map();
+const doors = new Map();
+const cabinets = new Map();
 const history = [];
 let tool = "floor";
 let currentStyle = "tile";
@@ -51,12 +53,22 @@ function cellSnapshot() {
 function wallSnapshot() {
   return [...walls.values()].map((w) => [w.side, w.x, w.z]).sort((a, b) => a[0].localeCompare(b[0]) || a[1] - b[1] || a[2] - b[2]);
 }
-function snapshot() { return { cells: cellSnapshot(), walls: wallSnapshot() }; }
+function doorSnapshot() {
+  return [...doors.values()].map((d) => [d.side, d.x, d.z]).sort((a, b) => a[0].localeCompare(b[0]) || a[1] - b[1] || a[2] - b[2]);
+}
+function cabinetSnapshot() {
+  return [...cabinets.values()].map((c) => [c.side, c.x, c.z, c.wallX, c.wallZ]).sort((a, b) => a[0].localeCompare(b[0]) || a[1] - b[1] || a[2] - b[2]);
+}
+function snapshot() { return { cells: cellSnapshot(), walls: wallSnapshot(), doors: doorSnapshot(), cabinets: cabinetSnapshot() }; }
 function restore(data) {
   cells.clear();
   walls.clear();
+  doors.clear();
+  cabinets.clear();
   const cellRows = Array.isArray(data) ? data : (data?.cells || []);
   const wallRows = Array.isArray(data) ? [] : (data?.walls || []);
+  const doorRows = Array.isArray(data) ? [] : (data?.doors || []);
+  const cabinetRows = Array.isArray(data) ? [] : (data?.cabinets || []);
   for (const row of cellRows) {
     if (!Array.isArray(row) || row.length !== 3) continue;
     const [x, z, style] = row;
@@ -66,6 +78,23 @@ function restore(data) {
     if (!Array.isArray(row) || row.length !== 3) continue;
     const [side, x, z] = row;
     if ((side === "h" || side === "v") && wallInside(side, x, z)) walls.set(wallKey(side, x, z), { side, x, z });
+  }
+  for (const row of doorRows) {
+    if (!Array.isArray(row) || row.length !== 3) continue;
+    const [side, x, z] = row;
+    if ((side === "h" || side === "v") && wallInside(side, x, z)) {
+      const k = wallKey(side, x, z);
+      walls.delete(k);
+      doors.set(k, { side, x, z });
+    }
+  }
+  for (const row of cabinetRows) {
+    if (!Array.isArray(row) || row.length !== 5) continue;
+    const [side, x, z, wallX, wallZ] = row;
+    if ((side === "h" || side === "v") && inside(x, z) && inside(side === "h" ? x + 1 : x, side === "v" ? z + 1 : z)) {
+      const cabinet = { side, x, z, wallX, wallZ };
+      cabinets.set(cabinetKey(cabinet), cabinet);
+    }
   }
   rebuild();
   updateUI();
@@ -87,7 +116,7 @@ function markDirty() {
 function saveNow(showMessage = true) {
   clearTimeout(saveTimer);
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 2, updatedAt: new Date().toISOString(), ...snapshot() }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 3, updatedAt: new Date().toISOString(), ...snapshot() }));
     dirty = false;
     $("saveStatus").textContent = "Черновик сохранён";
     $("saveDot").classList.remove("dirty");
@@ -99,7 +128,7 @@ function saveNow(showMessage = true) {
 }
 function updateUI() {
   const n = cells.size;
-  $("cellCount").textContent = `${n} ${plural(n, ["плитка", "плитки", "плиток"])} · ${walls.size} ${plural(walls.size, ["стена", "стены", "стен"])}`;
+  $("cellCount").textContent = `${n} ${plural(n, ["плитка", "плитки", "плиток"])} · ${walls.size + doors.size} ${plural(walls.size + doors.size, ["стена", "стены", "стен"])} · ${cabinets.size} ${plural(cabinets.size, ["шкаф", "шкафа", "шкафов"])}`;
   $("undoBtn").disabled = history.length === 0;
 }
 
@@ -192,6 +221,12 @@ let baseMesh;
 let wallMesh;
 const topMeshes = {};
 const dummy = new THREE.Object3D();
+const furnitureGroup = new THREE.Group();
+scene.add(furnitureGroup);
+const doorFrameMaterial = new THREE.MeshStandardMaterial({ color: 0xe7e2d6, roughness: 0.86 });
+const doorLeafMaterial = new THREE.MeshStandardMaterial({ color: 0xa9c8d8, roughness: 0.72 });
+const cabinetMaterial = new THREE.MeshStandardMaterial({ color: 0xb18b62, roughness: 0.8 });
+const cabinetFrontMaterial = new THREE.MeshStandardMaterial({ color: 0xd5b88f, roughness: 0.76 });
 
 function seeded(seed) {
   return () => {
@@ -299,6 +334,51 @@ function setInstance(mesh, index, cell) {
   dummy.updateMatrix();
   mesh.setMatrixAt(index, dummy.matrix);
 }
+const doorPostGeometry = new THREE.BoxGeometry(0.12, WALL_HEIGHT, 0.14);
+const doorLintelGeometry = new THREE.BoxGeometry(1.08, 0.15, 0.14);
+const doorLeafGeometry = new THREE.BoxGeometry(0.82, 1.16, 0.045);
+doorLeafGeometry.translate(0.41, 0.58, 0);
+const handleGeometry = new THREE.SphereGeometry(0.027, 8, 6);
+const cabinetBodyGeometry = new THREE.BoxGeometry(1.92, 1.24, 0.5);
+const cabinetFrontGeometry = new THREE.BoxGeometry(0.88, 1.08, 0.025);
+const cabinetHandleGeometry = new THREE.BoxGeometry(0.025, 0.16, 0.035);
+function furnitureMesh(geometry, material, parent, x, y, z) {
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.set(x, y, z);
+  parent.add(mesh);
+  return mesh;
+}
+function buildDoor(door) {
+  const group = new THREE.Group();
+  group.position.set(door.x + (door.side === "h" ? 0.5 : 0), 0, door.z + (door.side === "v" ? 0.5 : 0));
+  group.rotation.y = door.side === "v" ? Math.PI / 2 : 0;
+  furnitureMesh(doorPostGeometry, doorFrameMaterial, group, -0.48, WALL_HEIGHT / 2, 0);
+  furnitureMesh(doorPostGeometry, doorFrameMaterial, group, 0.48, WALL_HEIGHT / 2, 0);
+  furnitureMesh(doorLintelGeometry, doorFrameMaterial, group, 0, WALL_HEIGHT - 0.075, 0);
+  const leaf = new THREE.Group();
+  leaf.position.set(-0.41, 0.03, 0);
+  leaf.rotation.y = -1.02;
+  furnitureMesh(doorLeafGeometry, doorLeafMaterial, leaf, 0, 0, 0);
+  furnitureMesh(handleGeometry, cabinetMaterial, leaf, 0.71, 0.6, 0.045);
+  group.add(leaf);
+  furnitureGroup.add(group);
+}
+function buildCabinet(cabinet) {
+  const group = new THREE.Group();
+  if (cabinet.side === "h") {
+    group.position.set(cabinet.x + 1, 0, cabinet.wallZ);
+    group.rotation.y = cabinet.wallZ === cabinet.z ? 0 : Math.PI;
+  } else {
+    group.position.set(cabinet.wallX, 0, cabinet.z + 1);
+    group.rotation.y = cabinet.wallX === cabinet.x ? Math.PI / 2 : -Math.PI / 2;
+  }
+  furnitureMesh(cabinetBodyGeometry, cabinetMaterial, group, 0, 0.62, 0.25);
+  furnitureMesh(cabinetFrontGeometry, cabinetFrontMaterial, group, -0.46, 0.64, 0.513);
+  furnitureMesh(cabinetFrontGeometry, cabinetFrontMaterial, group, 0.46, 0.64, 0.513);
+  furnitureMesh(cabinetHandleGeometry, cabinetMaterial, group, -0.055, 0.65, 0.54);
+  furnitureMesh(cabinetHandleGeometry, cabinetMaterial, group, 0.055, 0.65, 0.54);
+  furnitureGroup.add(group);
+}
 function rebuild() {
   if (!baseMesh) return;
   const all = [...cells.values()];
@@ -322,6 +402,9 @@ function rebuild() {
     wallMesh.count = walls.size;
     wallMesh.instanceMatrix.needsUpdate = true;
   }
+  furnitureGroup.clear();
+  doors.forEach(buildDoor);
+  cabinets.forEach(buildCabinet);
 }
 function editCell(x, z, forcedTool) {
   if (!ready || !inside(x, z)) return;
@@ -355,7 +438,47 @@ function addWall(cell) {
   const wall = nearestWall(cell), k = wallKey(wall.side, wall.x, wall.z);
   if (walls.has(k)) return;
   const before = snapshot();
+  doors.delete(k);
   walls.set(k, { side: wall.side, x: wall.x, z: wall.z });
+  pushHistory(before);
+  rebuild();
+  updateUI();
+  markDirty();
+}
+function addDoor(cell) {
+  if (!ready) return;
+  const wall = nearestWall(cell), k = wallKey(wall.side, wall.x, wall.z);
+  if (doors.has(k)) return;
+  const before = snapshot();
+  walls.delete(k);
+  doors.set(k, { side: wall.side, x: wall.x, z: wall.z });
+  pushHistory(before);
+  rebuild();
+  updateUI();
+  markDirty();
+}
+function cabinetKey(cabinet) { return `${cabinet.side},${cabinet.x},${cabinet.z},${cabinet.wallX},${cabinet.wallZ}`; }
+function cabinetCells(cabinet) {
+  return cabinet.side === "h" ? [[cabinet.x, cabinet.z], [cabinet.x + 1, cabinet.z]] : [[cabinet.x, cabinet.z], [cabinet.x, cabinet.z + 1]];
+}
+function addCabinet(cell) {
+  if (!ready) return;
+  const wall = nearestWall(cell), k = wallKey(wall.side, wall.x, wall.z);
+  if (!walls.has(k)) { toast("Сначала поставь обычную стену у этого края"); return; }
+  const cabinet = { side: wall.side, x: cell.x, z: cell.z, wallX: wall.x, wallZ: wall.z };
+  if (wall.side === "h") {
+    const localX = cell.point.x - cell.x;
+    cabinet.x = THREE.MathUtils.clamp(localX > 0.5 ? cell.x - 1 : cell.x, -LIMIT, LIMIT - 2);
+  } else {
+    const localZ = cell.point.z - cell.z;
+    cabinet.z = THREE.MathUtils.clamp(localZ > 0.5 ? cell.z - 1 : cell.z, -LIMIT, LIMIT - 2);
+  }
+  if (cabinets.has(cabinetKey(cabinet))) return;
+  if (cabinetCells(cabinet).some(([x, z]) => !cells.has(key(x, z)))) { toast("Шкафу нужны две плитки пола вдоль стены"); return; }
+  const occupied = new Set([...cabinets.values()].flatMap((item) => cabinetCells(item).map(([x, z]) => key(x, z))));
+  if (cabinetCells(cabinet).some(([x, z]) => occupied.has(key(x, z)))) { toast("Эти две клетки уже заняты шкафом"); return; }
+  const before = snapshot();
+  cabinets.set(cabinetKey(cabinet), cabinet);
   pushHistory(before);
   rebuild();
   updateUI();
@@ -365,10 +488,15 @@ function eraseAt(cell) {
   if (!ready) return;
   const wall = nearestWall(cell), k = wallKey(wall.side, wall.x, wall.z);
   const floor = cells.get(key(cell.x, cell.z));
-  if (!walls.has(k) && !floor) return;
+  const cabinet = [...cabinets.values()].find((item) => cabinetCells(item).some(([x, z]) => x === cell.x && z === cell.z));
+  if (!doors.has(k) && !walls.has(k) && !floor && !cabinet) return;
   const before = snapshot();
-  if (walls.has(k)) walls.delete(k);
-  else cells.delete(key(cell.x, cell.z));
+  if (doors.has(k)) doors.delete(k);
+  else if (cabinet) cabinets.delete(cabinetKey(cabinet));
+  else if (walls.has(k)) {
+    walls.delete(k);
+    [...cabinets.values()].filter((item) => item.side === wall.side && item.wallX === wall.x && item.wallZ === wall.z).forEach((item) => cabinets.delete(cabinetKey(item)));
+  } else cells.delete(key(cell.x, cell.z));
   pushHistory(before);
   rebuild();
   updateUI();
@@ -392,14 +520,29 @@ const wallGhost = new THREE.Mesh(
 );
 wallGhost.visible = false;
 scene.add(wallGhost);
+const cabinetGhost = new THREE.Mesh(
+  new THREE.BoxGeometry(1.92, 1.24, 0.5),
+  new THREE.MeshBasicMaterial({ color: 0x4f8b6d, transparent: true, opacity: 0.3, depthWrite: false })
+);
+cabinetGhost.visible = false;
+scene.add(cabinetGhost);
 function updateGhost(clientX, clientY) {
   const cell = cellAt(clientX, clientY);
   ghost.visible = Boolean(cell) && tool === "floor";
-  wallGhost.visible = Boolean(cell) && tool !== "floor";
+  wallGhost.visible = Boolean(cell) && ["wall", "door", "eraser"].includes(tool);
+  cabinetGhost.visible = Boolean(cell) && tool === "cabinet";
   if (cell && tool === "floor") {
     ghost.position.x = cell.x + 0.5;
     ghost.position.z = cell.z + 0.5;
     ghost.material.color.set(0x4f8b6d);
+  } else if (cell && tool === "cabinet") {
+    const wall = nearestWall(cell);
+    let x = cell.x, z = cell.z;
+    if (wall.side === "h") x = THREE.MathUtils.clamp(cell.point.x - cell.x > 0.5 ? cell.x - 1 : cell.x, -LIMIT, LIMIT - 2);
+    else z = THREE.MathUtils.clamp(cell.point.z - cell.z > 0.5 ? cell.z - 1 : cell.z, -LIMIT, LIMIT - 2);
+    cabinetGhost.position.set(wall.side === "h" ? x + 1 : wall.x, 0.62, wall.side === "h" ? wall.z : z + 1);
+    cabinetGhost.rotation.y = wall.side === "h" ? (wall.z === z ? 0 : Math.PI) : (wall.x === x ? Math.PI / 2 : -Math.PI / 2);
+    cabinetGhost.translateZ(0.25);
   } else if (cell) {
     const wall = nearestWall(cell);
     wallGhost.position.set(wall.x + (wall.side === "h" ? 0.5 : 0), WALL_HEIGHT / 2, wall.z + (wall.side === "v" ? 0.5 : 0));
@@ -434,6 +577,7 @@ canvas.addEventListener("pointerdown", (event) => {
   pointers.set(event.pointerId, { x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false, button: event.button });
   ghost.visible = false;
   wallGhost.visible = false;
+  cabinetGhost.visible = false;
   if (pointers.size === 2) {
     gestureMulti = true;
     pinchStart = { ...distanceAndMid(), viewSize };
@@ -469,6 +613,8 @@ function finishPointer(event, cancelled = false) {
     if (cell) {
       const activeTool = p.button === 2 ? "eraser" : tool;
       if (activeTool === "wall") addWall(cell);
+      else if (activeTool === "door") addDoor(cell);
+      else if (activeTool === "cabinet") addCabinet(cell);
       else if (activeTool === "eraser") eraseAt(cell);
       else editCell(cell.x, cell.z);
     }
@@ -479,7 +625,7 @@ function finishPointer(event, cancelled = false) {
 }
 canvas.addEventListener("pointerup", (event) => finishPointer(event));
 canvas.addEventListener("pointercancel", (event) => finishPointer(event, true));
-canvas.addEventListener("pointerleave", () => { if (!pointers.size) { ghost.visible = false; wallGhost.visible = false; } });
+canvas.addEventListener("pointerleave", () => { if (!pointers.size) { ghost.visible = false; wallGhost.visible = false; cabinetGhost.visible = false; } });
 canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 canvas.addEventListener("wheel", (event) => {
   event.preventDefault();
@@ -497,7 +643,10 @@ for (const button of document.querySelectorAll("[data-tool]")) {
     });
     $("hint").textContent = tool === "floor"
       ? "Касание — поставить пол · движение — камера · щипок — масштаб"
-      : tool === "wall" ? "Коснитесь ближнего края клетки, чтобы поставить стену" : "Коснитесь края стены или плитки, чтобы удалить";
+      : tool === "wall" ? "Коснитесь края клетки, чтобы поставить стену"
+      : tool === "door" ? "Коснитесь края клетки, чтобы сделать проём с дверью"
+      : tool === "cabinet" ? "Коснитесь пола у стены: шкаф займёт две клетки вдоль неё"
+      : "Коснитесь объекта или плитки, чтобы удалить";
   });
 }
 for (const button of document.querySelectorAll("[data-style]")) {
@@ -536,7 +685,7 @@ $("viewBtn").addEventListener("click", () => {
   toast(topView ? "Вид сверху" : "Объёмный вид");
 });
 function openClear() {
-  if (!cells.size && !walls.size) { toast("Карта уже пустая"); return; }
+  if (!cells.size && !walls.size && !doors.size && !cabinets.size) { toast("Карта уже пустая"); return; }
   $("clearModal").classList.remove("hidden");
   $("cancelClear").focus();
 }
@@ -548,6 +697,8 @@ $("confirmClear").addEventListener("click", () => {
   const before = snapshot();
   cells.clear();
   walls.clear();
+  doors.clear();
+  cabinets.clear();
   pushHistory(before);
   rebuild();
   updateUI();
@@ -580,7 +731,7 @@ function startEditor(gltf) {
     let restored = false;
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-      if (saved && (saved.version === 1 || saved.version === 2) && Array.isArray(saved.cells)) {
+      if (saved && [1, 2, 3].includes(saved.version) && Array.isArray(saved.cells)) {
         restore(saved.version === 1 ? saved.cells : saved);
         restored = true;
       }
@@ -624,8 +775,12 @@ window.__editorProbe = () => ({
   ready,
   cells: cellSnapshot(),
   walls: wallSnapshot(),
+  doors: doorSnapshot(),
+  cabinets: cabinetSnapshot(),
   count: cells.size,
   wallCount: walls.size,
+  doorCount: doors.size,
+  cabinetCount: cabinets.size,
   grid: GRID,
   tool,
   style: currentStyle,
