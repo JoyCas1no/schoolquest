@@ -4,12 +4,15 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const $ = (id) => document.getElementById(id);
 const canvas = $("scene");
-const GRID = 24;
+const GRID = 100;
 const LIMIT = GRID / 2;
 const CAPACITY = GRID * GRID;
+const WALL_CAPACITY = 2 * GRID * (GRID + 1);
+const WALL_HEIGHT = 1.35;
 const STORAGE_KEY = "schoolquest.floor-editor.v1";
-const STYLE_NAMES = { tile: "Плитка", linoleum: "Линолеум", wood: "Дерево" };
+const STYLE_NAMES = { tile: "Плитка", linoleum: "Линолеум", wood: "Дерево", blue: "Голубой", sand: "Песочный", rose: "Розовый" };
 const cells = new Map();
+const walls = new Map();
 const history = [];
 let tool = "floor";
 let currentStyle = "tile";
@@ -36,15 +39,33 @@ function toast(text) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
 }
-function snapshot() {
+function wallKey(side, x, z) { return `${side},${x},${z}`; }
+function wallInside(side, x, z) {
+  return Number.isInteger(x) && Number.isInteger(z) && (side === "h"
+    ? x >= -LIMIT && x < LIMIT && z >= -LIMIT && z <= LIMIT
+    : x >= -LIMIT && x <= LIMIT && z >= -LIMIT && z < LIMIT);
+}
+function cellSnapshot() {
   return [...cells.values()].map((c) => [c.x, c.z, c.style]).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
 }
+function wallSnapshot() {
+  return [...walls.values()].map((w) => [w.side, w.x, w.z]).sort((a, b) => a[0].localeCompare(b[0]) || a[1] - b[1] || a[2] - b[2]);
+}
+function snapshot() { return { cells: cellSnapshot(), walls: wallSnapshot() }; }
 function restore(data) {
   cells.clear();
-  for (const row of data) {
+  walls.clear();
+  const cellRows = Array.isArray(data) ? data : (data?.cells || []);
+  const wallRows = Array.isArray(data) ? [] : (data?.walls || []);
+  for (const row of cellRows) {
     if (!Array.isArray(row) || row.length !== 3) continue;
     const [x, z, style] = row;
     if (inside(x, z) && STYLE_NAMES[style]) cells.set(key(x, z), { x, z, style });
+  }
+  for (const row of wallRows) {
+    if (!Array.isArray(row) || row.length !== 3) continue;
+    const [side, x, z] = row;
+    if ((side === "h" || side === "v") && wallInside(side, x, z)) walls.set(wallKey(side, x, z), { side, x, z });
   }
   rebuild();
   updateUI();
@@ -66,7 +87,7 @@ function markDirty() {
 function saveNow(showMessage = true) {
   clearTimeout(saveTimer);
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, updatedAt: new Date().toISOString(), cells: snapshot() }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 2, updatedAt: new Date().toISOString(), ...snapshot() }));
     dirty = false;
     $("saveStatus").textContent = "Черновик сохранён";
     $("saveDot").classList.remove("dirty");
@@ -78,7 +99,7 @@ function saveNow(showMessage = true) {
 }
 function updateUI() {
   const n = cells.size;
-  $("cellCount").textContent = `${n} ${plural(n, ["плитка", "плитки", "плиток"])} · ${n} м²`;
+  $("cellCount").textContent = `${n} ${plural(n, ["плитка", "плитки", "плиток"])} · ${walls.size} ${plural(walls.size, ["стена", "стены", "стен"])}`;
   $("undoBtn").disabled = history.length === 0;
 }
 
@@ -109,7 +130,7 @@ fill.position.set(10, 8, -12);
 scene.add(fill);
 
 const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(180, 180),
+  new THREE.PlaneGeometry(240, 240),
   new THREE.MeshStandardMaterial({ color: 0xe3e9e2, roughness: 1 })
 );
 ground.rotation.x = -Math.PI / 2;
@@ -141,7 +162,7 @@ ghost.visible = false;
 scene.add(ghost);
 
 function updateCamera() {
-  viewSize = THREE.MathUtils.clamp(viewSize, 5, 34);
+  viewSize = THREE.MathUtils.clamp(viewSize, 5, 130);
   const distance = 30;
   camera.position.set(
     cameraTarget.x + Math.cos(azimuth) * Math.cos(elevation) * distance,
@@ -168,6 +189,7 @@ resize();
 let baseGeometry;
 let topGeometry;
 let baseMesh;
+let wallMesh;
 const topMeshes = {};
 const dummy = new THREE.Object3D();
 
@@ -248,7 +270,10 @@ function setupInstances(gltf) {
   const materials = {
     tile: tileMaterial,
     linoleum: new THREE.MeshStandardMaterial({ map: makeLinoleumTexture(), roughness: 0.9, metalness: 0 }),
-    wood: new THREE.MeshStandardMaterial({ map: makeWoodTexture(), roughness: 0.76, metalness: 0 })
+    wood: new THREE.MeshStandardMaterial({ map: makeWoodTexture(), roughness: 0.76, metalness: 0 }),
+    blue: new THREE.MeshStandardMaterial({ color: 0xa9c8d8, roughness: 0.88, metalness: 0 }),
+    sand: new THREE.MeshStandardMaterial({ color: 0xd9c79f, roughness: 0.92, metalness: 0 }),
+    rose: new THREE.MeshStandardMaterial({ color: 0xd8afb0, roughness: 0.88, metalness: 0 })
   };
   for (const style of Object.keys(materials)) {
     const mesh = new THREE.InstancedMesh(topGeometry, materials[style], CAPACITY);
@@ -258,6 +283,13 @@ function setupInstances(gltf) {
     topMeshes[style] = mesh;
     scene.add(mesh);
   }
+  const wallGeometry = new THREE.BoxGeometry(1.08, WALL_HEIGHT, 0.12);
+  const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xe7e2d6, roughness: 0.86, metalness: 0 });
+  wallMesh = new THREE.InstancedMesh(wallGeometry, wallMaterial, WALL_CAPACITY);
+  wallMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  wallMesh.frustumCulled = false;
+  wallMesh.count = 0;
+  scene.add(wallMesh);
 }
 function setInstance(mesh, index, cell) {
   dummy.position.set(cell.x + 0.5, 0, cell.z + 0.5);
@@ -278,6 +310,17 @@ function rebuild() {
     mesh.count = styled.length;
     mesh.instanceMatrix.needsUpdate = true;
   }
+  if (wallMesh) {
+    [...walls.values()].forEach((wall, index) => {
+      dummy.position.set(wall.x + (wall.side === "h" ? 0.5 : 0), WALL_HEIGHT / 2, wall.z + (wall.side === "v" ? 0.5 : 0));
+      dummy.rotation.set(0, wall.side === "v" ? Math.PI / 2 : 0, 0);
+      dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
+      wallMesh.setMatrixAt(index, dummy.matrix);
+    });
+    wallMesh.count = walls.size;
+    wallMesh.instanceMatrix.needsUpdate = true;
+  }
 }
 function editCell(x, z, forcedTool) {
   if (!ready || !inside(x, z)) return;
@@ -296,6 +339,40 @@ function editCell(x, z, forcedTool) {
   updateUI();
   markDirty();
 }
+function nearestWall(cell) {
+  const localX = cell.point.x - cell.x, localZ = cell.point.z - cell.z;
+  const candidates = [
+    { side: "v", x: cell.x, z: cell.z, distance: localX },
+    { side: "v", x: cell.x + 1, z: cell.z, distance: 1 - localX },
+    { side: "h", x: cell.x, z: cell.z, distance: localZ },
+    { side: "h", x: cell.x, z: cell.z + 1, distance: 1 - localZ }
+  ];
+  return candidates.reduce((nearest, item) => item.distance < nearest.distance ? item : nearest);
+}
+function addWall(cell) {
+  if (!ready) return;
+  const wall = nearestWall(cell), k = wallKey(wall.side, wall.x, wall.z);
+  if (walls.has(k)) return;
+  const before = snapshot();
+  walls.set(k, { side: wall.side, x: wall.x, z: wall.z });
+  pushHistory(before);
+  rebuild();
+  updateUI();
+  markDirty();
+}
+function eraseAt(cell) {
+  if (!ready) return;
+  const wall = nearestWall(cell), k = wallKey(wall.side, wall.x, wall.z);
+  const floor = cells.get(key(cell.x, cell.z));
+  if (!walls.has(k) && !floor) return;
+  const before = snapshot();
+  if (walls.has(k)) walls.delete(k);
+  else cells.delete(key(cell.x, cell.z));
+  pushHistory(before);
+  rebuild();
+  updateUI();
+  markDirty();
+}
 
 const raycaster = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
@@ -306,15 +383,27 @@ function cellAt(clientX, clientY) {
   const hit = raycaster.intersectObject(rayPlane, false)[0];
   if (!hit) return null;
   const x = Math.floor(hit.point.x), z = Math.floor(hit.point.z);
-  return inside(x, z) ? { x, z } : null;
+  return inside(x, z) ? { x, z, point: hit.point } : null;
 }
+const wallGhost = new THREE.Mesh(
+  new THREE.BoxGeometry(1.08, WALL_HEIGHT, 0.15),
+  new THREE.MeshBasicMaterial({ color: 0x4f8b6d, transparent: true, opacity: 0.38, depthWrite: false })
+);
+wallGhost.visible = false;
+scene.add(wallGhost);
 function updateGhost(clientX, clientY) {
   const cell = cellAt(clientX, clientY);
-  ghost.visible = Boolean(cell);
-  if (cell) {
+  ghost.visible = Boolean(cell) && tool === "floor";
+  wallGhost.visible = Boolean(cell) && tool !== "floor";
+  if (cell && tool === "floor") {
     ghost.position.x = cell.x + 0.5;
     ghost.position.z = cell.z + 0.5;
-    ghost.material.color.set(tool === "eraser" ? 0xb85c52 : 0x4f8b6d);
+    ghost.material.color.set(0x4f8b6d);
+  } else if (cell) {
+    const wall = nearestWall(cell);
+    wallGhost.position.set(wall.x + (wall.side === "h" ? 0.5 : 0), WALL_HEIGHT / 2, wall.z + (wall.side === "v" ? 0.5 : 0));
+    wallGhost.rotation.y = wall.side === "v" ? Math.PI / 2 : 0;
+    wallGhost.material.color.set(tool === "eraser" ? 0xb85c52 : 0x4f8b6d);
   }
 }
 
@@ -343,6 +432,7 @@ canvas.addEventListener("pointerdown", (event) => {
   canvas.setPointerCapture(event.pointerId);
   pointers.set(event.pointerId, { x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false, button: event.button });
   ghost.visible = false;
+  wallGhost.visible = false;
   if (pointers.size === 2) {
     gestureMulti = true;
     pinchStart = { ...distanceAndMid(), viewSize };
@@ -375,7 +465,12 @@ function finishPointer(event, cancelled = false) {
   const wasLast = pointers.size === 1;
   if (!cancelled && wasLast && !gestureMulti && !p.moved) {
     const cell = cellAt(event.clientX, event.clientY);
-    if (cell) editCell(cell.x, cell.z, p.button === 2 ? "eraser" : undefined);
+    if (cell) {
+      const activeTool = p.button === 2 ? "eraser" : tool;
+      if (activeTool === "wall") addWall(cell);
+      else if (activeTool === "eraser") eraseAt(cell);
+      else editCell(cell.x, cell.z);
+    }
   }
   pointers.delete(event.pointerId);
   if (pointers.size < 2) pinchStart = null;
@@ -383,7 +478,7 @@ function finishPointer(event, cancelled = false) {
 }
 canvas.addEventListener("pointerup", (event) => finishPointer(event));
 canvas.addEventListener("pointercancel", (event) => finishPointer(event, true));
-canvas.addEventListener("pointerleave", () => { if (!pointers.size) ghost.visible = false; });
+canvas.addEventListener("pointerleave", () => { if (!pointers.size) { ghost.visible = false; wallGhost.visible = false; } });
 canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 canvas.addEventListener("wheel", (event) => {
   event.preventDefault();
@@ -399,7 +494,9 @@ for (const button of document.querySelectorAll("[data-tool]")) {
       el.classList.toggle("active", active);
       el.setAttribute("aria-pressed", String(active));
     });
-    $("hint").textContent = tool === "floor" ? "Касание — поставить пол · движение — камера · щипок — масштаб" : "Коснитесь плитки, чтобы убрать её";
+    $("hint").textContent = tool === "floor"
+      ? "Касание — поставить пол · движение — камера · щипок — масштаб"
+      : tool === "wall" ? "Коснитесь ближнего края клетки, чтобы поставить стену" : "Коснитесь края стены или плитки, чтобы удалить";
   });
 }
 for (const button of document.querySelectorAll("[data-style]")) {
@@ -410,7 +507,7 @@ for (const button of document.querySelectorAll("[data-style]")) {
       el.classList.toggle("active", active);
       el.setAttribute("aria-pressed", String(active));
     });
-    if (tool === "eraser") document.querySelector('[data-tool="floor"]').click();
+    if (tool !== "floor") document.querySelector('[data-tool="floor"]').click();
     toast(`${STYLE_NAMES[currentStyle]} выбрана`);
   });
 }
@@ -438,7 +535,7 @@ $("viewBtn").addEventListener("click", () => {
   toast(topView ? "Вид сверху" : "Объёмный вид");
 });
 function openClear() {
-  if (!cells.size) { toast("Карта уже пустая"); return; }
+  if (!cells.size && !walls.size) { toast("Карта уже пустая"); return; }
   $("clearModal").classList.remove("hidden");
   $("cancelClear").focus();
 }
@@ -449,6 +546,7 @@ $("clearModal").addEventListener("click", (event) => { if (event.target === $("c
 $("confirmClear").addEventListener("click", () => {
   const before = snapshot();
   cells.clear();
+  walls.clear();
   pushHistory(before);
   rebuild();
   updateUI();
@@ -481,13 +579,21 @@ function startEditor(gltf) {
     let restored = false;
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-      if (saved && saved.version === 1 && Array.isArray(saved.cells)) {
-        restore(saved.cells);
+      if (saved && (saved.version === 1 || saved.version === 2) && Array.isArray(saved.cells)) {
+        restore(saved.version === 1 ? saved.cells : saved);
         restored = true;
       }
     } catch (error) { /* Start with the sample patch if storage is unavailable. */ }
     if (!restored) {
       for (let x = -3; x < 3; x++) for (let z = -3; z < 3; z++) cells.set(key(x, z), { x, z, style: "tile" });
+      for (let x = -3; x < 3; x++) {
+        walls.set(wallKey("h", x, 3), { side: "h", x, z: 3 });
+        if (x !== -1 && x !== 0) walls.set(wallKey("h", x, -3), { side: "h", x, z: -3 });
+      }
+      for (let z = -3; z < 3; z++) {
+        walls.set(wallKey("v", -3, z), { side: "v", x: -3, z });
+        walls.set(wallKey("v", 3, z), { side: "v", x: 3, z });
+      }
       rebuild();
       updateUI();
     }
@@ -515,8 +621,11 @@ loadFloorModel();
 
 window.__editorProbe = () => ({
   ready,
-  cells: snapshot(),
+  cells: cellSnapshot(),
+  walls: wallSnapshot(),
   count: cells.size,
+  wallCount: walls.size,
+  grid: GRID,
   tool,
   style: currentStyle,
   history: history.length,

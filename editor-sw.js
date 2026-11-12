@@ -1,4 +1,4 @@
-const CACHE = "schoolquest-editor-v3";
+const CACHE = "schoolquest-editor-v4";
 const CORE = [
   "./editor.html", "./src/editor.js", "./assets/favicon.svg", "./editor-manifest.webmanifest",
   ...[...Array.from({ length: 7 }, (_, index) => String(index).padStart(2, "0")), "07-a", "07-b", "07-c", "07-d", "08"].map((name) => `./assets/models/floor-parts/part-${name}`),
