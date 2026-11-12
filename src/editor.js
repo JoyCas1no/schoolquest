@@ -10,7 +10,7 @@ const CAPACITY = GRID * GRID;
 const WALL_CAPACITY = 2 * GRID * (GRID + 1);
 const WALL_HEIGHT = 1.35;
 const STORAGE_KEY = "schoolquest.floor-editor.v1";
-const STYLE_NAMES = { tile: "Русский", linoleum: "Природа", wood: "Английский", blue: "Логика", rose: "Искусство", violet: "Математика", sand: "Коридор" };
+const STYLE_NAMES = { tile: "Русский", linoleum: "Окружающий мир", wood: "Английский", blue: "Логика", rose: "Литература", violet: "Математика", sand: "Коридор" };
 const cells = new Map();
 const walls = new Map();
 const history = [];
@@ -268,7 +268,7 @@ function setupInstances(gltf) {
   tileMaterial.roughness = 0.8;
   if (tileMaterial.map) tileMaterial.map.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
   const materials = {
-    tile: tileMaterial,
+    tile: new THREE.MeshStandardMaterial({ color: 0xb9bdb9, roughness: 0.9, metalness: 0 }),
     linoleum: new THREE.MeshStandardMaterial({ map: makeLinoleumTexture(), roughness: 0.9, metalness: 0 }),
     wood: new THREE.MeshStandardMaterial({ map: makeWoodTexture(), roughness: 0.76, metalness: 0 }),
     blue: new THREE.MeshStandardMaterial({ color: 0xa9c8d8, roughness: 0.88, metalness: 0 }),
