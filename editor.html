@@ -8,86 +8,7 @@
 <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="./editor-manifest.webmanifest">
 <title>Редактор пола — SchoolQuest</title>
-<style>
-:root{--bg:#e9eeE8;--paper:#fbfcf9;--ink:#24362f;--muted:#718078;--line:#dce3dc;--green:#386c58;--green2:#e3eee7;--danger:#a14f49;--shadow:0 12px 38px rgba(37,58,48,.12)}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
-body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation}
-button:focus-visible{outline:3px solid #7fae98;outline-offset:2px}
-button:disabled{opacity:.38;cursor:default}
-button:active:not(:disabled){transform:scale(.96)}
-svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
-.ui{position:fixed;inset:0;pointer-events:none;padding:calc(14px + env(safe-area-inset-top)) 16px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;justify-content:space-between}
-.topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.brand,.actions,.view-controls,.bottom-panel,.hint{pointer-events:auto}
-.brand{display:flex;align-items:center;gap:11px;background:rgba(251,252,249,.94);border:1px solid rgba(255,255,255,.75);border-radius:17px;padding:10px 14px;box-shadow:var(--shadow);backdrop-filter:blur(14px)}
-.brand-mark{width:36px;height:36px;border-radius:11px;background:var(--green);color:white;display:grid;place-items:center}
-.brand-mark svg{width:22px;height:22px}
-.brand-title{font-size:15px;font-weight:750;letter-spacing:-.01em;white-space:nowrap}
-.brand-sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:5px}
-.save-dot{width:6px;height:6px;border-radius:50%;background:#6b9b80}
-.save-dot.dirty{background:#c6924b}
-.actions{display:flex;gap:7px;background:rgba(251,252,249,.94);border:1px solid rgba(255,255,255,.75);border-radius:16px;padding:6px;box-shadow:var(--shadow);backdrop-filter:blur(14px)}
-.icon-btn{width:42px;height:42px;display:grid;place-items:center;background:transparent;border-radius:11px;transition:background .15s,transform .1s}
-.icon-btn:hover{background:#edf1eb}
-.icon-btn.primary{background:var(--green);color:white}
-.icon-btn.primary:hover{background:#2e5d4b}
-.view-controls{position:absolute;right:16px;top:50%;transform:translateY(-45%);display:flex;flex-direction:column;gap:5px;background:rgba(251,252,249,.94);border:1px solid rgba(255,255,255,.75);border-radius:15px;padding:6px;box-shadow:var(--shadow);backdrop-filter:blur(14px)}
-.view-controls .icon-btn{width:38px;height:38px}
-#mobileClearBtn{display:none}
-.control-sep{height:1px;background:var(--line);margin:2px 5px}
-.hint{align-self:center;margin-bottom:12px;background:rgba(36,54,47,.82);color:#fff;padding:8px 14px;border-radius:99px;font-size:12px;box-shadow:0 5px 18px rgba(36,54,47,.14);backdrop-filter:blur(10px);transition:opacity .2s;white-space:nowrap}
-.bottom-panel{align-self:center;width:min(1040px,100%);background:rgba(251,252,249,.97);border:1px solid rgba(255,255,255,.8);border-radius:22px;padding:14px;box-shadow:var(--shadow);backdrop-filter:blur(16px)}
-.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;padding:0 2px}
-.panel-title{font-size:13px;font-weight:750}
-.cell-count{font-size:12px;color:var(--muted)}
-.workspace{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:stretch}
-.tools{display:flex;gap:6px;background:#edf1eb;border-radius:14px;padding:5px}
-.tool{width:64px;min-height:61px;border-radius:10px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:11px;font-weight:650}
-.tool.active{background:var(--paper);color:var(--green);box-shadow:0 2px 8px rgba(42,65,55,.1)}
-.materials{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.material{position:relative;min-height:61px;border:1px solid var(--line);border-radius:13px;background:#fff;padding:7px 9px;display:flex;align-items:center;gap:9px;text-align:left}
-.material.active{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
-.material.active:after{content:"";position:absolute;right:7px;top:7px;width:7px;height:7px;border-radius:50%;background:var(--green)}
-.swatch{width:34px;height:42px;flex:0 0 auto;border-radius:8px;border:1px solid rgba(60,65,55,.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}
-.swatch.tile{background-color:#b9bdb9;background-image:linear-gradient(#979e99 1px,transparent 1px),linear-gradient(90deg,#979e99 1px,transparent 1px);background-size:9px 9px}
-.swatch.linoleum{background:linear-gradient(135deg,#aebfae,#c3cebd)}
-.swatch.wood{background:repeating-linear-gradient(0deg,#c89f70 0,#c89f70 10px,#b88d5e 11px,#d2ae81 12px,#d2ae81 22px,#ac8054 23px)}
-.swatch.blue{background:#a9c8d8}.swatch.sand{background:#d9c79f}.swatch.rose{background:#d8afb0}.swatch.violet{background:#b9afd3}
-.material-name{display:block;font-size:12px;font-weight:650;line-height:1.2}
-.material-size{display:block;font-size:10px;color:var(--muted);margin-top:4px}
-.toast{position:fixed;left:50%;top:calc(88px + env(safe-area-inset-top));transform:translate(-50%,-8px);background:#263c32;color:#fff;border-radius:12px;padding:10px 15px;font-size:13px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.2s;z-index:20;max-width:calc(100% - 32px);text-align:center}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-.loading{position:fixed;inset:0;background:#e9eee8;z-index:30;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:var(--ink);transition:opacity .35s}
-.loading.hidden{opacity:0;pointer-events:none}
-.loader{width:42px;height:42px;border:3px solid #cbd8ce;border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
-.loading-title{font-weight:700}
-.loading-sub{font-size:13px;color:var(--muted);margin-top:-8px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.modal-backdrop{position:fixed;inset:0;background:rgba(25,38,32,.35);backdrop-filter:blur(5px);z-index:25;display:grid;place-items:center;padding:24px}
-.modal-backdrop.hidden{display:none}
-.modal{width:min(390px,100%);background:var(--paper);border-radius:22px;padding:22px;box-shadow:0 24px 70px rgba(24,38,31,.24)}
-.modal h2{font-size:19px;margin:0 0 8px}
-.modal p{font-size:14px;line-height:1.5;color:var(--muted);margin:0 0 20px}
-.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.modal-actions button{min-height:46px;border-radius:12px;background:#eaf0e9;font-weight:650}
-.modal-actions .confirm-clear{background:var(--danger);color:white}
-@media(max-width:600px){
- .ui{padding:calc(10px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom))}
- .brand{padding:8px 10px;border-radius:14px;gap:8px}.brand-mark{width:32px;height:32px;border-radius:9px}.brand-title{font-size:13px}.brand-sub{font-size:10px}
- .actions{padding:4px;border-radius:14px;gap:2px}.icon-btn{width:38px;height:38px}.actions .clear-action{display:none}
- .view-controls{right:10px;padding:4px;top:43%}.view-controls .icon-btn{width:34px;height:34px}#mobileClearBtn{display:grid}
- .hint{font-size:11px;margin-bottom:9px;padding:7px 11px;max-width:calc(100% - 20px);overflow:hidden;text-overflow:ellipsis}
- .bottom-panel{border-radius:19px;padding:11px}.panel-head{margin-bottom:9px}.workspace{grid-template-columns:1fr;gap:9px}
- .tools{padding:4px}.tool{flex:1;width:auto;min-height:50px;flex-direction:column;gap:3px;font-size:10px}.tool svg{width:18px;height:18px}
- .materials{grid-template-columns:repeat(4,1fr)}
- .material{min-height:50px;padding:6px 4px;gap:4px;justify-content:center}.swatch{width:24px;height:34px;border-radius:7px}.material-name{font-size:9px}.material-size{display:none}.material.active:after{right:4px;top:4px;width:6px;height:6px}
-}
-@media(max-width:370px){.brand-sub{display:none}.materials{grid-template-columns:repeat(3,1fr)}.material-name{font-size:9px}.swatch{width:24px;height:32px}.brand{padding-right:9px}.icon-btn{width:35px;height:35px}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style>
+<link rel="stylesheet" href="./src/editor.css?v=7">
 </head>
 <body>
 <canvas id="scene" aria-label="Трёхмерная сетка школьной карты. Коснитесь клетки, чтобы добавить пол." tabindex="0"></canvas>
@@ -100,6 +21,7 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
     <div class="actions">
       <button class="icon-btn" id="undoBtn" aria-label="Отменить последнее действие" title="Отменить" disabled><svg viewBox="0 0 24 24"><path d="m9 7-5 5 5 5"/><path d="M4 12h9a6 6 0 0 1 6 6"/></svg></button>
       <button class="icon-btn primary" id="saveBtn" aria-label="Сохранить черновик" title="Сохранить"><svg viewBox="0 0 24 24"><path d="M5 3h12l2 2v16H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/></svg></button>
+      <button class="icon-btn" id="cloudBtn" aria-label="Войти и синхронизировать карту" title="Облачная синхронизация"><svg viewBox="0 0 24 24"><path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 20 11a3.5 3.5 0 0 1-1 7z"/><path d="m9 14 3-3 3 3M12 11v7"/></svg></button>
       <button class="icon-btn clear-action" id="clearBtn" aria-label="Очистить карту" title="Очистить"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/></svg></button>
     </div>
   </div>
@@ -121,6 +43,7 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
         <button class="tool" data-tool="door" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M5 21V3h14v18M8 21V6h8v15M12 13h.01"/></svg>Дверь</button>
         <button class="tool" data-tool="cabinet" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 3h16v17H4zM12 3v17M10 11v2M14 11v2M3 21h18"/></svg>Шкаф</button>
         <button class="tool" data-tool="desk" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M3 7h18v4H3zM5 11v9M19 11v9M8 15h8M9 15v5M15 15v5"/></svg>Парта</button>
+        <button class="tool" data-tool="board" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M3 4h18v13H3zM6 21l3-4M18 21l-3-4M7 9h10M7 12h6"/></svg>Доска</button>
         <button class="tool" data-tool="eraser" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="m4 15 8-10 8 7-6 8H8zM9 20h11"/></svg>Ластик</button>
       </div>
       <div class="materials" role="group" aria-label="Покрытие пола">
@@ -138,11 +61,15 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="loading" id="loading"><div class="loader" id="loaderIcon"></div><div class="loading-title" id="loadingTitle">Собираем конструктор</div><div class="loading-sub" id="loadingSub">Загружаем модуль пола 1 × 1 м</div></div>
 <div class="modal-backdrop hidden" id="clearModal" role="dialog" aria-modal="true" aria-labelledby="clearTitle">
- <div class="modal"><h2 id="clearTitle">Очистить всю карту?</h2><p>Все плитки, стены, двери, шкафы и парты будут удалены. После очистки действие можно отменить кнопкой со стрелкой.</p><div class="modal-actions"><button id="cancelClear">Отмена</button><button class="confirm-clear" id="confirmClear">Очистить</button></div></div>
+ <div class="modal"><h2 id="clearTitle">Очистить всю карту?</h2><p>Все плитки, стены, двери, шкафы, парты и доски будут удалены. После очистки действие можно отменить кнопкой со стрелкой.</p><div class="modal-actions"><button id="cancelClear">Отмена</button><button class="confirm-clear" id="confirmClear">Очистить</button></div></div>
 </div>
+<div class="modal-backdrop hidden" id="cloudModal" role="dialog" aria-modal="true" aria-labelledby="cloudTitle">
+ <form class="modal" id="cloudForm"><h2 id="cloudTitle">Единая карта на всех устройствах</h2><p>Войди в свой аккаунт SchoolQuest. Текущая карта будет перенесена в облако, если там ещё нет черновика.</p><label class="cloud-label">Логин<input id="cloudUsername" name="username" autocomplete="username" autocapitalize="none" required minlength="3" maxlength="20"></label><label class="cloud-label">Пароль<input id="cloudPassword" name="password" type="password" autocomplete="current-password" required></label><p class="cloud-error" id="cloudError" role="alert"></p><div class="modal-actions"><button type="button" id="cancelCloud">Отмена</button><button class="confirm-cloud" id="confirmCloud" type="submit">Войти и синхронизировать</button></div></form>
+</div>
+<script src="./src/cloud.min.js?v=2"></script>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}
 </script>
-<script type="module" src="./src/editor.js?v=6"></script>
+<script type="module" src="./src/editor.min.js?v=7"></script>
 </body>
 </html>

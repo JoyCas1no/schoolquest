@@ -1,6 +1,6 @@
-const CACHE = "schoolquest-editor-v8";
+const CACHE = "schoolquest-editor-v10";
 const CORE = [
-  "./editor.html", "./src/editor.js", "./assets/favicon.svg", "./editor-manifest.webmanifest",
+  "./editor.html", "./src/editor.min.js", "./src/editor.css", "./src/cloud.min.js", "./assets/favicon.svg", "./editor-manifest.webmanifest",
   ...[...Array.from({ length: 7 }, (_, index) => String(index).padStart(2, "0")), "07-a", "07-b", "07-c", "07-d", "08"].map((name) => `./assets/models/floor-parts/part-${name}`),
   "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js",
   "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js",
@@ -17,7 +17,7 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const isThree = url.origin === "https://cdn.jsdelivr.net" && url.pathname.startsWith("/npm/three@0.180.0/");
   const isModel = url.origin === location.origin && url.pathname.includes("/assets/models/");
-  if (isThree || isModel || (url.origin === location.origin && url.pathname.endsWith("/src/editor.js"))) {
+  if (isThree || isModel || (url.origin === location.origin && url.pathname.endsWith("/src/editor.min.js"))) {
     event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
       const copy = response.clone();
       caches.open(CACHE).then((cache) => cache.put(event.request, copy));
