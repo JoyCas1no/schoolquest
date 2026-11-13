@@ -80,6 +80,6 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
 .materials.single-option{grid-template-columns:minmax(220px,330px)}
 .swatch.generic{display:grid;place-items:center;background:var(--green2);color:var(--green);font-size:16px;font-weight:800}
 .swatch.paint{border:1px solid rgba(36,54,47,.12)}
-.tool[data-tool="cabinet"]{margin-left:10px}.tool[data-tool="eraser"]{margin-left:10px}
-@media(max-width:600px){.materials.single-option{grid-template-columns:1fr}.tool[data-tool="cabinet"],.tool[data-tool="eraser"]{margin-left:0}}
+.tool[data-tool="decor"]{margin-left:10px}.tool[data-tool="eraser"]{margin-left:10px}
+@media(max-width:600px){.materials.single-option{grid-template-columns:1fr}.tool[data-tool="decor"],.tool[data-tool="eraser"]{margin-left:0}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
