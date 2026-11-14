@@ -1,6 +1,6 @@
-const CACHE = "schoolquest-editor-v22";
+const CACHE = "schoolquest-editor-v23";
 const CORE = [
-  "./editor.html", "./src/editor.min.js", "./src/editor.css", "./src/cloud.min.js", "./assets/favicon.svg", "./assets/textures/floor-russian-tile.svg", "./assets/textures/floor-world-linoleum.svg", "./assets/textures/floor-english-wood.svg", "./assets/textures/floor-logic-blue.svg", "./editor-manifest.webmanifest",
+  "./editor.html", "./src/editor.min.js", "./src/editor.css", "./src/cloud.min.js", "./assets/favicon.svg", "./assets/textures/floor-russian-tile.svg", "./assets/textures/floor-world-linoleum.svg", "./assets/textures/floor-english-wood.svg", "./assets/textures/floor-logic-blue.svg", "./assets/textures/floor-literature-rose.svg", "./editor-manifest.webmanifest",
   ...[...Array.from({ length: 7 }, (_, index) => String(index).padStart(2, "0")), "07-a", "07-b", "07-c", "07-d", "08"].map((name) => `./assets/models/floor-parts/part-${name}`),
   "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js",
   "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js",
